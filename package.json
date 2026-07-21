@@ -1,0 +1,9 @@
+{
+  "name": "ny-human-resources-system",
+  "version": "1.0.0",
+  "description": "NY Human Resources System - Foreign Employee Management",
+  "private": true,
+  "scripts": {
+    "dev": "dev.bat"
+  }
+}
