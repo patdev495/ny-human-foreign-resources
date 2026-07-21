@@ -67,7 +67,7 @@ class StayBase(BaseModel):
     bed_location: str | None = None
     stay_type: str  # "CO_DINH" | "CONG_TAC"
     has_meals: bool = True
-    start_date: datetime.date
+    start_date: datetime.date | None = None
     end_date: datetime.date | None = None
     notes: str | None = None
 
@@ -98,7 +98,7 @@ class ResidentInfo(BaseModel):
     stay_type: str
     has_meals: bool
     bed_location: str | None = None
-    start_date: datetime.date
+    start_date: datetime.date | None = None
     end_date: datetime.date | None = None
 
 
@@ -112,9 +112,9 @@ class RoomOccupancyRead(BaseModel):
 # --- VISA SCHEMAS ---
 
 class VisaBase(BaseModel):
-    visa_type: str
-    entry_date: datetime.date
-    expiry_date: datetime.date
+    visa_type: str | None = None
+    entry_date: datetime.date | None = None
+    expiry_date: datetime.date | None = None
     notes: str | None = None
 
 
@@ -132,8 +132,8 @@ class VisaRead(VisaBase):
 # --- TAM TRU SCHEMAS ---
 
 class TamTruBase(BaseModel):
-    registration_date: datetime.date
-    expiry_date: datetime.date
+    registration_date: datetime.date | None = None
+    expiry_date: datetime.date | None = None
     notes: str | None = None
 
 
@@ -157,9 +157,9 @@ class ExpiringDocumentItem(BaseModel):
     employee_name: str
     passport_number: str | None = None
     doc_type: str  # "VISA" | "TAM_TRU"
-    type_name: str
-    expiry_date: datetime.date
-    days_remaining: int
+    type_name: str | None = None
+    expiry_date: datetime.date | None = None
+    days_remaining: int | None = None
 
 
 class ExpiringDocumentsResponse(BaseModel):

@@ -200,10 +200,10 @@ def seed():
         matched_nat = nat_map.get(emp_upper_name) or nat_map.get(emp_base_name)
 
         exit_date = parse_date(exit_date_raw)
-        entry_date = parse_date(entry_date_raw) or datetime.date(2025, 12, 1)
-        visa_expiry = parse_date(visa_expiry_raw) or datetime.date(2026, 12, 31)
-        tt_reg = parse_date(tam_tru_reg_raw) or entry_date
-        tt_expiry = parse_date(tam_tru_expiry_raw) or visa_expiry
+        entry_date = parse_date(entry_date_raw)
+        visa_expiry = parse_date(visa_expiry_raw)
+        tt_reg = parse_date(tam_tru_reg_raw)
+        tt_expiry = parse_date(tam_tru_expiry_raw)
 
         # Check or Create Employee
         emp = db.query(models.ForeignEmployee).filter(models.ForeignEmployee.name_latin == clean_name).first()
@@ -277,48 +277,61 @@ def seed():
             db.flush()
             stay_count += 1
 
-        # Check if Visa already exists under this trip Stay
-        v_type_clean = str(visa_type_raw).strip() if visa_type_raw else "DN1"
-        existing_visa = (
-            db.query(models.Visa)
-            .filter(
-                models.Visa.stay_id == existing_stay.id,
-                models.Visa.visa_type == v_type_clean,
-                models.Visa.entry_date == entry_date,
-                models.Visa.expiry_date == visa_expiry,
-            )
-            .first()
+        # Only create Visa if actual visa info is present in Excel
+        has_visa_info = bool(
+            (visa_type_raw and str(visa_type_raw).strip()) or
+            entry_date or
+            visa_expiry
         )
-        if not existing_visa:
-            visa = models.Visa(
-                stay_id=existing_stay.id,
-                visa_type=v_type_clean,
-                entry_date=entry_date,
-                expiry_date=visa_expiry,
-                notes=None,
+        if has_visa_info:
+            v_type_clean = str(visa_type_raw).strip() if visa_type_raw else None
+            existing_visa = (
+                db.query(models.Visa)
+                .filter(
+                    models.Visa.stay_id == existing_stay.id,
+                    models.Visa.visa_type == v_type_clean,
+                    models.Visa.entry_date == entry_date,
+                    models.Visa.expiry_date == visa_expiry,
+                )
+                .first()
             )
-            db.add(visa)
-            visa_count += 1
+            if not existing_visa:
+                visa = models.Visa(
+                    stay_id=existing_stay.id,
+                    visa_type=v_type_clean,
+                    entry_date=entry_date,
+                    expiry_date=visa_expiry,
+                    notes=None,
+                )
+                db.add(visa)
+                visa_count += 1
 
-        # Check if TamTru already exists under this trip Stay
-        existing_tt = (
-            db.query(models.TamTru)
-            .filter(
-                models.TamTru.stay_id == existing_stay.id,
-                models.TamTru.registration_date == tt_reg,
-                models.TamTru.expiry_date == tt_expiry,
-            )
-            .first()
+        # Only create TamTru if actual tam_tru info is present in Excel
+        has_tam_tru_info = bool(
+            (tam_tru_reg_raw and str(tam_tru_reg_raw).strip()) or
+            (tam_tru_expiry_raw and str(tam_tru_expiry_raw).strip()) or
+            tt_reg or
+            tt_expiry
         )
-        if not existing_tt:
-            tam_tru = models.TamTru(
-                stay_id=existing_stay.id,
-                registration_date=tt_reg,
-                expiry_date=tt_expiry,
-                notes=None,
+        if has_tam_tru_info:
+            existing_tt = (
+                db.query(models.TamTru)
+                .filter(
+                    models.TamTru.stay_id == existing_stay.id,
+                    models.TamTru.registration_date == tt_reg,
+                    models.TamTru.expiry_date == tt_expiry,
+                )
+                .first()
             )
-            db.add(tam_tru)
-            tt_count += 1
+            if not existing_tt:
+                tam_tru = models.TamTru(
+                    stay_id=existing_stay.id,
+                    registration_date=tt_reg,
+                    expiry_date=tt_expiry,
+                    notes=None,
+                )
+                db.add(tam_tru)
+                tt_count += 1
 
     db.commit()
     db.close()

@@ -57,7 +57,7 @@ export interface Stay {
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
-  start_date: string;
+  start_date?: string | null;
   end_date?: string | null;
   notes?: string | null;
 }
@@ -69,7 +69,7 @@ export interface StayCreate {
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
-  start_date: string;
+  start_date?: string | null;
   end_date?: string | null;
   notes?: string | null;
 }
@@ -85,7 +85,7 @@ export interface ResidentInfo {
   stay_type: string;
   has_meals: boolean;
   bed_location?: string | null;
-  start_date: string;
+  start_date?: string | null;
   end_date?: string | null;
 }
 
@@ -99,30 +99,30 @@ export interface RoomOccupancy {
 export interface Visa {
   id: number;
   stay_id: number;
-  visa_type: string;
-  entry_date: string;
-  expiry_date: string;
+  visa_type?: string | null;
+  entry_date?: string | null;
+  expiry_date?: string | null;
   notes?: string | null;
 }
 
 export interface VisaCreate {
-  visa_type: string;
-  entry_date: string;
-  expiry_date: string;
+  visa_type?: string | null;
+  entry_date?: string | null;
+  expiry_date?: string | null;
   notes?: string | null;
 }
 
 export interface TamTru {
   id: number;
   stay_id: number;
-  registration_date: string;
-  expiry_date: string;
+  registration_date?: string | null;
+  expiry_date?: string | null;
   notes?: string | null;
 }
 
 export interface TamTruCreate {
-  registration_date: string;
-  expiry_date: string;
+  registration_date?: string | null;
+  expiry_date?: string | null;
   notes?: string | null;
 }
 
@@ -133,9 +133,9 @@ export interface ExpiringDocumentItem {
   employee_name: string;
   passport_number?: string | null;
   doc_type: "VISA" | "TAM_TRU";
-  type_name: string;
-  expiry_date: string;
-  days_remaining: number;
+  type_name?: string | null;
+  expiry_date?: string | null;
+  days_remaining?: number | null;
 }
 
 export interface ExpiringDocumentsResponse {

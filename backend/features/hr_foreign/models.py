@@ -56,7 +56,7 @@ class Stay(Base):
     bed_location = Column(Unicode(50), nullable=True)  # Vị trí giường (A, B, 2 giường...) từ Excel
     stay_type = Column(Unicode(50), nullable=False, default="CO_DINH")  # CO_DINH, CONG_TAC
     has_meals = Column(Boolean, nullable=False, default=True)
-    start_date = Column(Date, nullable=False)
+    start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
@@ -72,9 +72,9 @@ class Visa(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
-    visa_type = Column(Unicode(100), nullable=False)  # DN1, LD2, DT1...
-    entry_date = Column(Date, nullable=False)
-    expiry_date = Column(Date, nullable=False)
+    visa_type = Column(Unicode(100), nullable=True)  # DN1, LD2, DT1...
+    entry_date = Column(Date, nullable=True)
+    expiry_date = Column(Date, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
     stay = relationship("Stay", back_populates="visas")
@@ -85,8 +85,8 @@ class TamTru(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
-    registration_date = Column(Date, nullable=False)
-    expiry_date = Column(Date, nullable=False)
+    registration_date = Column(Date, nullable=True)
+    expiry_date = Column(Date, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
     stay = relationship("Stay", back_populates="tam_trus")
