@@ -12,16 +12,17 @@ interface EmployeeListProps {
 
 const getDays = (dateStr?: string | null): number | null => {
   if (!dateStr) return null;
-  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const targetTime = new Date(dateStr).getTime();
+  const todayTime = new Date().setHours(0, 0, 0, 0);
+  return Math.ceil((targetTime - todayTime) / (1000 * 60 * 60 * 24));
 };
 
-type DocBadgeStatus = "missing" | "expired" | "critical" | "warning" | "ok";
+type DocBadgeStatus = "missing" | "expired" | "warning" | "ok";
 
-const classifyDays = (days: number | null): DocBadgeStatus => {
+const classifyDays = (days: number | null, threshold: number): DocBadgeStatus => {
   if (days === null) return "missing";
-  if (days < 0) return "expired";
-  if (days <= 30) return "critical";
-  if (days <= 90) return "warning";
+  if (days <= 0) return "expired";
+  if (days <= threshold) return "warning";
   return "ok";
 };
 
@@ -30,43 +31,40 @@ const badgeConfig: Record<
   { label: (days: number | null) => string; cls: string }
 > = {
   missing:  { label: () => "Thiếu TT",          cls: "bg-slate-100 text-slate-500 border-slate-200" },
-  expired:  { label: () => "Hết hạn",            cls: "bg-red-100 text-red-700 border-red-200" },
-  critical: { label: (d) => `${d} ngày`,         cls: "bg-red-50 text-red-600 border-red-200" },
-  warning:  { label: (d) => `${d} ngày`,         cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
+  expired:  { label: (d) => (d !== null ? `Hết hạn (${d}d)` : "Hết hạn"), cls: "bg-red-100 text-red-800 border-red-300 font-bold" },
+  warning:  { label: (d) => `${d} ngày`,         cls: "bg-amber-100 text-amber-800 border-amber-300 font-bold" },
   ok:       { label: (d) => `${d} ngày`,         cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
 
-const DocBadge: React.FC<{ dateStr?: string | null; label?: string }> = ({ dateStr, label }) => {
+const DocBadge: React.FC<{ dateStr?: string | null; label?: string; threshold: number }> = ({ dateStr, label, threshold }) => {
   const days = getDays(dateStr);
-  const status = classifyDays(days);
-  const { label: getLabel, cls } = badgeConfig[status]!;
+  const status = classifyDays(days, threshold);
+  const { label: getLabel, cls } = badgeConfig[status];
   const text = label
     ? `${label}: ${status === "missing" ? "Thiếu TT" : status === "expired" ? "Hết hạn" : `${days} ngày`}`
     : getLabel(days);
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-semibold ${cls}`}>
       {status === "missing" && <span className="mr-1 opacity-60">–</span>}
-      {(status === "expired") && <span className="mr-1">⚠</span>}
+      {status === "expired" && <span className="mr-1">⚠</span>}
       {text}
     </span>
   );
 };
 
 // Passport: uses passport_expiry field directly
-const PassportBadge: React.FC<{ emp: ForeignEmployee }> = ({ emp }) => {
+const PassportBadge: React.FC<{ emp: ForeignEmployee; threshold: number }> = ({ emp, threshold }) => {
   if (!emp.passport_number) {
-    // No passport number at all
     return <span className="inline-flex items-center px-2 py-0.5 rounded border text-[11px] font-semibold bg-slate-100 text-slate-500 border-slate-200">Thiếu TT</span>;
   }
   if (!emp.passport_expiry) {
-    // Has number but no expiry — prompt user to fill in
     return (
       <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded border text-[11px] font-semibold bg-amber-50 text-amber-600 border-amber-200">
         <span>⚠</span> Chưa có hạn
       </span>
     );
   }
-  return <DocBadge dateStr={emp.passport_expiry} />;
+  return <DocBadge dateStr={emp.passport_expiry} threshold={threshold} />;
 };
 
 
@@ -75,6 +73,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "IN_VN" | "RETURNED">("ALL");
+  const [thresholdDays, setThresholdDays] = useState<number>(60);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<ForeignEmployee | null>(null);
   const [profileEmpId, setProfileEmpId] = useState<number | null>(null);
@@ -184,13 +183,42 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-3 text-[11px] text-slate-500">
-        <span className="font-semibold text-slate-600">Màu giấy tờ:</span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">Còn hạn</span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-yellow-50 text-yellow-700 border-yellow-200 font-semibold">≤ 90 ngày</span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-red-50 text-red-600 border-red-200 font-semibold">≤ 30 ngày / Hết hạn</span>
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-slate-100 text-slate-500 border-slate-200 font-semibold">Thiếu TT</span>
+      {/* Threshold Selector & Legend */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-bold text-slate-700">Mốc cảnh báo giấy tờ:</span>
+          <div className="flex items-center bg-white p-1 rounded-lg border border-slate-200 shadow-2xs">
+            {[15, 30, 60, 90, 120].map((days) => (
+              <button
+                key={days}
+                onClick={() => setThresholdDays(days)}
+                className={`px-2.5 py-1 text-xs font-bold rounded-md transition-all cursor-pointer ${
+                  thresholdDays === days
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {days} ngày
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 text-[11px] flex-wrap">
+          <span className="font-semibold text-slate-500">Màu giấy tờ:</span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold">
+            🟢 Còn hạn (&gt; {thresholdDays}d)
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-amber-100 text-amber-800 border-amber-300 font-semibold">
+            🟡 Sắp hết (≤ {thresholdDays}d)
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-red-100 text-red-800 border-red-300 font-semibold">
+            🔴 Đã hết hạn
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded border bg-slate-100 text-slate-500 border-slate-200 font-semibold">
+            ⚪ Thiếu TT
+          </span>
+        </div>
       </div>
 
       {/* Table */}
@@ -251,18 +279,18 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
                   {/* Hộ chiếu */}
                   <td className="px-4 py-3 text-center">
-                    <PassportBadge emp={emp} />
+                    <PassportBadge emp={emp} threshold={thresholdDays} />
                   </td>
 
                   {/* GPLĐ */}
                   <td className="px-4 py-3 text-center">
-                    <DocBadge dateStr={emp.latest_gpld_expiry} />
+                    <DocBadge dateStr={emp.latest_gpld_expiry} threshold={thresholdDays} />
                   </td>
 
                   {/* Visa */}
                   <td className="px-4 py-3 text-center">
                     <div className="flex flex-col items-center gap-0.5">
-                      <DocBadge dateStr={emp.latest_visa_expiry} />
+                      <DocBadge dateStr={emp.latest_visa_expiry} threshold={thresholdDays} />
                       {emp.latest_visa_type && (
                         <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                           {emp.latest_visa_type}
@@ -273,12 +301,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
                   {/* Tạm trú */}
                   <td className="px-4 py-3 text-center">
-                    <DocBadge dateStr={emp.latest_tamtru_expiry} />
+                    <DocBadge dateStr={emp.latest_tamtru_expiry} threshold={thresholdDays} />
                   </td>
 
                   {/* Hợp đồng */}
                   <td className="px-4 py-3 text-center">
-                    <DocBadge dateStr={emp.latest_contract_expiry} />
+                    <DocBadge dateStr={emp.latest_contract_expiry} threshold={thresholdDays} />
                   </td>
 
                   {/* Thao tác */}
