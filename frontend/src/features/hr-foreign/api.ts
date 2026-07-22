@@ -1,4 +1,7 @@
 import type {
+  Contract,
+  ContractCreate,
+  ContractUpdate,
   EmployeeHistoryResponse,
   EventDay,
   EventDayCreate,
@@ -20,8 +23,13 @@ import type {
   StayUpdate,
   TamTru,
   TamTruCreate,
+  TamTruUpdate,
   Visa,
   VisaCreate,
+  VisaUpdate,
+  WorkPermit,
+  WorkPermitCreate,
+  WorkPermitUpdate,
 } from "./types";
 
 const BASE = "/api/hr-foreign";
@@ -83,6 +91,84 @@ export async function deleteEmployee(id: number): Promise<void> {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("Failed to delete employee");
+}
+
+// --- CONTRACTS API ---
+
+export async function fetchContracts(employeeId: number): Promise<Contract[]> {
+  const res = await fetch(`${BASE}/employees/${employeeId}/contracts`);
+  if (!res.ok) throw new Error("Failed to fetch contracts");
+  return res.json() as Promise<Contract[]>;
+}
+
+export async function createContract(
+  employeeId: number,
+  payload: ContractCreate
+): Promise<Contract> {
+  const res = await fetch(`${BASE}/employees/${employeeId}/contracts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to create contract");
+  return res.json() as Promise<Contract>;
+}
+
+export async function updateContract(
+  contractId: number,
+  payload: ContractUpdate
+): Promise<Contract> {
+  const res = await fetch(`${BASE}/contracts/${contractId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update contract");
+  return res.json() as Promise<Contract>;
+}
+
+export async function deleteContract(contractId: number): Promise<void> {
+  const res = await fetch(`${BASE}/contracts/${contractId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete contract");
+}
+
+// --- WORK PERMITS API ---
+
+export async function fetchWorkPermits(employeeId: number): Promise<WorkPermit[]> {
+  const res = await fetch(`${BASE}/employees/${employeeId}/work-permits`);
+  if (!res.ok) throw new Error("Failed to fetch work permits");
+  return res.json() as Promise<WorkPermit[]>;
+}
+
+export async function createWorkPermit(
+  employeeId: number,
+  payload: WorkPermitCreate
+): Promise<WorkPermit> {
+  const res = await fetch(`${BASE}/employees/${employeeId}/work-permits`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to create work permit");
+  return res.json() as Promise<WorkPermit>;
+}
+
+export async function updateWorkPermit(
+  permitId: number,
+  payload: WorkPermitUpdate
+): Promise<WorkPermit> {
+  const res = await fetch(`${BASE}/work-permits/${permitId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update work permit");
+  return res.json() as Promise<WorkPermit>;
+}
+
+export async function deleteWorkPermit(permitId: number): Promise<void> {
+  const res = await fetch(`${BASE}/work-permits/${permitId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete work permit");
 }
 
 // --- ROOMS & OCCUPANCY API ---
@@ -197,6 +283,20 @@ export async function deleteVisa(id: number): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete visa");
 }
 
+export async function updateVisa(
+  id: number,
+  payload: VisaUpdate
+): Promise<Visa> {
+  const res = await fetch(`${BASE}/visas/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update visa");
+  return res.json() as Promise<Visa>;
+}
+
+
 // --- TAM TRU API ---
 
 export async function fetchTamTrus(stayId: number): Promise<TamTru[]> {
@@ -218,6 +318,19 @@ export async function createTamTru(stayId: number, payload: TamTruCreate): Promi
 export async function deleteTamTru(id: number): Promise<void> {
   const res = await fetch(`${BASE}/tam-trus/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete tam tru");
+}
+
+export async function updateTamTru(
+  id: number,
+  payload: TamTruUpdate
+): Promise<TamTru> {
+  const res = await fetch(`${BASE}/tam-trus/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update tam tru");
+  return res.json() as Promise<TamTru>;
 }
 
 // --- EXPIRING DOCUMENTS API ---

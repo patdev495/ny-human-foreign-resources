@@ -5,6 +5,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import (
+    Contract,
     EventDay,
     ForeignEmployee,
     MealAbsence,
@@ -13,8 +14,12 @@ from features.hr_foreign.models import (
     Stay,
     TamTru,
     Visa,
+    WorkPermit,
 )
 from features.hr_foreign.schemas import (
+    ContractCreate,
+    ContractRead,
+    ContractUpdate,
     EventDayCreate,
     ExpiringDocumentItem,
     ExpiringDocumentsResponse,
@@ -35,8 +40,13 @@ from features.hr_foreign.schemas import (
     StayUpdate,
     TamTruCreate,
     TamTruRead,
+    TamTruUpdate,
     VisaCreate,
     VisaRead,
+    VisaUpdate,
+    WorkPermitCreate,
+    WorkPermitRead,
+    WorkPermitUpdate,
 )
 
 
@@ -89,7 +99,7 @@ def get_employees(db: Session, q: str | None = None) -> list[ForeignEmployee]:
 def to_employee_read(db: Session, emp: ForeignEmployee) -> ForeignEmployeeRead:
     today = datetime.date.today()
     res = ForeignEmployeeRead.model_validate(emp)
-    
+
     active_stay = (
         db.query(Stay)
         .filter(
@@ -99,7 +109,7 @@ def to_employee_read(db: Session, emp: ForeignEmployee) -> ForeignEmployeeRead:
         .first()
     )
     has_exited = bool(emp.required_exit_date and emp.required_exit_date < today)
-    
+
     res.is_in_vietnam = bool(active_stay and not has_exited)
     if active_stay:
         if active_stay.room:
@@ -108,8 +118,48 @@ def to_employee_read(db: Session, emp: ForeignEmployee) -> ForeignEmployeeRead:
             res.current_room_number = "Khách sạn"
     else:
         res.current_room_number = None
-        
+
+    # --- Compute document expiry summaries ---
+    # Latest visa (max expiry_date across all stays)
+    all_stay_ids = [s.id for s in emp.stays]
+    if all_stay_ids:
+        latest_visa = (
+            db.query(Visa)
+            .filter(Visa.stay_id.in_(all_stay_ids), Visa.expiry_date.isnot(None))
+            .order_by(Visa.expiry_date.desc())
+            .first()
+        )
+        res.latest_visa_expiry = latest_visa.expiry_date if latest_visa else None
+        res.latest_visa_type = latest_visa.visa_type if latest_visa else None
+
+        latest_tamtru = (
+            db.query(TamTru)
+            .filter(TamTru.stay_id.in_(all_stay_ids), TamTru.expiry_date.isnot(None))
+            .order_by(TamTru.expiry_date.desc())
+            .first()
+        )
+        res.latest_tamtru_expiry = latest_tamtru.expiry_date if latest_tamtru else None
+
+    # Latest GPLĐ (max valid_to)
+    latest_wp = (
+        db.query(WorkPermit)
+        .filter(WorkPermit.employee_id == emp.id, WorkPermit.valid_to.isnot(None))
+        .order_by(WorkPermit.valid_to.desc())
+        .first()
+    )
+    res.latest_gpld_expiry = latest_wp.valid_to if latest_wp else None
+
+    # Latest contract (max end_date)
+    latest_contract = (
+        db.query(Contract)
+        .filter(Contract.employee_id == emp.id, Contract.end_date.isnot(None))
+        .order_by(Contract.end_date.desc())
+        .first()
+    )
+    res.latest_contract_expiry = latest_contract.end_date if latest_contract else None
+
     return res
+
 
 
 def get_employee_by_id(db: Session, emp_id: int) -> ForeignEmployee | None:
@@ -145,6 +195,8 @@ def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | 
     if not emp:
         return None
 
+    work_permits = get_work_permits_by_employee(db, emp_id)
+    contracts = get_contracts_by_employee(db, emp_id)
     stays = get_stays(db, employee_id=emp_id)
     stay_ids = [s.id for s in stays]
 
@@ -160,10 +212,86 @@ def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | 
 
     return EmployeeHistoryResponse(
         employee=to_employee_read(db, emp),
+        work_permits=[WorkPermitRead.model_validate(wp) for wp in work_permits],
+        contracts=[ContractRead.model_validate(c) for c in contracts],
         stays=stay_reads,
         visas=[VisaRead.model_validate(v) for v in visas],
         tam_trus=[TamTruRead.model_validate(tt) for tt in tam_trus],
     )
+
+
+# --- CONTRACTS ---
+
+def get_contracts_by_employee(db: Session, employee_id: int) -> list[Contract]:
+    return (
+        db.query(Contract)
+        .filter(Contract.employee_id == employee_id)
+        .order_by(Contract.start_date)
+        .all()
+    )
+
+
+def get_contract_by_id(db: Session, contract_id: int) -> Contract | None:
+    return db.query(Contract).filter(Contract.id == contract_id).first()
+
+
+def create_contract(db: Session, employee_id: int, payload: ContractCreate) -> Contract:
+    c = Contract(employee_id=employee_id, **payload.model_dump())
+    db.add(c)
+    db.flush()
+    db.commit()
+    db.refresh(c)
+    return c
+
+
+def update_contract(db: Session, contract: Contract, payload: ContractUpdate) -> Contract:
+    for key, value in payload.model_dump().items():
+        setattr(contract, key, value)
+    db.commit()
+    db.refresh(contract)
+    return contract
+
+
+def delete_contract(db: Session, contract: Contract) -> None:
+    db.delete(contract)
+    db.commit()
+
+
+# --- WORK PERMITS ---
+
+def get_work_permits_by_employee(db: Session, employee_id: int) -> list[WorkPermit]:
+    return (
+        db.query(WorkPermit)
+        .filter(WorkPermit.employee_id == employee_id)
+        .order_by(WorkPermit.valid_from)
+        .all()
+    )
+
+
+def get_work_permit_by_id(db: Session, permit_id: int) -> WorkPermit | None:
+    return db.query(WorkPermit).filter(WorkPermit.id == permit_id).first()
+
+
+def create_work_permit(db: Session, employee_id: int, payload: WorkPermitCreate) -> WorkPermit:
+    permit = WorkPermit(employee_id=employee_id, **payload.model_dump())
+    db.add(permit)
+    db.flush()
+    db.commit()
+    db.refresh(permit)
+    return permit
+
+
+def update_work_permit(db: Session, permit: WorkPermit, payload: WorkPermitUpdate) -> WorkPermit:
+    for key, value in payload.model_dump().items():
+        setattr(permit, key, value)
+    db.commit()
+    db.refresh(permit)
+    return permit
+
+
+def delete_work_permit(db: Session, permit: WorkPermit) -> None:
+    db.delete(permit)
+    db.commit()
 
 
 # --- ROOMS ---
@@ -319,6 +447,14 @@ def delete_visa(db: Session, visa: Visa) -> None:
     db.commit()
 
 
+def update_visa(db: Session, visa: Visa, payload: VisaUpdate) -> Visa:
+    for key, value in payload.model_dump().items():
+        setattr(visa, key, value)
+    db.commit()
+    db.refresh(visa)
+    return visa
+
+
 # --- TAM TRU ---
 
 def get_tam_trus_by_stay(db: Session, stay_id: int) -> list[TamTru]:
@@ -341,6 +477,14 @@ def create_tam_tru(db: Session, stay_id: int, payload: TamTruCreate) -> TamTru:
 def delete_tam_tru(db: Session, tam_tru: TamTru) -> None:
     db.delete(tam_tru)
     db.commit()
+
+
+def update_tam_tru(db: Session, tam_tru: TamTru, payload: TamTruUpdate) -> TamTru:
+    for key, value in payload.model_dump().items():
+        setattr(tam_tru, key, value)
+    db.commit()
+    db.refresh(tam_tru)
+    return tam_tru
 
 
 # --- EXPIRING DOCUMENTS ---

@@ -176,27 +176,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Số hộ chiếu</label>
-              <input
-                type="text"
-                value={formData.passport_number || ""}
-                onChange={(e) => setFormData({ ...formData, passport_number: e.target.value })}
-                placeholder="VD: E12345678"
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Hạn hộ chiếu</label>
-              <input
-                type="date"
-                value={formData.passport_expiry || ""}
-                onChange={(e) => setFormData({ ...formData, passport_expiry: e.target.value })}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"
-              />
-            </div>
-
-            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Số điện thoại</label>
               <input
                 type="text"

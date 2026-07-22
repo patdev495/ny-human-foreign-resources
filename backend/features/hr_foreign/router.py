@@ -8,6 +8,9 @@ from core.database import get_db
 from features.hr_foreign import models, service
 from features.hr_foreign.schemas import (
     EmployeeHistoryResponse,
+    ContractCreate,
+    ContractRead,
+    ContractUpdate,
     EventDayCreate,
     EventDayRead,
     ExpiringDocumentsResponse,
@@ -28,8 +31,13 @@ from features.hr_foreign.schemas import (
     StayUpdate,
     TamTruCreate,
     TamTruRead,
+    TamTruUpdate,
     VisaCreate,
     VisaRead,
+    VisaUpdate,
+    WorkPermitCreate,
+    WorkPermitRead,
+    WorkPermitUpdate,
 )
 
 router = APIRouter()
@@ -88,6 +96,90 @@ def delete_employee(emp_id: int, db: Session = Depends(get_db)) -> None:
     if not emp:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
     service.delete_employee(db, emp)
+
+
+# --- CONTRACTS ENDPOINTS ---
+
+@router.get("/employees/{emp_id}/contracts", response_model=list[ContractRead])
+def list_contracts(emp_id: int, db: Session = Depends(get_db)) -> list[ContractRead]:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.get_contracts_by_employee(db, emp_id)
+
+
+@router.post(
+    "/employees/{emp_id}/contracts",
+    response_model=ContractRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_contract(
+    emp_id: int, payload: ContractCreate, db: Session = Depends(get_db)
+) -> ContractRead:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.create_contract(db, emp_id, payload)
+
+
+@router.put("/contracts/{contract_id}", response_model=ContractRead)
+def update_contract(
+    contract_id: int, payload: ContractUpdate, db: Session = Depends(get_db)
+) -> ContractRead:
+    c = service.get_contract_by_id(db, contract_id)
+    if not c:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contract not found")
+    return service.update_contract(db, c, payload)
+
+
+@router.delete("/contracts/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_contract(contract_id: int, db: Session = Depends(get_db)) -> None:
+    c = service.get_contract_by_id(db, contract_id)
+    if not c:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contract not found")
+    service.delete_contract(db, c)
+
+
+# --- WORK PERMITS ENDPOINTS ---
+
+@router.get("/employees/{emp_id}/work-permits", response_model=list[WorkPermitRead])
+def list_work_permits(emp_id: int, db: Session = Depends(get_db)) -> list[WorkPermitRead]:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.get_work_permits_by_employee(db, emp_id)
+
+
+@router.post(
+    "/employees/{emp_id}/work-permits",
+    response_model=WorkPermitRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_work_permit(
+    emp_id: int, payload: WorkPermitCreate, db: Session = Depends(get_db)
+) -> WorkPermitRead:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.create_work_permit(db, emp_id, payload)
+
+
+@router.put("/work-permits/{permit_id}", response_model=WorkPermitRead)
+def update_work_permit(
+    permit_id: int, payload: WorkPermitUpdate, db: Session = Depends(get_db)
+) -> WorkPermitRead:
+    permit = service.get_work_permit_by_id(db, permit_id)
+    if not permit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Work permit not found")
+    return service.update_work_permit(db, permit, payload)
+
+
+@router.delete("/work-permits/{permit_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_work_permit(permit_id: int, db: Session = Depends(get_db)) -> None:
+    permit = service.get_work_permit_by_id(db, permit_id)
+    if not permit:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Work permit not found")
+    service.delete_work_permit(db, permit)
 
 
 # --- ROOMS & OCCUPANCY ENDPOINTS ---
@@ -233,6 +325,16 @@ def delete_visa(visa_id: int, db: Session = Depends(get_db)) -> None:
     service.delete_visa(db, visa)
 
 
+@router.put("/visas/{visa_id}", response_model=VisaRead)
+def update_visa(
+    visa_id: int, payload: VisaUpdate, db: Session = Depends(get_db)
+) -> VisaRead:
+    visa = service.get_visa_by_id(db, visa_id)
+    if not visa:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visa not found")
+    return service.update_visa(db, visa, payload)
+
+
 # --- TAM TRU ENDPOINTS ---
 
 @router.get("/stays/{stay_id}/tam-trus", response_model=list[TamTruRead])
@@ -261,6 +363,16 @@ def delete_tam_tru(tam_tru_id: int, db: Session = Depends(get_db)) -> None:
     if not tam_tru:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
     service.delete_tam_tru(db, tam_tru)
+
+
+@router.put("/tam-trus/{tam_tru_id}", response_model=TamTruRead)
+def update_tam_tru(
+    tam_tru_id: int, payload: TamTruUpdate, db: Session = Depends(get_db)
+) -> TamTruRead:
+    tam_tru = service.get_tam_tru_by_id(db, tam_tru_id)
+    if not tam_tru:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
+    return service.update_tam_tru(db, tam_tru, payload)
 
 
 # --- EXPIRING DOCUMENTS ENDPOINT ---

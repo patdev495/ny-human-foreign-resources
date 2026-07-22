@@ -6,7 +6,7 @@ import { RoomOccupancyBoard } from "./features/hr-foreign/components/RoomOccupan
 import { ExpiringDocsAlert } from "./features/hr-foreign/components/ExpiringDocsAlert";
 import { MealConfigAndEvents } from "./features/hr-foreign/components/MealConfigAndEvents";
 import { MealExpenseReport } from "./features/hr-foreign/components/MealExpenseReport";
-import { VisaTamTruSection } from "./features/hr-foreign/components/VisaTamTruSection";
+import { StayVisaTamTruSection } from "./features/hr-foreign/components/VisaTamTruSection";
 import type { Stay } from "./features/hr-foreign/types";
 
 export type NavTab =
@@ -97,7 +97,7 @@ export const App: React.FC = () => {
         {activeTab === "STAYS" && (
           <div className="space-y-6">
             <StayList onSelectStay={(stay) => setSelectedStay(stay)} />
-            {selectedStay && <VisaTamTruSection stay={selectedStay} />}
+            {selectedStay && <StayVisaTamTruSection stay={selectedStay} />}
           </div>
         )}
 

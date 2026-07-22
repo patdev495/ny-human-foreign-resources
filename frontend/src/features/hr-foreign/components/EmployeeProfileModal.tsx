@@ -1,6 +1,176 @@
-import React, { useState, useEffect } from "react";
-import type { EmployeeHistoryResponse } from "../types";
-import { fetchEmployeeHistory } from "../api";
+import React, { useState, useEffect, useCallback } from "react";
+import type { EmployeeHistoryResponse, ForeignEmployee } from "../types";
+import { fetchEmployeeHistory, updateEmployee } from "../api";
+import { WorkPermitSection } from "./WorkPermitSection";
+import { ContractSection } from "./ContractSection";
+import { VisaTamTruSection } from "./VisaTamTruSection";
+
+interface PassportSectionProps {
+  employee: ForeignEmployee;
+  onRefresh: () => void;
+}
+
+export const PassportSection: React.FC<PassportSectionProps> = ({
+  employee,
+  onRefresh,
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [passportNumber, setPassportNumber] = useState(employee.passport_number || "");
+  const [passportExpiry, setPassportExpiry] = useState(employee.passport_expiry || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPassportNumber(employee.passport_number || "");
+    setPassportExpiry(employee.passport_expiry || "");
+  }, [employee]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSaving(true);
+    try {
+      await updateEmployee(employee.id, {
+        name_latin: employee.name_latin,
+        name_chinese: employee.name_chinese || null,
+        gender: employee.gender,
+        nationality: employee.nationality || null,
+        date_of_birth: employee.date_of_birth || null,
+        phone: employee.phone || null,
+        department: employee.department || null,
+        role: employee.role || null,
+        notes: employee.notes || null,
+        required_exit_date: employee.required_exit_date || null,
+        passport_number: passportNumber.trim() || null,
+        passport_expiry: passportExpiry || null,
+      });
+      setIsEditing(false);
+      onRefresh();
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Không thể cập nhật hộ chiếu");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getDaysRemaining = (dateStr?: string | null): number | null => {
+    if (!dateStr) return null;
+    return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  };
+
+  const daysRem = getDaysRemaining(employee.passport_expiry);
+  const isExpired = daysRem !== null && daysRem < 0;
+  const isExpiringSoon = daysRem !== null && daysRem >= 0 && daysRem <= 90;
+
+  return (
+    <div className="p-5 bg-white rounded-xl border border-slate-200 space-y-4">
+      <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+        <h4 className="text-sm font-bold text-slate-800">Thông tin Hộ chiếu</h4>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="px-3 py-1.5 text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg cursor-pointer transition-colors"
+          >
+            Chỉnh sửa
+          </button>
+        )}
+      </div>
+
+      {error && (
+        <div className="p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-200">
+          {error}
+        </div>
+      )}
+
+      {isEditing ? (
+        <form onSubmit={handleSave} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-slate-600 font-medium mb-1">Số hộ chiếu</label>
+              <input
+                type="text"
+                value={passportNumber}
+                onChange={(e) => setPassportNumber(e.target.value)}
+                placeholder="VD: E12345678"
+                className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-mono"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-600 font-medium mb-1">Hạn hộ chiếu</label>
+              <input
+                type="date"
+                value={passportExpiry}
+                onChange={(e) => setPassportExpiry(e.target.value)}
+                className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white font-mono"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsEditing(false);
+                setPassportNumber(employee.passport_number || "");
+                setPassportExpiry(employee.passport_expiry || "");
+                setError(null);
+              }}
+              className="px-3 py-1.5 border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-xs cursor-pointer disabled:opacity-60 transition-colors"
+            >
+              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs py-2">
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+            <div>
+              <span className="text-slate-400 block mb-0.5">Số hộ chiếu</span>
+              <span className="font-mono font-bold text-slate-800 text-base">
+                {employee.passport_number || "Chưa thiết lập"}
+              </span>
+            </div>
+            {employee.passport_number && (
+              <span className="text-slate-300 text-2xl font-bold font-mono">#</span>
+            )}
+          </div>
+
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+            <div>
+              <span className="text-slate-400 block mb-0.5">Hạn hộ chiếu</span>
+              <span className="font-mono font-bold text-slate-800 text-base">
+                {employee.passport_expiry || "Chưa thiết lập"}
+              </span>
+            </div>
+            {employee.passport_expiry && (
+              <div className="text-right">
+                {isExpired ? (
+                  <span className="px-2.5 py-1 bg-red-100 text-red-700 rounded-full font-bold">
+                    Đã hết hạn
+                  </span>
+                ) : isExpiringSoon ? (
+                  <span className="px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-bold">
+                    Còn {daysRem} ngày
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full font-bold">
+                    Còn {daysRem} ngày
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface EmployeeProfileModalProps {
   employeeId: number | null;
@@ -15,26 +185,24 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
 }) => {
   const [data, setData] = useState<EmployeeHistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"STAYS" | "VISAS" | "TAM_TRU">("STAYS");
+  const [activeTab, setActiveTab] = useState<"HOP_DONG" | "GPLD" | "STAYS" | "VISA_TAM_TRU" | "PASSPORT">("HOP_DONG");
+
+  const loadData = useCallback(async () => {
+    if (!employeeId || !isOpen) { setData(null); return; }
+    try {
+      setLoading(true);
+      const res = await fetchEmployeeHistory(employeeId);
+      setData(res);
+    } catch (err) {
+      console.error("Failed to load employee profile history:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId, isOpen]);
 
   useEffect(() => {
-    if (!employeeId || !isOpen) {
-      setData(null);
-      return;
-    }
-    const loadData = async () => {
-      try {
-        setLoading(true);
-        const res = await fetchEmployeeHistory(employeeId);
-        setData(res);
-      } catch (err) {
-        console.error("Failed to load employee profile history:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadData();
-  }, [employeeId, isOpen]);
+  }, [loadData]);
 
   if (!isOpen) return null;
 
@@ -66,6 +234,10 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
             {/* Master Personal Details Card */}
             <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
               <div>
+                <span className="text-slate-500 block mb-0.5">Mã nhân viên:</span>
+                <span className="font-mono font-bold text-slate-700 text-sm">{data.employee.employee_code || "-"}</span>
+              </div>
+              <div>
                 <span className="text-slate-500 block mb-0.5">Tên Latin:</span>
                 <span className="font-bold text-slate-900 text-sm">{data.employee.name_latin}</span>
               </div>
@@ -81,7 +253,6 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 <span className="text-slate-500 block mb-0.5">Hạn Hộ Chiếu:</span>
                 <span className="font-mono font-medium text-slate-800">{data.employee.passport_expiry || "-"}</span>
               </div>
-
               <div>
                 <span className="text-slate-500 block mb-0.5">Quốc Tịch / Giới tính:</span>
                 <span className="font-medium text-slate-800">{data.employee.nationality} ({data.employee.gender})</span>
@@ -91,17 +262,33 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 <span className="font-medium text-slate-800">{data.employee.department || "-"} / {data.employee.role || "-"}</span>
               </div>
               <div>
-                <span className="text-slate-500 block mb-0.5">Số Điện Thoại:</span>
-                <span className="font-mono font-medium text-slate-800">{data.employee.phone || "-"}</span>
-              </div>
-              <div>
                 <span className="text-slate-500 block mb-0.5">Ngày Sinh:</span>
                 <span className="font-mono text-slate-800">{data.employee.date_of_birth || "-"}</span>
               </div>
             </div>
 
             {/* History Tabs Navigation */}
-            <div className="flex border-b border-slate-200 space-x-4">
+            <div className="flex border-b border-slate-200 space-x-4 overflow-x-auto">
+              <button
+                onClick={() => setActiveTab("HOP_DONG")}
+                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTab === "HOP_DONG"
+                    ? "border-indigo-500 text-indigo-600"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Hợp đồng ({data.contracts.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("GPLD")}
+                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTab === "GPLD"
+                    ? "border-amber-500 text-amber-600"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                GPLĐ ({data.work_permits.length})
+              </button>
               <button
                 onClick={() => setActiveTab("STAYS")}
                 className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors ${
@@ -113,26 +300,44 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 Lịch sử Lưu trú & Chỗ ở ({data.stays.length})
               </button>
               <button
-                onClick={() => setActiveTab("VISAS")}
+                onClick={() => setActiveTab("VISA_TAM_TRU")}
                 className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors ${
-                  activeTab === "VISAS"
+                  activeTab === "VISA_TAM_TRU"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                Lịch sử Thị thực Visa ({data.visas.length})
+                Visa & Tạm trú ({data.visas.length + data.tam_trus.length})
               </button>
               <button
-                onClick={() => setActiveTab("TAM_TRU")}
-                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors ${
-                  activeTab === "TAM_TRU"
+                onClick={() => setActiveTab("PASSPORT")}
+                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTab === "PASSPORT"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                Lịch sử Đăng ký Tạm trú ({data.tam_trus.length})
+                Hộ chiếu
               </button>
             </div>
+
+            {/* TAB CONTENT: HOP DONG */}
+            {activeTab === "HOP_DONG" && (
+              <ContractSection
+                employeeId={data.employee.id}
+                contracts={data.contracts}
+                onRefresh={loadData}
+              />
+            )}
+
+            {/* TAB CONTENT: GPLD */}
+            {activeTab === "GPLD" && (
+              <WorkPermitSection
+                employeeId={data.employee.id}
+                workPermits={data.work_permits}
+                onRefresh={loadData}
+              />
+            )}
 
             {/* TAB CONTENT: STAYS */}
             {activeTab === "STAYS" && (
@@ -191,54 +396,22 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               </div>
             )}
 
-            {/* TAB CONTENT: VISAS */}
-            {activeTab === "VISAS" && (
-              <div className="space-y-3">
-                {data.visas.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có lịch sử Visa nào.</p>
-                ) : (
-                  data.visas.map((v) => (
-                    <div
-                      key={v.id}
-                      className="p-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-slate-900 text-sm">Visa loại {v.visa_type}</div>
-                        <div className="text-slate-600 font-mono mt-0.5">
-                          Nhập cảnh: {v.entry_date} &bull; Hết hạn: <span className="font-semibold text-blue-700">{v.expiry_date}</span>
-                        </div>
-                        {v.notes && <div className="text-slate-400 mt-0.5">{v.notes}</div>}
-                      </div>
-                      <div className="text-slate-400 font-mono text-[11px]">Gắn với Stay #{v.stay_id}</div>
-                    </div>
-                  ))
-                )}
-              </div>
+            {/* TAB CONTENT: VISA_TAM_TRU */}
+            {activeTab === "VISA_TAM_TRU" && (
+              <VisaTamTruSection
+                stays={data.stays}
+                visas={data.visas}
+                tamTrus={data.tam_trus}
+                onRefresh={loadData}
+              />
             )}
 
-            {/* TAB CONTENT: TAM TRU */}
-            {activeTab === "TAM_TRU" && (
-              <div className="space-y-3">
-                {data.tam_trus.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có lịch sử Đăng ký tạm trú nào.</p>
-                ) : (
-                  data.tam_trus.map((tt) => (
-                    <div
-                      key={tt.id}
-                      className="p-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between text-xs"
-                    >
-                      <div>
-                        <div className="font-bold text-slate-900 text-sm">Khai báo Đăng ký Tạm trú</div>
-                        <div className="text-slate-600 font-mono mt-0.5">
-                          Ngày khai báo: {tt.registration_date} &bull; Hết hạn: <span className="font-semibold text-emerald-700">{tt.expiry_date}</span>
-                        </div>
-                        {tt.notes && <div className="text-slate-400 mt-0.5">{tt.notes}</div>}
-                      </div>
-                      <div className="text-slate-400 font-mono text-[11px]">Gắn với Stay #{tt.stay_id}</div>
-                    </div>
-                  ))
-                )}
-              </div>
+            {/* TAB CONTENT: PASSPORT */}
+            {activeTab === "PASSPORT" && (
+              <PassportSection
+                employee={data.employee}
+                onRefresh={loadData}
+              />
             )}
           </div>
         )}

@@ -2,6 +2,7 @@
 
 export interface ForeignEmployee {
   id: number;
+  employee_code?: string | null;
   name_latin: string;
   name_chinese?: string | null;
   gender: string;
@@ -16,9 +17,16 @@ export interface ForeignEmployee {
   notes?: string | null;
   is_in_vietnam?: boolean;
   current_room_number?: string | null;
+  // computed document expiry summaries
+  latest_visa_expiry?: string | null;
+  latest_visa_type?: string | null;
+  latest_gpld_expiry?: string | null;
+  latest_tamtru_expiry?: string | null;
+  latest_contract_expiry?: string | null;
 }
 
 export interface ForeignEmployeeCreate {
+  employee_code?: string | null;
   name_latin: string;
   name_chinese?: string | null;
   gender: string;
@@ -34,6 +42,46 @@ export interface ForeignEmployeeCreate {
 }
 
 export interface ForeignEmployeeUpdate extends ForeignEmployeeCreate {}
+
+export interface WorkPermit {
+  id: number;
+  employee_id: number;
+  permit_number?: string | null;
+  issue_date?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  issue_type?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkPermitCreate {
+  permit_number?: string | null;
+  issue_date?: string | null;
+  valid_from?: string | null;
+  valid_to?: string | null;
+  issue_type?: string | null;
+  notes?: string | null;
+}
+
+export interface WorkPermitUpdate extends WorkPermitCreate {}
+
+export interface Contract {
+  id: number;
+  employee_id: number;
+  contract_type?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  notes?: string | null;
+}
+
+export interface ContractCreate {
+  contract_type?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  notes?: string | null;
+}
+
+export interface ContractUpdate extends ContractCreate {}
 
 export interface Room {
   id: number;
@@ -112,6 +160,8 @@ export interface VisaCreate {
   notes?: string | null;
 }
 
+export interface VisaUpdate extends VisaCreate {}
+
 export interface TamTru {
   id: number;
   stay_id: number;
@@ -125,6 +175,8 @@ export interface TamTruCreate {
   expiry_date?: string | null;
   notes?: string | null;
 }
+
+export interface TamTruUpdate extends TamTruCreate {}
 
 export interface ExpiringDocumentItem {
   id: number;
@@ -209,6 +261,8 @@ export interface MealExpenseReportResponse {
 
 export interface EmployeeHistoryResponse {
   employee: ForeignEmployee;
+  work_permits: WorkPermit[];
+  contracts: Contract[];
   stays: Stay[];
   visas: Visa[];
   tam_trus: TamTru[];

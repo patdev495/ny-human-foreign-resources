@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 # --- FOREIGN EMPLOYEE SCHEMAS ---
 
 class ForeignEmployeeBase(BaseModel):
+    employee_code: str | None = None
     name_latin: str
     name_chinese: str | None = None
     gender: str
@@ -33,8 +34,15 @@ class ForeignEmployeeRead(ForeignEmployeeBase):
     id: int
     is_in_vietnam: bool = True
     current_room_number: str | None = None
+    # Computed document expiry summaries (for list view status badges)
+    latest_visa_expiry: datetime.date | None = None
+    latest_visa_type: str | None = None
+    latest_gpld_expiry: datetime.date | None = None
+    latest_tamtru_expiry: datetime.date | None = None
+    latest_contract_expiry: datetime.date | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
 
 
 # --- ROOM SCHEMAS ---
@@ -122,6 +130,10 @@ class VisaCreate(VisaBase):
     pass
 
 
+class VisaUpdate(VisaBase):
+    pass
+
+
 class VisaRead(VisaBase):
     id: int
     stay_id: int
@@ -141,9 +153,63 @@ class TamTruCreate(TamTruBase):
     pass
 
 
+class TamTruUpdate(TamTruBase):
+    pass
+
+
 class TamTruRead(TamTruBase):
     id: int
     stay_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- WORK PERMIT SCHEMAS ---
+
+class WorkPermitBase(BaseModel):
+    permit_number: str | None = None
+    issue_date: datetime.date | None = None
+    valid_from: datetime.date | None = None
+    valid_to: datetime.date | None = None
+    issue_type: str | None = None
+    notes: str | None = None
+
+
+class WorkPermitCreate(WorkPermitBase):
+    pass
+
+
+class WorkPermitUpdate(WorkPermitBase):
+    pass
+
+
+class WorkPermitRead(WorkPermitBase):
+    id: int
+    employee_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- CONTRACT SCHEMAS ---
+
+class ContractBase(BaseModel):
+    contract_type: str | None = None
+    start_date: datetime.date | None = None
+    end_date: datetime.date | None = None
+    notes: str | None = None
+
+
+class ContractCreate(ContractBase):
+    pass
+
+
+class ContractUpdate(ContractBase):
+    pass
+
+
+class ContractRead(ContractBase):
+    id: int
+    employee_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -253,6 +319,8 @@ class MealExpenseReportResponse(BaseModel):
 
 class EmployeeHistoryResponse(BaseModel):
     employee: ForeignEmployeeRead
+    work_permits: list[WorkPermitRead]
+    contracts: list[ContractRead]
     stays: list[StayRead]
     visas: list[VisaRead]
     tam_trus: list[TamTruRead]

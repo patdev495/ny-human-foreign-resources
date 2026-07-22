@@ -1,24 +1,36 @@
 # -*- coding: utf-8 -*-
+"""
+Seed script: Đọc 18 nhân viên từ '1. DANH SÁCH NNN 2026.xlsx' làm nguồn chính.
+             Đọc KTX file để bổ sung lịch sử chỗ ở (phòng, giường, ngày vào).
+             Xoá toàn bộ dữ liệu cũ trước khi seed.
+"""
 from __future__ import annotations
 
 import datetime
-import openpyxl
+import glob
 import os
-import sys
 import re
+import sys
+
+import openpyxl
 from sqlalchemy.orm import Session
 
-sys.stdout.reconfigure(encoding='utf-8')
+sys.stdout.reconfigure(encoding="utf-8")
 
-from core.database import SessionLocal, engine, Base
+from core.database import Base, SessionLocal, engine
 from features.hr_foreign import models, service
 
-def parse_date(val):
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def parse_date(val: object) -> datetime.date | None:
     if isinstance(val, datetime.datetime):
         return val.date()
     if isinstance(val, datetime.date):
         return val
-    if isinstance(val, int) or isinstance(val, float):
+    if isinstance(val, (int, float)):
         try:
             return datetime.date(1899, 12, 30) + datetime.timedelta(days=int(val))
         except Exception:
@@ -32,315 +44,313 @@ def parse_date(val):
                 pass
     return None
 
-ROLE_KEYWORDS = ["PHÓ TỔNG", "CHỦ TỊCH", "GIÁM ĐỐC", "QUẢN LÝ", "TRƯỞNG PHÒNG", "CON TRAI", "SẢN XUẤT", "KỸ THUẬT"]
 
-def parse_name_and_role(raw_name):
-    raw_str = str(raw_name).strip().replace('\t', '')
-    parens = re.findall(r'\((.*?)\)', raw_str)
-    clean_name = re.sub(r'\s*\([^)]*\)', '', raw_str).strip()
-    
-    if " - " in clean_name:
-        parts = clean_name.split(" - ")
-        clean_name = parts[0].strip()
+def clean_str(val: object) -> str | None:
+    if val is None:
+        return None
+    s = str(val).strip().replace("\t", "")
+    return s if s else None
 
-    extracted_role = None
-    extracted_notes = []
-    
-    for p in parens:
-        p_clean = p.strip()
-        p_upper = p_clean.upper()
-        if any(k in p_upper for k in ROLE_KEYWORDS):
-            extracted_role = p_clean
-        else:
-            if p_upper not in ["CỐ ĐỊNH"]:
-                extracted_notes.append(p_clean)
 
-    if extracted_role:
-        er_up = extracted_role.upper()
-        if "PHÓ TỔNG" in er_up:
-            extracted_role = "Ph\u00f3 T\u1ed5ng"
-        elif "CHỦ TỊCH" in er_up and "CON TRAI" in er_up:
-            extracted_role = "Con trai Ch\u1ee7 t\u1ecbch"
-        elif "CHỦ TỊCH" in er_up:
-            extracted_role = "Ch\u1ee7 t\u1ecbch"
+def find_data_file(pattern: str) -> str:
+    """Find a file in the data directory by a keyword pattern."""
+    for base in [
+        os.path.join("..", "data"),
+        os.path.join("data"),
+        os.path.join("..", "..", "data"),
+    ]:
+        files = glob.glob(os.path.join(base, "*.xlsx"))
+        matches = [f for f in files if pattern.upper() in os.path.basename(f).upper()]
+        if matches:
+            return matches[0]
+    raise FileNotFoundError(f"Cannot find data file matching '{pattern}'")
 
-    return clean_name, extracted_role, " | ".join(extracted_notes) if extracted_notes else None
 
-def build_nationality_map(xe_path):
-    nat_map = {}
-    if not os.path.exists(xe_path):
-        return nat_map
+# ---------------------------------------------------------------------------
+# Seed from DANH SÁCH NNN 2026
+# ---------------------------------------------------------------------------
 
-    try:
-        wb = openpyxl.load_workbook(xe_path, data_only=True)
-        for sheetname in ["NNN04,2026 ", "NNN05,2026", "NNN06,2026", "NNN07,2026"]:
-            if sheetname in wb.sheetnames:
-                sheet = wb[sheetname]
-                for row_idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
-                    if row_idx < 15:
-                        continue
-                    name_val = row[1]
-                    nat_val = row[3]
-                    if name_val and str(name_val).strip() and nat_val and str(nat_val).strip():
-                        clean_name = str(name_val).strip().replace('\t', '').upper()
-                        clean_nat = str(nat_val).strip()
-                        if "ĐÀI LOAN" in clean_nat.upper():
-                            clean_nat = "\u0110\u00e0\u0069\u0020\u004c\u006f\u0061\u006e"
-                        elif "TRUNG QUỐC" in clean_nat.upper():
-                            clean_nat = "\u0054\u0072\u0075\u006e\u0067\u0020\u0051\u0075\u1ed1\u0063"
+def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
+    """
+    Seed ForeignEmployee + WorkPermit + Visa from '1. DANH SÁCH NNN 2026.xlsx'.
+    Returns mapping: name_latin (upper) -> employee_id
+    """
+    print(f"  Loading DANH SACH: {path}")
+    wb = openpyxl.load_workbook(path, data_only=True)
+    sh = wb[wb.sheetnames[0]]
 
-                        base_name = clean_name.split('(')[0].strip()
-                        nat_map[clean_name] = clean_nat
-                        nat_map[base_name] = clean_nat
-    except Exception as e:
-        print(f"Warning building nationality map: {e}")
-
-    return nat_map
-
-def update_stay_notes_span(existing_notes: str | None, new_note: str | None) -> str | None:
-    if not new_note or not str(new_note).strip():
-        return existing_notes
-    note_str = str(new_note).strip()
-    if not existing_notes:
-        return note_str
-    
-    # Check if note matches "Tháng XX/YYYY"
-    m_old = re.findall(r"Th\u00e1ng\s+(\d{2}/\d{4})", existing_notes)
-    m_new = re.findall(r"Th\u00e1ng\s+(\d{2}/\d{4})", note_str)
-    if m_old and m_new:
-        first_m = m_old[0]
-        last_m = m_new[0]
-        if first_m != last_m:
-            return f"Th\u00e1ng {first_m} - Th\u00e1ng {last_m}"
-    return existing_notes
-
-def seed():
-    print("Resetting Database Tables...")
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    db: Session = SessionLocal()
-
-    ktx_path = os.path.join("..", "data", "2026 SẮP PHÒNG KTX .xlsx")
-    if not os.path.exists(ktx_path):
-        ktx_path = os.path.join("data", "2026 SẮP PHÒNG KTX .xlsx")
-
-    xe_path = os.path.join("..", "data", "2026.4 BẢNG THEO DÕI XE HY .xlsx")
-    if not os.path.exists(xe_path):
-        xe_path = os.path.join("data", "2026.4 BẢNG THEO DÕI XE HY .xlsx")
-
-    if not os.path.exists(ktx_path):
-        print(f"Error: Could not find Excel file at {ktx_path}")
-        return
-
-    print("Building nationality mapping from 2026.4 BẢNG THEO DÕI XE HY .xlsx...")
-    nat_map = build_nationality_map(xe_path)
-
-    print(f"Loading KTX Excel file: {ktx_path}")
-    wb = openpyxl.load_workbook(ktx_path, data_only=True)
-    sheet = wb["2026"]
-
-    service.seed_default_meal_prices(db)
-
-    rooms_map = {}
+    name_to_id: dict[str, int] = {}
     emp_count = 0
-    stay_count = 0
+    wp_count = 0
     visa_count = 0
-    tt_count = 0
 
-    current_room_number = None
+    for row_idx, row in enumerate(sh.iter_rows(values_only=True), start=1):
+        # Header at row 4, data from row 5
+        if row_idx < 5:
+            continue
 
-    for row_idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+        name_raw = clean_str(row[3])
+        if not name_raw:
+            continue
+
+        # --- Employee basic info ---
+        employee_code = clean_str(row[2])   # Mã số (NY...)
+        gender_raw = clean_str(row[5])
+        nationality = clean_str(row[6])
+        passport_raw = clean_str(row[7])
+        department = clean_str(row[8])       # Vị trí công việc (category)
+        role = clean_str(row[9])             # Chức danh chi tiết
+        dob = parse_date(row[4])
+
+        gender = "Nữ" if gender_raw and "nữ" in gender_raw.lower() else "Nam"
+        passport_number = str(passport_raw) if passport_raw else None
+
+        emp = models.ForeignEmployee(
+            employee_code=employee_code,
+            name_latin=name_raw,
+            gender=gender,
+            nationality=nationality,
+            date_of_birth=dob,
+            passport_number=passport_number,
+            passport_expiry=None,
+            department=department,
+            role=role,
+        )
+        db.add(emp)
+        db.flush()
+        emp_count += 1
+        name_to_id[name_raw.upper()] = emp.id
+
+        # --- Work Permit (GPLĐ) ---
+        permit_number = clean_str(row[1])    # Số GPLĐ
+        gpld_issue = parse_date(row[12])     # Ngày cấp
+        gpld_from = parse_date(row[13])      # Từ ngày
+        gpld_to = parse_date(row[14])        # Đến ngày
+        issue_type = clean_str(row[15])      # Cấp mới / Cấp lại / Gia hạn
+
+        if permit_number or gpld_from or gpld_to:
+            wp = models.WorkPermit(
+                employee_id=emp.id,
+                permit_number=permit_number,
+                issue_date=gpld_issue,
+                valid_from=gpld_from,
+                valid_to=gpld_to,
+                issue_type=issue_type,
+            )
+            db.add(wp)
+            wp_count += 1
+
+        # --- Create a default active Stay (no room) to hold Visa records ---
+        stay = models.Stay(
+            employee_id=emp.id,
+            accommodation_type="KTX",
+            room_id=None,
+            bed_location=None,
+            stay_type="CO_DINH",
+            has_meals=True,
+            start_date=gpld_from,
+            end_date=None,
+        )
+        db.add(stay)
+        db.flush()
+
+        # --- Visa lần 1 (col 17-19) ---
+        v1_type = clean_str(row[17])
+        v1_from = parse_date(row[18])
+        v1_to = parse_date(row[19])
+        if v1_type or v1_from or v1_to:
+            db.add(models.Visa(
+                stay_id=stay.id,
+                visa_type=v1_type,
+                entry_date=v1_from,
+                expiry_date=v1_to,
+            ))
+            visa_count += 1
+
+        # --- Visa lần 2 (col 20-22) ---
+        v2_type = clean_str(row[20])
+        v2_from = parse_date(row[21])
+        v2_to = parse_date(row[22])
+        if v2_type or v2_from or v2_to:
+            db.add(models.Visa(
+                stay_id=stay.id,
+                visa_type=v2_type,
+                entry_date=v2_from,
+                expiry_date=v2_to,
+            ))
+            visa_count += 1
+
+        # --- Contract (Hợp đồng) (col 10-11) ---
+        contract_start = parse_date(row[10])
+        contract_end = parse_date(row[11])
+        contract_status = clean_str(row[16])  # trạng thái / ghi chú
+        
+        contract_type = "CẤP MỚI"
+        if issue_type:
+            val_upper = issue_type.upper()
+            if "GIA HẠN" in val_upper:
+                contract_type = "GIA HẠN"
+            elif "CẤP LẠI" in val_upper or "CẤP ĐỔI" in val_upper:
+                contract_type = "CẤP LẠI"
+            elif "CHẤM DỨT" in val_upper:
+                contract_type = "CHẤM DỨT SỚM"
+            elif "CẤP MỚI" in val_upper or "MIỄN" in val_upper:
+                contract_type = "CẤP MỚI"
+            else:
+                contract_type = issue_type.upper()
+
+        if contract_start or contract_end:
+            db.add(models.Contract(
+                employee_id=emp.id,
+                contract_type=contract_type,
+                start_date=contract_start,
+                end_date=contract_end,
+                notes=contract_status,
+            ))
+
+    db.flush()
+    print(f"    => {emp_count} employees, {wp_count} work permits, {visa_count} visas seeded.")
+    return name_to_id
+
+
+# ---------------------------------------------------------------------------
+# Enrich Stay data from KTX file
+# ---------------------------------------------------------------------------
+
+def enrich_from_ktx(db: Session, ktx_path: str, name_to_id: dict[str, int]) -> None:
+    """
+    Read KTX Excel, find rows matching the 18 employees,
+    create/update Room + Stay with room & bed info.
+    """
+    print(f"  Loading KTX: {ktx_path}")
+    wb = openpyxl.load_workbook(ktx_path, data_only=True)
+    sh = wb["2026"]
+
+    rooms_map: dict[str, models.Room] = {}
+    current_room: str | None = None
+    enriched = 0
+
+    for row_idx, row in enumerate(sh.iter_rows(values_only=True), start=1):
         if row_idx < 7:
             continue
 
-        room_val = row[0]
-        bed_val = row[1]
-        name_latin = row[2]
-        name_chinese = row[3]
-        gender_raw = row[4]
-        visa_type_raw = row[6]
-        entry_date_raw = row[7]
-        visa_expiry_raw = row[8]
-        tam_tru_reg_raw = row[9]
-        tam_tru_expiry_raw = row[10]
-        exit_date_raw = row[11]
-        notes_raw = row[12]
+        # Track current room number (merged cells)
+        room_val = clean_str(row[0])
+        if room_val and re.match(r"^\d{4}$", room_val):
+            current_room = room_val
 
-        if room_val is not None and str(room_val).strip():
-            current_room_number = str(room_val).strip()
-
-        if not name_latin or not str(name_latin).strip():
+        bed_val = clean_str(row[1])
+        name_raw = clean_str(row[2])
+        if not name_raw:
             continue
 
-        raw_lat_str = str(name_latin).strip()
-        if "PHÒNG ĂN" in raw_lat_str.upper() or "PHÒNG THỂ DỤC" in raw_lat_str.upper():
+        if "PHÒNG ĂN" in name_raw.upper() or "PHÒNG THỂ DỤC" in name_raw.upper():
             continue
 
-        clean_name, extracted_role, extra_notes = parse_name_and_role(name_latin)
-        name_chi_clean = str(name_chinese).strip().replace('\t', '') if name_chinese else None
+        # Normalise name: strip extra text in parens, strip trailing space
+        name_key = re.sub(r"\s*\(.*?\)", "", name_raw).strip().upper()
 
-        # Get or create Room
-        room_obj = None
-        if current_room_number:
-            if current_room_number not in rooms_map:
-                room_db = db.query(models.Room).filter(models.Room.room_number == current_room_number).first()
+        emp_id = name_to_id.get(name_key)
+        if not emp_id:
+            # Try partial match (name may have trailing space in KTX)
+            for key, eid in name_to_id.items():
+                if key.startswith(name_key) or name_key.startswith(key):
+                    emp_id = eid
+                    break
+
+        if not emp_id:
+            continue  # Not one of our 18 people
+
+        # Ensure Room exists
+        if current_room:
+            if current_room not in rooms_map:
+                room_db = db.query(models.Room).filter(models.Room.room_number == current_room).first()
                 if not room_db:
-                    room_db = models.Room(room_number=current_room_number)
+                    room_db = models.Room(room_number=current_room)
                     db.add(room_db)
                     db.flush()
-                rooms_map[current_room_number] = room_db
-            room_obj = rooms_map[current_room_number]
-
-        gender = "Nam"
-        if gender_raw and "N\u1eff" in str(gender_raw):
-            gender = "N\u1eff"
-
-        emp_upper_name = clean_name.upper()
-        emp_base_name = emp_upper_name.split('(')[0].strip()
-        matched_nat = nat_map.get(emp_upper_name) or nat_map.get(emp_base_name)
-
-        exit_date = parse_date(exit_date_raw)
-        entry_date = parse_date(entry_date_raw)
-        visa_expiry = parse_date(visa_expiry_raw)
-        tt_reg = parse_date(tam_tru_reg_raw)
-        tt_expiry = parse_date(tam_tru_expiry_raw)
-
-        # Check or Create Employee
-        emp = db.query(models.ForeignEmployee).filter(models.ForeignEmployee.name_latin == clean_name).first()
-        if not emp:
-            emp = models.ForeignEmployee(
-                name_latin=clean_name,
-                name_chinese=name_chi_clean,
-                gender=gender,
-                nationality=matched_nat,
-                passport_number=None,
-                passport_expiry=None,
-                required_exit_date=exit_date,
-                department=None,
-                role=extracted_role,
-                notes=extra_notes or (str(notes_raw).strip() if notes_raw else None),
-            )
-            db.add(emp)
-            db.flush()
-            emp_count += 1
+                rooms_map[current_room] = room_db
+            room_obj = rooms_map[current_room]
         else:
-            if extracted_role and not emp.role:
-                emp.role = extracted_role
-            if exit_date:
-                emp.required_exit_date = exit_date
+            room_obj = None
 
-        bed_clean = str(bed_val).strip() if bed_val else None
+        entry_date = parse_date(row[7])
+        notes_raw = clean_str(row[12])
 
-        # Check if an active stay exists for the SAME trip sang Việt Nam (same entry_date, room, bed)
-        existing_stay = (
+        # Update the default Stay created from DANH SÁCH
+        active_stay = (
             db.query(models.Stay)
             .filter(
-                models.Stay.employee_id == emp.id,
-                models.Stay.accommodation_type == "KTX",
-                models.Stay.room_id == (room_obj.id if room_obj else None),
-                models.Stay.bed_location == bed_clean,
-                models.Stay.start_date == entry_date,
+                models.Stay.employee_id == emp_id,
                 models.Stay.end_date.is_(None),
             )
             .first()
         )
 
-        if existing_stay:
-            # Update month span note (e.g., "Tháng 02/2026 - Tháng 04/2026")
-            existing_stay.notes = update_stay_notes_span(existing_stay.notes, notes_raw)
-        else:
-            # If new trip entry date or room move, close previous active stay
-            previous_active_stay = (
-                db.query(models.Stay)
-                .filter(
-                    models.Stay.employee_id == emp.id,
-                    models.Stay.end_date.is_(None),
-                )
-                .first()
-            )
-            if previous_active_stay:
-                previous_active_stay.end_date = entry_date
+        if active_stay and room_obj:
+            active_stay.room_id = room_obj.id
+            active_stay.bed_location = bed_val
+            if entry_date and not active_stay.start_date:
+                active_stay.start_date = entry_date
+            if notes_raw:
+                active_stay.notes = notes_raw
+            enriched += 1
 
-            # Create new Stay
-            existing_stay = models.Stay(
-                employee_id=emp.id,
-                accommodation_type="KTX",
-                room_id=room_obj.id if room_obj else None,
-                bed_location=bed_clean,
-                stay_type="CO_DINH",
-                has_meals=True,
-                start_date=entry_date,
-                end_date=None,
-                notes=str(notes_raw).strip() if notes_raw else None,
-            )
-            db.add(existing_stay)
-            db.flush()
-            stay_count += 1
+    db.flush()
+    print(f"    => {enriched} stays enriched with room/bed data. {len(rooms_map)} rooms created.")
 
-        # Only create Visa if actual visa info is present in Excel
-        has_visa_info = bool(
-            (visa_type_raw and str(visa_type_raw).strip()) or
-            entry_date or
-            visa_expiry
-        )
-        if has_visa_info:
-            v_type_clean = str(visa_type_raw).strip() if visa_type_raw else None
-            existing_visa = (
-                db.query(models.Visa)
-                .filter(
-                    models.Visa.stay_id == existing_stay.id,
-                    models.Visa.visa_type == v_type_clean,
-                    models.Visa.entry_date == entry_date,
-                    models.Visa.expiry_date == visa_expiry,
-                )
-                .first()
-            )
-            if not existing_visa:
-                visa = models.Visa(
-                    stay_id=existing_stay.id,
-                    visa_type=v_type_clean,
-                    entry_date=entry_date,
-                    expiry_date=visa_expiry,
-                    notes=None,
-                )
-                db.add(visa)
-                visa_count += 1
 
-        # Only create TamTru if actual tam_tru info is present in Excel
-        has_tam_tru_info = bool(
-            (tam_tru_reg_raw and str(tam_tru_reg_raw).strip()) or
-            (tam_tru_expiry_raw and str(tam_tru_expiry_raw).strip()) or
-            tt_reg or
-            tt_expiry
-        )
-        if has_tam_tru_info:
-            existing_tt = (
-                db.query(models.TamTru)
-                .filter(
-                    models.TamTru.stay_id == existing_stay.id,
-                    models.TamTru.registration_date == tt_reg,
-                    models.TamTru.expiry_date == tt_expiry,
-                )
-                .first()
-            )
-            if not existing_tt:
-                tam_tru = models.TamTru(
-                    stay_id=existing_stay.id,
-                    registration_date=tt_reg,
-                    expiry_date=tt_expiry,
-                    notes=None,
-                )
-                db.add(tam_tru)
-                tt_count += 1
+# ---------------------------------------------------------------------------
+# Main seed
+# ---------------------------------------------------------------------------
 
-    db.commit()
-    db.close()
-    print("Database reset & re-seeded with UPDATED MONTH SPAN NOTES FOR CONTINUOUS STAYS!")
-    print(f"Rooms: {len(rooms_map)}")
-    print(f"Employees: {emp_count}")
-    print(f"Total Trip Stays: {stay_count}")
-    print(f"Total Visas: {visa_count}")
-    print(f"Total Tam Trus: {tt_count}")
+def seed() -> None:
+    print("=" * 60)
+    print("Resetting database...")
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+
+    db: Session = SessionLocal()
+    try:
+        # Seed default meal prices
+        service.seed_default_meal_prices(db)
+
+        # Step 1: Seed 18 employees from DANH SÁCH
+        danh_sach_path = find_data_file("DANH")
+        name_to_id = seed_from_danh_sach(db, danh_sach_path)
+
+        # Step 2: Enrich stays from KTX file
+        try:
+            ktx_path = find_data_file("KTX")
+            enrich_from_ktx(db, ktx_path, name_to_id)
+        except FileNotFoundError as e:
+            print(f"  Warning: {e} — skipping KTX enrichment.")
+
+        db.commit()
+
+        # Summary
+        emp_count = db.query(models.ForeignEmployee).count()
+        wp_count = db.query(models.WorkPermit).count()
+        stay_count = db.query(models.Stay).count()
+        room_count = db.query(models.Room).count()
+        visa_count = db.query(models.Visa).count()
+
+        print("=" * 60)
+        print("Seed complete!")
+        print(f"  Employees  : {emp_count}")
+        print(f"  WorkPermits: {wp_count}")
+        print(f"  Stays      : {stay_count}")
+        print(f"  Rooms      : {room_count}")
+        print(f"  Visas      : {visa_count}")
+        print("=" * 60)
+
+    except Exception as e:
+        db.rollback()
+        print(f"ERROR: {e}")
+        raise
+    finally:
+        db.close()
+
 
 if __name__ == "__main__":
     seed()
