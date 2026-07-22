@@ -67,12 +67,30 @@ const PassportBadge: React.FC<{ emp: ForeignEmployee; threshold: number }> = ({ 
   return <DocBadge dateStr={emp.passport_expiry} threshold={threshold} />;
 };
 
+const getEmployeeDocStatuses = (emp: ForeignEmployee, threshold: number): DocBadgeStatus[] => {
+  const passportStatus: DocBadgeStatus = !emp.passport_number
+    ? "missing"
+    : !emp.passport_expiry
+    ? "warning"
+    : classifyDays(getDays(emp.passport_expiry), threshold);
+
+  const gpldStatus = classifyDays(getDays(emp.latest_gpld_expiry), threshold);
+  const visaStatus = classifyDays(getDays(emp.latest_visa_expiry), threshold);
+  const tamtruStatus = classifyDays(getDays(emp.latest_tamtru_expiry), threshold);
+  const contractStatus = classifyDays(getDays(emp.latest_contract_expiry), threshold);
+
+  return [passportStatus, gpldStatus, visaStatus, tamtruStatus, contractStatus];
+};
+
 
 export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "IN_VN" | "RETURNED">("ALL");
+  const [docStatusFilter, setDocStatusFilter] = useState<
+    "ALL" | "HAS_EXPIRED" | "HAS_WARNING" | "HAS_MISSING" | "ALL_OK"
+  >("ALL");
   const [thresholdDays, setThresholdDays] = useState<number>(60);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmp, setEditingEmp] = useState<ForeignEmployee | null>(null);
@@ -123,8 +141,17 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const returnedCount = employees.filter((e) => !e.is_in_vietnam).length;
 
   const filtered = employees.filter((emp) => {
-    if (statusFilter === "IN_VN") return emp.is_in_vietnam;
-    if (statusFilter === "RETURNED") return !emp.is_in_vietnam;
+    if (statusFilter === "IN_VN" && !emp.is_in_vietnam) return false;
+    if (statusFilter === "RETURNED" && emp.is_in_vietnam) return false;
+
+    if (docStatusFilter !== "ALL") {
+      const statuses = getEmployeeDocStatuses(emp, thresholdDays);
+      if (docStatusFilter === "HAS_EXPIRED" && !statuses.includes("expired")) return false;
+      if (docStatusFilter === "HAS_WARNING" && !statuses.includes("warning")) return false;
+      if (docStatusFilter === "HAS_MISSING" && !statuses.includes("missing")) return false;
+      if (docStatusFilter === "ALL_OK" && !statuses.every((s) => s === "ok")) return false;
+    }
+
     return true;
   });
 
@@ -145,18 +172,33 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
       </div>
 
       {/* Search + Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative w-full sm:w-80">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo tên, hộ chiếu, bộ phận..."
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-          <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Tìm theo tên, hộ chiếu, bộ phận..."
+              className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <svg className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+
+          {/* Dropdown Lọc Giấy tờ */}
+          <select
+            value={docStatusFilter}
+            onChange={(e) => setDocStatusFilter(e.target.value as any)}
+            className="px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-2xs w-full sm:w-auto"
+          >
+            <option value="ALL">📋 Tất cả trạng thái giấy tờ</option>
+            <option value="HAS_EXPIRED">🔴 Có giấy tờ HẾT HẠN</option>
+            <option value="HAS_WARNING">🟡 Có giấy tờ SẮP HẾT HẠN (≤ {thresholdDays}d)</option>
+            <option value="HAS_MISSING">⚪ Có giấy tờ THIẾU THÔNG TIN</option>
+            <option value="ALL_OK">🟢 Tất cả giấy tờ CÒN HẠN (&gt; {thresholdDays}d)</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
