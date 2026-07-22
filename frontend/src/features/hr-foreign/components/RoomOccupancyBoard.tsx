@@ -9,6 +9,7 @@ export const RoomOccupancyBoard: React.FC = () => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
+  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
 
   // Modals
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -132,12 +133,12 @@ export const RoomOccupancyBoard: React.FC = () => {
         </div>
       )}
 
-      {/* Filter Tabs & Summary stats */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
-        <div className="flex items-center space-x-2">
+      {/* Filter Tabs & Summary stats & View Mode */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
+        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
           <button
             onClick={() => setFilterType("ALL")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               filterType === "ALL"
                 ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
                 : "text-slate-600 hover:text-slate-900"
@@ -147,7 +148,7 @@ export const RoomOccupancyBoard: React.FC = () => {
           </button>
           <button
             onClick={() => setFilterType("KTX")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               filterType === "KTX"
                 ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
                 : "text-slate-600 hover:text-slate-900"
@@ -157,7 +158,7 @@ export const RoomOccupancyBoard: React.FC = () => {
           </button>
           <button
             onClick={() => setFilterType("HOTEL")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               filterType === "HOTEL"
                 ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
                 : "text-slate-600 hover:text-slate-900"
@@ -167,17 +168,109 @@ export const RoomOccupancyBoard: React.FC = () => {
           </button>
         </div>
 
-        <div className="text-xs font-medium text-slate-600 flex items-center gap-2">
-          <span>Tổng số đang ở:</span>
-          <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 font-bold rounded-full">
-            {totalResidents} người
-          </span>
+        <div className="flex items-center gap-4 justify-between md:justify-end">
+          {/* View Mode Switch */}
+          <div className="flex items-center bg-white p-1 rounded-lg border border-slate-200 text-xs font-bold shadow-2xs">
+            <button
+              onClick={() => setViewMode("GROUPED")}
+              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                viewMode === "GROUPED"
+                  ? "bg-indigo-600 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>🏢</span> Theo Phòng
+            </button>
+            <button
+              onClick={() => setViewMode("LIST")}
+              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
+                viewMode === "LIST"
+                  ? "bg-indigo-600 text-white shadow-2xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <span>👤</span> Theo Nhân viên
+            </button>
+          </div>
+
+          <div className="text-xs font-medium text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
+            <span>Đang ở:</span>
+            <span className="px-2.5 py-0.5 bg-indigo-100 text-indigo-800 font-bold rounded-full">
+              {totalResidents} người
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Occupancy Grid */}
+      {/* Occupancy Display */}
       {loading ? (
         <div className="py-12 text-center text-slate-400">Đang tải hiện trạng chỗ ở...</div>
+      ) : viewMode === "LIST" ? (
+        /* --- 👤 LIST VIEW MODE (Theo danh sách nhân viên đang lưu trú) --- */
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              👤 Danh sách Nhân sự Đang lưu trú ({totalResidents} người)
+            </h3>
+          </div>
+
+          {totalResidents === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-400">Chưa có nhân sự nào lưu trú.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs text-slate-700">
+                <thead className="bg-slate-100/70 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3">Tên nhân sự</th>
+                    <th className="px-4 py-3">Mã NV</th>
+                    <th className="px-4 py-3">Loại chỗ ở</th>
+                    <th className="px-4 py-3">Tên cơ sở / Phòng</th>
+                    <th className="px-4 py-3 text-center">Giường / Phòng KS</th>
+                    <th className="px-4 py-3 text-center">Ngày bắt đầu</th>
+                    <th className="px-4 py-3 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredOccupancy.flatMap((item) => {
+                    const isHotel = item.accommodation_type === "HOTEL";
+                    const unitName = isHotel ? item.unit_name : `Phòng ${item.unit_name}`;
+
+                    return item.active_residents.map((res) => (
+                      <tr key={res.stay_id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-slate-900">{res.employee_name}</td>
+                        <td className="px-4 py-3 font-mono text-blue-600">{res.employee_code || "–"}</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {isHotel ? (
+                            <span className="px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                              🏨 Khách sạn
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                              🏫 KTX
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{unitName}</td>
+                        <td className="px-4 py-3 text-center text-slate-600">
+                          {res.bed_location || (isHotel ? `P.${res.hotel_room_number || "–"}` : "–")}
+                        </td>
+                        <td className="px-4 py-3 text-center text-slate-600 whitespace-nowrap">{res.start_date || "–"}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleOpenCheckOut(res, unitName)}
+                            className="px-2.5 py-1 text-[11px] font-medium text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-md transition-colors cursor-pointer"
+                          >
+                            Trả phòng
+                          </button>
+                        </td>
+                      </tr>
+                    ));
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       ) : filteredOccupancy.length === 0 ? (
         <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
           Chưa có chỗ ở nào khớp với bộ lọc.

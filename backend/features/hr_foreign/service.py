@@ -862,6 +862,7 @@ def get_daily_presence_report(
     )
 
     items: list[DailyPresenceItem] = []
+    unassigned_items: list[DailyPresenceItem] = []
     ktx_map: dict[str, list[DailyPresenceItem]] = {}
     hotel_map: dict[str, list[DailyPresenceItem]] = {}
 
@@ -877,10 +878,12 @@ def get_daily_presence_report(
         hotel_n = stay.hotel.name if stay.hotel else None
         hotel_rm = stay.hotel_room_number
 
-        if stay.accommodation_type == "KTX":
-            loc_name = f"Phòng {room_num}" if room_num else "KTX"
+        if room_num:
+            loc_name = f"Phòng {room_num}"
+        elif hotel_n:
+            loc_name = f"{hotel_n}" + (f" - P.{hotel_rm}" if hotel_rm else "")
         else:
-            loc_name = f"{hotel_n or 'Khách sạn'}" + (f" - P.{hotel_rm}" if hotel_rm else "")
+            loc_name = "Chưa xếp phòng"
 
         item = DailyPresenceItem(
             employee_id=emp.id,
@@ -903,12 +906,12 @@ def get_daily_presence_report(
         )
         items.append(item)
 
-        if stay.accommodation_type == "KTX":
-            grp_key = room_num or "KTX Khác"
-            ktx_map.setdefault(grp_key, []).append(item)
+        if stay.accommodation_type == "KTX" and room_num:
+            ktx_map.setdefault(room_num, []).append(item)
+        elif stay.accommodation_type == "HOTEL" and hotel_n:
+            hotel_map.setdefault(hotel_n, []).append(item)
         else:
-            grp_key = hotel_n or "Khách sạn Khác"
-            hotel_map.setdefault(grp_key, []).append(item)
+            unassigned_items.append(item)
 
     ktx_groups = [
         DailyPresenceGroup(group_name=k, count=len(v), items=v)
@@ -928,9 +931,11 @@ def get_daily_presence_report(
             total_in_vn=len(items),
             ktx_count=ktx_count,
             hotel_count=hotel_count,
+            unassigned_count=len(unassigned_items),
         ),
         ktx_groups=ktx_groups,
         hotel_groups=hotel_groups,
+        unassigned_items=unassigned_items,
         items=items,
     )
 

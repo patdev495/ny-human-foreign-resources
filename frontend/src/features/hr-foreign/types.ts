@@ -324,6 +324,7 @@ export interface DailyPresenceSummary {
   total_in_vn: number;
   ktx_count: number;
   hotel_count: number;
+  unassigned_count?: number;
 }
 
 export interface DailyPresenceGroup {
@@ -337,6 +338,7 @@ export interface DailyPresenceReportResponse {
   summary: DailyPresenceSummary;
   ktx_groups: DailyPresenceGroup[];
   hotel_groups: DailyPresenceGroup[];
+  unassigned_items?: DailyPresenceItem[];
   items: DailyPresenceItem[];
 }
 

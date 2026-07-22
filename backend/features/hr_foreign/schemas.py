@@ -376,6 +376,7 @@ class DailyPresenceSummary(BaseModel):
     total_in_vn: int
     ktx_count: int
     hotel_count: int
+    unassigned_count: int = 0
 
 
 class DailyPresenceGroup(BaseModel):
@@ -389,6 +390,7 @@ class DailyPresenceReportResponse(BaseModel):
     summary: DailyPresenceSummary
     ktx_groups: list[DailyPresenceGroup]
     hotel_groups: list[DailyPresenceGroup]
+    unassigned_items: list[DailyPresenceItem] = []
     items: list[DailyPresenceItem]
 
 
