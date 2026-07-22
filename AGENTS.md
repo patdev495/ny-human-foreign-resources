@@ -105,3 +105,33 @@ frontend/
 - **Always** add a new feature as a new directory under `features/` on both sides.
 - Cross-feature dependencies must go through `shared/` or `core/` — never import directly between feature directories.
 - Backend router for each feature must be registered in `main.py` under its own prefix (e.g. `/api/hr-foreign`).
+
+## Git & Commit Conventions
+
+When creating git commits, agents **must** follow **Conventional Commits** and Git Flow rules:
+
+### 1. Commit Message Format
+`<type>(<scope>): <description>`
+
+- **Allowed Types**:
+  - `feat`: New user-facing feature or enhancement
+  - `fix`: Bug fix for existing functionality
+  - `docs`: Documentation updates only
+  - `style`: Formatting, linting, whitespace changes with no logic change
+  - `refactor`: Restructuring code without changing external behavior
+  - `test`: Adding or updating test cases
+  - `chore`: Maintenance, build scripts, dependency updates
+- **Scope**: Lowercase module or feature slug (e.g. `hr_foreign`, `core`, `frontend`, `deps`).
+- **Description**: Use imperative, present tense ("add", "fix", "update"), keep short and lowercase.
+
+### 2. Git Flow Rules
+- **Branches**:
+  - `main` / `master`: Production releases.
+  - `develop`: Integration branch for incoming features.
+  - `feature/<name>`: New feature work.
+  - `fix/<name>` or `hotfix/<name>`: Bug fixes.
+- **Commit Guidelines**:
+  - Atomic commits: group related changes into logical commits.
+  - Never stage or commit temporary files, logs, local data (`*.db`, `uploads/`), or `.env` files.
+  - Always run tests (`uv run pytest`) and verify type safety before committing.
+
