@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+from features.hr_foreign.status_engine import (
+    evaluate_employee_statuses,
+    get_expiring_documents as status_engine_get_expiring_documents,
+)
+
 import datetime
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -104,69 +109,14 @@ def get_employees(db: Session, q: str | None = None) -> list[ForeignEmployee]:
     return query.all()
 
 
+def get_employees_read(db: Session, q: str | None = None) -> list[ForeignEmployeeRead]:
+    employees = get_employees(db, q=q)
+    return evaluate_employee_statuses(db, employees)
+
+
 def to_employee_read(db: Session, emp: ForeignEmployee) -> ForeignEmployeeRead:
-    today = datetime.date.today()
-    res = ForeignEmployeeRead.model_validate(emp)
-
-    active_stay = (
-        db.query(Stay)
-        .filter(
-            Stay.employee_id == emp.id,
-            or_(Stay.end_date.is_(None), Stay.end_date >= today),
-        )
-        .first()
-    )
-    has_exited = bool(emp.required_exit_date and emp.required_exit_date < today)
-
-    res.is_in_vietnam = bool(active_stay and not has_exited)
-    if active_stay:
-        if active_stay.room:
-            res.current_room_number = active_stay.room.room_number
-        elif active_stay.accommodation_type == "HOTEL":
-            res.current_room_number = "Khách sạn"
-    else:
-        res.current_room_number = None
-
-    # --- Compute document expiry summaries ---
-    # Latest visa (max expiry_date across all stays)
-    all_stay_ids = [s.id for s in emp.stays]
-    if all_stay_ids:
-        latest_visa = (
-            db.query(Visa)
-            .filter(Visa.stay_id.in_(all_stay_ids), Visa.expiry_date.isnot(None))
-            .order_by(Visa.expiry_date.desc())
-            .first()
-        )
-        res.latest_visa_expiry = latest_visa.expiry_date if latest_visa else None
-        res.latest_visa_type = latest_visa.visa_type if latest_visa else None
-
-        latest_tamtru = (
-            db.query(TamTru)
-            .filter(TamTru.stay_id.in_(all_stay_ids), TamTru.expiry_date.isnot(None))
-            .order_by(TamTru.expiry_date.desc())
-            .first()
-        )
-        res.latest_tamtru_expiry = latest_tamtru.expiry_date if latest_tamtru else None
-
-    # Latest GPLĐ (max valid_to)
-    latest_wp = (
-        db.query(WorkPermit)
-        .filter(WorkPermit.employee_id == emp.id, WorkPermit.valid_to.isnot(None))
-        .order_by(WorkPermit.valid_to.desc())
-        .first()
-    )
-    res.latest_gpld_expiry = latest_wp.valid_to if latest_wp else None
-
-    # Latest contract (max end_date)
-    latest_contract = (
-        db.query(Contract)
-        .filter(Contract.employee_id == emp.id, Contract.end_date.isnot(None))
-        .order_by(Contract.end_date.desc())
-        .first()
-    )
-    res.latest_contract_expiry = latest_contract.end_date if latest_contract else None
-
-    return res
+    results = evaluate_employee_statuses(db, [emp])
+    return results[0]
 
 
 
@@ -588,56 +538,7 @@ def update_tam_tru(db: Session, tam_tru: TamTru, payload: TamTruUpdate) -> TamTr
 # --- EXPIRING DOCUMENTS ---
 
 def get_expiring_documents(db: Session, days: int = 30) -> ExpiringDocumentsResponse:
-    today = datetime.date.today()
-    cutoff_date = today + datetime.timedelta(days=days)
-
-    visas = db.query(Visa).filter(Visa.expiry_date >= today, Visa.expiry_date <= cutoff_date).all()
-    tam_trus = db.query(TamTru).filter(TamTru.expiry_date >= today, TamTru.expiry_date <= cutoff_date).all()
-
-    expiring_visas: list[ExpiringDocumentItem] = []
-    for v in visas:
-        stay = v.stay
-        emp = stay.employee if stay else None
-        if emp:
-            days_rem = (v.expiry_date - today).days
-            expiring_visas.append(
-                ExpiringDocumentItem(
-                    id=v.id,
-                    stay_id=v.stay_id,
-                    employee_id=emp.id,
-                    employee_name=emp.name_latin,
-                    passport_number=emp.passport_number,
-                    doc_type="VISA",
-                    type_name=v.visa_type,
-                    expiry_date=v.expiry_date,
-                    days_remaining=days_rem,
-                )
-            )
-
-    expiring_tam_trus: list[ExpiringDocumentItem] = []
-    for tt in tam_trus:
-        stay = tt.stay
-        emp = stay.employee if stay else None
-        if emp:
-            days_rem = (tt.expiry_date - today).days
-            expiring_tam_trus.append(
-                ExpiringDocumentItem(
-                    id=tt.id,
-                    stay_id=tt.stay_id,
-                    employee_id=emp.id,
-                    employee_name=emp.name_latin,
-                    passport_number=emp.passport_number,
-                    doc_type="TAM_TRU",
-                    type_name="Đăng ký Tạm trú",
-                    expiry_date=tt.expiry_date,
-                    days_remaining=days_rem,
-                )
-            )
-
-    return ExpiringDocumentsResponse(
-        expiring_visas=expiring_visas,
-        expiring_tam_trus=expiring_tam_trus,
-    )
+    return status_engine_get_expiring_documents(db, days=days)
 
 
 # --- MEAL ABSENCES ---

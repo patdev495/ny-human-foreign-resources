@@ -80,6 +80,17 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
       setError("Vui lòng chọn nhân sự.");
       return;
     }
+
+    if (!editingStay) {
+      const sel = employees.find((emp) => emp.id === Number(employeeId));
+      if (sel && sel.current_room_number) {
+        setError(
+          `Nhân sự ${sel.name_latin} hiện đang có chỗ ở (${sel.current_room_number}). Vui lòng làm thủ tục Trả phòng cũ trước khi thêm mới.`
+        );
+        return;
+      }
+    }
+
     if (!startDate) {
       setError("Vui lòng chọn ngày bắt đầu.");
       return;
@@ -258,15 +269,41 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
                 <select
                   disabled={!!editingStay}
                   value={employeeId}
-                  onChange={(e) => setEmployeeId(Number(e.target.value))}
+                  onChange={(e) => {
+                    setEmployeeId(Number(e.target.value));
+                    setError(null);
+                  }}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
                 >
-                  {employees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name_latin} ({emp.passport_number}) - {emp.department || "N/A"}
-                    </option>
-                  ))}
+                  {employees.map((emp) => {
+                    const isOccupied = Boolean(emp.current_room_number);
+                    return (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name_latin} ({emp.passport_number}) - {emp.department || "N/A"}
+                        {isOccupied ? ` ⚠️ [Đang ở: ${emp.current_room_number}]` : ""}
+                      </option>
+                    );
+                  })}
                 </select>
+                {!editingStay && (() => {
+                  const sel = employees.find((e) => e.id === Number(employeeId));
+                  const busy = Boolean(sel && sel.current_room_number);
+                  if (!sel || !busy) return null;
+                  return (
+                    <div className="mt-2 p-3 bg-amber-50 border border-amber-300 rounded-lg text-amber-900 text-xs space-y-1">
+                      <div className="font-bold flex items-center gap-1 text-amber-800">
+                        <span>⚠️ Cảnh báo: Nhân sự này đang có chỗ ở!</span>
+                      </div>
+                      <p>
+                        Nhân sự <strong>{sel.name_latin}</strong> hiện đang có chỗ ở tại:{" "}
+                        <strong>{sel.current_room_number}</strong>.
+                      </p>
+                      <p className="text-red-700 font-bold">
+                        ⛔ Vui lòng làm thủ tục Trả phòng cũ trước khi thêm mới.
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -131,21 +131,41 @@ export const DailyPresenceReport: React.FC = () => {
       {data && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total present */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-5 shadow-md flex items-center justify-between">
+          <div
+            onClick={() => setActiveSubTab("ALL")}
+            title="Bấm để xem tất cả nhân sự đang có mặt tại VN"
+            className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 bg-white rounded-2xl p-5 border flex items-center justify-between select-none ${
+              activeSubTab === "ALL"
+                ? "border-blue-500 ring-2 ring-blue-500 bg-blue-50/30 shadow-xs"
+                : "border-slate-200 hover:border-blue-300"
+            }`}
+          >
             <div>
-              <p className="text-xs font-medium text-blue-100 uppercase tracking-wider">
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Đang có mặt tại VN
               </p>
-              <h3 className="text-3xl font-extrabold mt-1">{data.summary.total_in_vn}</h3>
-              <p className="text-[11px] text-blue-200 mt-1">Ngày: {data.target_date}</p>
+              <h3 className="text-3xl font-extrabold text-slate-800 mt-1">
+                {data.summary.total_in_vn}
+              </h3>
+              <p className="text-[11px] text-blue-600 font-semibold mt-1">
+                Ngày: {data.target_date}
+              </p>
             </div>
-            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-2xl font-black backdrop-blur-xs">
+            <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-2xl font-black border border-blue-100">
               🇻🇳
             </div>
           </div>
 
           {/* KTX Count */}
-          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 flex items-center justify-between">
+          <div
+            onClick={() => setActiveSubTab("KTX")}
+            title="Bấm để lọc nhân sự ở Ký túc xá"
+            className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 bg-white rounded-2xl p-5 border flex items-center justify-between select-none ${
+              activeSubTab === "KTX"
+                ? "border-emerald-500 ring-2 ring-emerald-500 bg-emerald-50/30 shadow-xs"
+                : "border-slate-200 hover:border-emerald-300"
+            }`}
+          >
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Tại Ký túc xá (KTX)
@@ -163,7 +183,15 @@ export const DailyPresenceReport: React.FC = () => {
           </div>
 
           {/* Hotel Count */}
-          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 flex items-center justify-between">
+          <div
+            onClick={() => setActiveSubTab("HOTEL")}
+            title="Bấm để lọc nhân sự ở Khách sạn"
+            className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 bg-white rounded-2xl p-5 border flex items-center justify-between select-none ${
+              activeSubTab === "HOTEL"
+                ? "border-amber-500 ring-2 ring-amber-500 bg-amber-50/30 shadow-xs"
+                : "border-slate-200 hover:border-amber-300"
+            }`}
+          >
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Tại Khách sạn
@@ -181,7 +209,15 @@ export const DailyPresenceReport: React.FC = () => {
           </div>
 
           {/* Unassigned Count */}
-          <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 flex items-center justify-between">
+          <div
+            onClick={() => setActiveSubTab("UNASSIGNED")}
+            title="Bấm để lọc nhân sự chưa được xếp chỗ ở"
+            className={`cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5 bg-white rounded-2xl p-5 border flex items-center justify-between select-none ${
+              activeSubTab === "UNASSIGNED"
+                ? "border-rose-500 ring-2 ring-rose-500 bg-rose-50/30 shadow-xs"
+                : "border-slate-200 hover:border-rose-300"
+            }`}
+          >
             <div>
               <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Chưa xếp chỗ ở

@@ -52,6 +52,28 @@ def clean_str(val: object) -> str | None:
     return s if s else None
 
 
+def parse_visa_info(raw_str: str | None) -> tuple[str, str | None]:
+    if not raw_str:
+        return "DN1", None
+    u = raw_str.strip().upper()
+    notes = raw_str.strip()
+    if any(k in u for k in ["THĂM THÂN", "TT", "TẠM TRÚ"]):
+        return "TT", notes
+    elif "LĐ" in u or "LD" in u:
+        return ("LĐ1" if "1" in u else "LĐ2"), notes
+    elif "ĐT" in u or "DT" in u:
+        code = "ĐT1" if "1" in u else ("ĐT2" if "2" in u else ("ĐT3" if "3" in u else "ĐT4"))
+        return code, notes
+    elif "DN" in u:
+        code = "DN2" if "2" in u else "DN1"
+        return code, (notes if notes != code else None)
+    elif "DL" in u:
+        return "DL", (notes if notes != "DL" else None)
+    elif "EV" in u:
+        return "EV", (notes if notes != "EV" else None)
+    return "DN1", notes
+
+
 def find_data_file(pattern: str) -> str:
     """Find a file in the data directory by a keyword pattern."""
     for base in [
@@ -159,11 +181,13 @@ def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
         v1_from = parse_date(row[18])
         v1_to = parse_date(row[19])
         if v1_type or v1_from or v1_to:
+            c1, n1 = parse_visa_info(v1_type)
             db.add(models.Visa(
                 stay_id=stay.id,
-                visa_type=v1_type,
+                visa_type=c1,
                 entry_date=v1_from,
                 expiry_date=v1_to,
+                notes=n1,
             ))
             visa_count += 1
 
@@ -172,11 +196,13 @@ def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
         v2_from = parse_date(row[21])
         v2_to = parse_date(row[22])
         if v2_type or v2_from or v2_to:
+            c2, n2 = parse_visa_info(v2_type)
             db.add(models.Visa(
                 stay_id=stay.id,
-                visa_type=v2_type,
+                visa_type=c2,
                 entry_date=v2_from,
                 expiry_date=v2_to,
+                notes=n2,
             ))
             visa_count += 1
 

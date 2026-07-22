@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { ForeignEmployee, ForeignEmployeeCreate } from "../types";
+import { getVisaLabel } from "../types";
 import { fetchEmployees, createEmployee, updateEmployee, deleteEmployee } from "../api";
 import { EmployeeModal } from "./EmployeeModal";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
@@ -334,8 +335,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
                     <div className="flex flex-col items-center gap-0.5">
                       <DocBadge dateStr={emp.latest_visa_expiry} threshold={thresholdDays} />
                       {emp.latest_visa_type && (
-                        <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                          {emp.latest_visa_type}
+                        <span
+                          title={getVisaLabel(emp.latest_visa_type)}
+                          className="text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 whitespace-nowrap"
+                        >
+                          {getVisaLabel(emp.latest_visa_type)}
                         </span>
                       )}
                     </div>

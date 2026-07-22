@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     app_name: str = "NY Human Resources System"
     app_version: str = "0.1.0"
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = ["*"]
 
     # MSSQL via ODBC Driver 18
     db_server: str

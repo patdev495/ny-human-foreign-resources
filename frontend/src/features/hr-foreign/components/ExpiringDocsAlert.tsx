@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { ExpiringDocumentsResponse } from "../types";
+import { getVisaLabel } from "../types";
 import { fetchExpiringDocuments } from "../api";
 
 export const ExpiringDocsAlert: React.FC = () => {
@@ -24,14 +25,17 @@ export const ExpiringDocsAlert: React.FC = () => {
   }, [days]);
 
   const totalExpiring =
-    (data?.expiring_visas.length || 0) + (data?.expiring_tam_trus.length || 0);
+    (data?.expiring_visas.length || 0) +
+    (data?.expiring_tam_trus.length || 0) +
+    (data?.expiring_gpl_ds?.length || 0) +
+    (data?.expiring_contracts?.length || 0);
 
   return (
     <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
         <div>
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            Cảnh báo Giấy tờ sắp Hết hạn (Visa / Tạm trú)
+            Cảnh báo Giấy tờ sắp Hết hạn (Visa / Tạm trú / GPLĐ / Hợp đồng)
             {totalExpiring > 0 && (
               <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">
                 {totalExpiring} cần lưu ý
@@ -62,21 +66,21 @@ export const ExpiringDocsAlert: React.FC = () => {
         <div className="py-8 text-center text-slate-400">Đang kiểm tra danh sách hết hạn...</div>
       ) : totalExpiring === 0 ? (
         <div className="py-8 text-center bg-emerald-50/50 rounded-xl border border-emerald-100 text-emerald-700 text-sm font-medium">
-           Tất cả Visa và Tạm trú của nhân sự đều còn hạn dài trong vòng {days} ngày tới.
+          Tất cả giấy tờ pháp lý của nhân sự đều còn hạn dài trong vòng {days} ngày tới.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* EXPIRING VISAS */}
           <div className="space-y-3">
             <h3 className="font-semibold text-slate-800 text-sm flex items-center justify-between">
-              <span>Visa sắp hết hạn ({data?.expiring_visas.length})</span>
+              <span>Visa sắp hết hạn ({data?.expiring_visas.length || 0})</span>
             </h3>
             {data?.expiring_visas.length === 0 ? (
               <p className="text-xs text-slate-400 italic">Không có Visa nào sắp hết hạn.</p>
             ) : (
               data?.expiring_visas.map((item) => (
                 <div
-                  key={item.id}
+                  key={`visa-${item.id}`}
                   className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/40 flex items-center justify-between"
                 >
                   <div>
@@ -84,7 +88,7 @@ export const ExpiringDocsAlert: React.FC = () => {
                       {item.employee_name} {item.passport_number ? `(${item.passport_number})` : ""}
                     </div>
                     <div className="text-xs text-slate-600 mt-0.5">
-                      Visa loại: <span className="font-semibold">{item.type_name}</span> &bull; Ngày hết hạn:{" "}
+                      Visa loại: <span className="font-semibold">{getVisaLabel(item.type_name)}</span> &bull; Hết hạn:{" "}
                       <span className="font-mono font-semibold text-amber-900">{item.expiry_date}</span>
                     </div>
                   </div>
@@ -101,14 +105,14 @@ export const ExpiringDocsAlert: React.FC = () => {
           {/* EXPIRING TAM TRUS */}
           <div className="space-y-3">
             <h3 className="font-semibold text-slate-800 text-sm flex items-center justify-between">
-              <span>Đăng ký Tạm trú sắp hết hạn ({data?.expiring_tam_trus.length})</span>
+              <span>Tạm trú sắp hết hạn ({data?.expiring_tam_trus.length || 0})</span>
             </h3>
             {data?.expiring_tam_trus.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">Không có Đăng ký tạm trú nào sắp hết hạn.</p>
+              <p className="text-xs text-slate-400 italic">Không có Tạm trú nào sắp hết hạn.</p>
             ) : (
               data?.expiring_tam_trus.map((item) => (
                 <div
-                  key={item.id}
+                  key={`tamtru-${item.id}`}
                   className="p-3.5 rounded-xl border border-rose-200 bg-rose-50/40 flex items-center justify-between"
                 >
                   <div>
@@ -116,12 +120,76 @@ export const ExpiringDocsAlert: React.FC = () => {
                       {item.employee_name} {item.passport_number ? `(${item.passport_number})` : ""}
                     </div>
                     <div className="text-xs text-slate-600 mt-0.5">
-                      Giấy tờ: <span className="font-semibold">{item.type_name}</span> &bull; Ngày hết hạn:{" "}
+                      Giấy tờ: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
                       <span className="font-mono font-semibold text-rose-900">{item.expiry_date}</span>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className="px-2 py-1 bg-rose-100 text-rose-800 font-bold text-xs rounded-lg">
+                      Còn {item.days_remaining} ngày
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* EXPIRING WORK PERMITS (GPLĐ) */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-slate-800 text-sm flex items-center justify-between">
+              <span>Giấy phép lao động (GPLĐ) ({data?.expiring_gpl_ds?.length || 0})</span>
+            </h3>
+            {!data?.expiring_gpl_ds || data.expiring_gpl_ds.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Không có GPLĐ nào sắp hết hạn.</p>
+            ) : (
+              data.expiring_gpl_ds.map((item) => (
+                <div
+                  key={`gpld-${item.id}`}
+                  className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/40 flex items-center justify-between"
+                >
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">
+                      {item.employee_name} {item.passport_number ? `(${item.passport_number})` : ""}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-0.5">
+                      Số GPLĐ: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
+                      <span className="font-mono font-semibold text-blue-900">{item.expiry_date}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 font-bold text-xs rounded-lg">
+                      Còn {item.days_remaining} ngày
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* EXPIRING CONTRACTS */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-slate-800 text-sm flex items-center justify-between">
+              <span>Hợp đồng lao động ({data?.expiring_contracts?.length || 0})</span>
+            </h3>
+            {!data?.expiring_contracts || data.expiring_contracts.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Không có Hợp đồng nào sắp hết hạn.</p>
+            ) : (
+              data.expiring_contracts.map((item) => (
+                <div
+                  key={`contract-${item.id}`}
+                  className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/40 flex items-center justify-between"
+                >
+                  <div>
+                    <div className="font-semibold text-slate-900 text-sm">
+                      {item.employee_name} {item.passport_number ? `(${item.passport_number})` : ""}
+                    </div>
+                    <div className="text-xs text-slate-600 mt-0.5">
+                      Hợp đồng: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
+                      <span className="font-mono font-semibold text-purple-900">{item.expiry_date}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="px-2 py-1 bg-purple-100 text-purple-800 font-bold text-xs rounded-lg">
                       Còn {item.days_remaining} ngày
                     </span>
                   </div>

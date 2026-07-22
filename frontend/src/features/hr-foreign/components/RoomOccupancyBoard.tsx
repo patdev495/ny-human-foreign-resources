@@ -10,6 +10,7 @@ export const RoomOccupancyBoard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
   const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Modals
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -49,15 +50,64 @@ export const RoomOccupancyBoard: React.FC = () => {
     setIsCheckOutOpen(true);
   };
 
-  const unassignedEmployees = employees.filter(
-    (emp) => emp.is_in_vietnam && !emp.current_room_number
-  );
-
-  const filteredOccupancy = occupancy.filter((item) => {
-    if (filterType === "KTX") return item.accommodation_type === "KTX";
-    if (filterType === "HOTEL") return item.accommodation_type === "HOTEL";
-    return true;
+  const unassignedEmployees = employees.filter((emp) => {
+    if (!emp.is_in_vietnam || emp.current_room_number) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (emp.name_latin && emp.name_latin.toLowerCase().includes(q)) ||
+      (emp.name_chinese && emp.name_chinese.toLowerCase().includes(q)) ||
+      (emp.employee_code && emp.employee_code.toLowerCase().includes(q)) ||
+      (emp.department && emp.department.toLowerCase().includes(q)) ||
+      (emp.passport_number && emp.passport_number.toLowerCase().includes(q))
+    );
   });
+
+  const filteredOccupancy = occupancy
+    .filter((item) => {
+      if (filterType === "KTX") return item.accommodation_type === "KTX";
+      if (filterType === "HOTEL") return item.accommodation_type === "HOTEL";
+      return true;
+    })
+    .map((item) => {
+      if (!searchQuery.trim()) return item;
+      const q = searchQuery.toLowerCase();
+      const isHotel = item.accommodation_type === "HOTEL";
+      const unitName = isHotel ? item.unit_name : `Phòng ${item.unit_name}`;
+      const unitMatches =
+        unitName.toLowerCase().includes(q) ||
+        (item.address && item.address.toLowerCase().includes(q)) ||
+        (item.notes && item.notes.toLowerCase().includes(q));
+
+      const matchingResidents = item.active_residents.filter((res) => {
+        if (unitMatches) return true;
+        const emp = employees.find((e) => e.id === res.employee_id);
+        return (
+          (res.name_latin && res.name_latin.toLowerCase().includes(q)) ||
+          (res.name_chinese && res.name_chinese.toLowerCase().includes(q)) ||
+          (res.passport_number && res.passport_number.toLowerCase().includes(q)) ||
+          (emp?.employee_code && emp.employee_code.toLowerCase().includes(q)) ||
+          (res.bed_location && res.bed_location.toLowerCase().includes(q))
+        );
+      });
+
+      return {
+        ...item,
+        active_residents: matchingResidents,
+      };
+    })
+    .filter((item) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      const isHotel = item.accommodation_type === "HOTEL";
+      const unitName = isHotel ? item.unit_name : `Phòng ${item.unit_name}`;
+      const unitMatches =
+        unitName.toLowerCase().includes(q) ||
+        (item.address && item.address.toLowerCase().includes(q)) ||
+        (item.notes && item.notes.toLowerCase().includes(q));
+
+      return unitMatches || item.active_residents.length > 0;
+    });
 
   const totalResidents = filteredOccupancy.reduce(
     (sum, r) => sum + r.active_residents.length,
@@ -168,7 +218,7 @@ export const RoomOccupancyBoard: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-4 justify-between md:justify-end">
+        <div className="flex items-center gap-3 justify-between md:justify-end flex-wrap">
           {/* View Mode Switch */}
           <div className="flex items-center bg-white p-1 rounded-lg border border-slate-200 text-xs font-bold shadow-2xs">
             <button
@@ -191,6 +241,26 @@ export const RoomOccupancyBoard: React.FC = () => {
             >
               <span>👤</span> Theo Nhân viên
             </button>
+          </div>
+
+          {/* Search input box */}
+          <div className="relative w-44 sm:w-60">
+            <input
+              type="text"
+              placeholder="Tìm tên, mã, phòng..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-7 py-1.5 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all shadow-2xs"
+            />
+            <span className="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1.5 text-xs text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <div className="text-xs font-medium text-slate-600 flex items-center gap-1.5 whitespace-nowrap">
@@ -235,36 +305,39 @@ export const RoomOccupancyBoard: React.FC = () => {
                     const isHotel = item.accommodation_type === "HOTEL";
                     const unitName = isHotel ? item.unit_name : `Phòng ${item.unit_name}`;
 
-                    return item.active_residents.map((res) => (
-                      <tr key={res.stay_id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 font-bold text-slate-900">{res.employee_name}</td>
-                        <td className="px-4 py-3 font-mono text-blue-600">{res.employee_code || "–"}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {isHotel ? (
-                            <span className="px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                              🏨 Khách sạn
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
-                              🏫 KTX
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{unitName}</td>
-                        <td className="px-4 py-3 text-center text-slate-600">
-                          {res.bed_location || (isHotel ? `P.${res.hotel_room_number || "–"}` : "–")}
-                        </td>
-                        <td className="px-4 py-3 text-center text-slate-600 whitespace-nowrap">{res.start_date || "–"}</td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleOpenCheckOut(res, unitName)}
-                            className="px-2.5 py-1 text-[11px] font-medium text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-md transition-colors cursor-pointer"
-                          >
-                            Trả phòng
-                          </button>
-                        </td>
-                      </tr>
-                    ));
+                    return item.active_residents.map((res) => {
+                      const emp = employees.find((e) => e.id === res.employee_id);
+                      return (
+                        <tr key={res.stay_id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3 font-bold text-slate-900">{res.name_latin}</td>
+                          <td className="px-4 py-3 font-mono text-blue-600">{emp?.employee_code || "–"}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {isHotel ? (
+                              <span className="px-2 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                🏨 Khách sạn
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                🏫 KTX
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-slate-900">{unitName}</td>
+                          <td className="px-4 py-3 text-center text-slate-600">
+                            {res.bed_location || "–"}
+                          </td>
+                          <td className="px-4 py-3 text-center text-slate-600 whitespace-nowrap">{res.start_date || "–"}</td>
+                          <td className="px-4 py-3 text-right">
+                            <button
+                              onClick={() => handleOpenCheckOut(res, unitName)}
+                              className="px-2.5 py-1 text-[11px] font-medium text-rose-600 hover:text-white hover:bg-rose-600 border border-rose-200 rounded-md transition-colors cursor-pointer"
+                            >
+                              Trả phòng
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    });
                   })}
                 </tbody>
               </table>

@@ -95,10 +95,23 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     }
   };
 
+  const selectedEmployee = employees.find(
+    (emp) => emp.id === Number(selectedEmployeeId)
+  );
+  const hasActiveAccommodation = Boolean(
+    selectedEmployee && selectedEmployee.current_room_number
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEmployeeId) {
       setError("Vui lòng chọn Nhân viên nước ngoài");
+      return;
+    }
+    if (selectedEmployee && hasActiveAccommodation) {
+      setError(
+        `Nhân sự ${selectedEmployee.name_latin} hiện đang có chỗ ở (${selectedEmployee.current_room_number}). Vui lòng làm thủ tục Trả phòng cũ trước khi xếp mới.`
+      );
       return;
     }
     if (accommodationType === "KTX" && !roomId) {
@@ -233,19 +246,48 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
               <select
                 required
                 value={selectedEmployeeId}
-                onChange={(e) =>
-                  setSelectedEmployeeId(e.target.value ? Number(e.target.value) : "")
-                }
-                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+                onChange={(e) => {
+                  setSelectedEmployeeId(e.target.value ? Number(e.target.value) : "");
+                  setError(null);
+                }}
+                className={`w-full px-3.5 py-2 border rounded-lg text-sm outline-none bg-white ${
+                  hasActiveAccommodation
+                    ? "border-amber-400 bg-amber-50/20 focus:ring-2 focus:ring-amber-500"
+                    : "border-slate-300 focus:ring-2 focus:ring-indigo-500"
+                }`}
               >
                 <option value="">-- Chọn nhân viên trong hệ thống --</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name_latin} {emp.name_chinese ? `(${emp.name_chinese})` : ""} - HC:{" "}
-                    {emp.passport_number || "Không có"}
-                  </option>
-                ))}
+                {employees.map((emp) => {
+                  const isOccupied = Boolean(emp.current_room_number);
+                  return (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name_latin} {emp.name_chinese ? `(${emp.name_chinese})` : ""} - HC:{" "}
+                      {emp.passport_number || "Không có"}
+                      {isOccupied ? ` ⚠️ [Đang ở: ${emp.current_room_number}]` : ""}
+                    </option>
+                  );
+                })}
               </select>
+
+              {selectedEmployee && hasActiveAccommodation && (
+                <div className="mt-2.5 p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl text-amber-900 text-xs font-medium space-y-1.5 shadow-2xs">
+                  <div className="font-bold flex items-center gap-1.5 text-amber-800 text-sm">
+                    <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Cảnh báo: Nhân viên này đang có chỗ ở!</span>
+                  </div>
+                  <p className="leading-relaxed">
+                    Nhân sự <strong>{selectedEmployee.name_latin}</strong> {selectedEmployee.name_chinese ? `(${selectedEmployee.name_chinese})` : ""} hiện <strong>đang ở tại</strong>:{" "}
+                    <span className="font-bold text-amber-950 bg-amber-200/80 px-2 py-0.5 rounded border border-amber-300">
+                      {selectedEmployee.current_room_number}
+                    </span>.
+                  </p>
+                  <div className="text-red-700 font-bold bg-white p-2.5 rounded-lg border border-red-200 flex items-center gap-2">
+                    <span>⛔ Hệ thống yêu cầu làm thủ tục <strong><u>Trả phòng cũ</u></strong> cho nhân viên trước khi xếp vào chỗ ở mới!</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Đơn vị chỗ ở cụ thể */}
@@ -399,8 +441,8 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
               </button>
               <button
                 type="submit"
-                disabled={submitting}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                disabled={submitting || hasActiveAccommodation}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận xếp ở"}
               </button>

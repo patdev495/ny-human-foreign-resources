@@ -253,19 +253,21 @@ class ContractRead(ContractBase):
 
 class ExpiringDocumentItem(BaseModel):
     id: int
-    stay_id: int
+    stay_id: int | None = None
     employee_id: int
     employee_name: str
     passport_number: str | None = None
-    doc_type: str  # "VISA" | "TAM_TRU"
+    doc_type: str  # "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT"
     type_name: str | None = None
     expiry_date: datetime.date | None = None
     days_remaining: int | None = None
 
 
 class ExpiringDocumentsResponse(BaseModel):
-    expiring_visas: list[ExpiringDocumentItem]
-    expiring_tam_trus: list[ExpiringDocumentItem]
+    expiring_visas: list[ExpiringDocumentItem] = []
+    expiring_tam_trus: list[ExpiringDocumentItem] = []
+    expiring_gpl_ds: list[ExpiringDocumentItem] = []
+    expiring_contracts: list[ExpiringDocumentItem] = []
 
 
 # --- MEAL ABSENCE SCHEMAS ---

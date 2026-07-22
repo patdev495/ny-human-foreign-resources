@@ -212,11 +212,11 @@ export interface TamTruUpdate extends TamTruCreate {}
 
 export interface ExpiringDocumentItem {
   id: number;
-  stay_id: number;
+  stay_id?: number | null;
   employee_id: number;
   employee_name: string;
   passport_number?: string | null;
-  doc_type: "VISA" | "TAM_TRU";
+  doc_type: "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT";
   type_name?: string | null;
   expiry_date?: string | null;
   days_remaining?: number | null;
@@ -225,6 +225,8 @@ export interface ExpiringDocumentItem {
 export interface ExpiringDocumentsResponse {
   expiring_visas: ExpiringDocumentItem[];
   expiring_tam_trus: ExpiringDocumentItem[];
+  expiring_gpl_ds?: ExpiringDocumentItem[];
+  expiring_contracts?: ExpiringDocumentItem[];
 }
 
 export interface MealAbsence {
@@ -337,8 +339,40 @@ export interface DailyPresenceReportResponse {
   target_date: string;
   summary: DailyPresenceSummary;
   ktx_groups: DailyPresenceGroup[];
-  hotel_groups: DailyPresenceGroup[];
   unassigned_items?: DailyPresenceItem[];
   items: DailyPresenceItem[];
+}
+
+export interface VisaTypeOption {
+  code: string;
+  name: string;
+  description?: string;
+}
+
+export const VISA_TYPE_OPTIONS: VisaTypeOption[] = [
+  { code: "DN1", name: "Visa Doanh nghiệp (Có pháp nhân)", description: "Cấp cho người làm việc với doanh nghiệp có tư cách pháp nhân" },
+  { code: "DN2", name: "Visa Doanh nghiệp (Chào bán dịch vụ)", description: "Cấp cho người vào chào bán dịch vụ, thành lập đại diện" },
+  { code: "LĐ1", name: "Visa Lao động (Miễn GPLĐ)", description: "Cấp cho người làm việc thuộc diện miễn Giấy phép lao động" },
+  { code: "LĐ2", name: "Visa Lao động (Có GPLĐ)", description: "Cấp cho người làm việc thuộc diện phải có Giấy phép lao động" },
+  { code: "ĐT1", name: "Visa Đầu tư (Vốn >= 100 tỷ)", description: "Nhà đầu tư vốn góp từ 100 tỷ VNĐ trở lên" },
+  { code: "ĐT2", name: "Visa Đầu tư (Vốn 50 - <100 tỷ)", description: "Nhà đầu tư vốn góp từ 50 tỷ đến dưới 100 tỷ VNĐ" },
+  { code: "ĐT3", name: "Visa Đầu tư (Vốn 3 - <50 tỷ)", description: "Nhà đầu tư vốn góp từ 3 tỷ đến dưới 50 tỷ VNĐ" },
+  { code: "ĐT4", name: "Visa Đầu tư (Vốn < 3 tỷ)", description: "Nhà đầu tư vốn góp dưới 3 tỷ VNĐ" },
+  { code: "TT", name: "Visa Thăm thân", description: "Cấp cho người thân (vợ/chồng/con) của NLĐ/Nhà đầu tư" },
+  { code: "DL", name: "Visa Du lịch", description: "Cấp cho người vào du lịch" },
+  { code: "NG", name: "Visa Ngoại giao", description: "Cấp cho thành viên cơ quan đại diện ngoại giao" },
+  { code: "HH", name: "Visa Hội thảo / Công vụ", description: "Cấp cho người vào dự hội nghị, hội thảo" },
+  { code: "EV", name: "Visa Điện tử (E-visa)", description: "Cấp qua hệ thống giao dịch điện tử" },
+  { code: "SQ", name: "Visa Lãnh sự quán", description: "Cấp bởi Cơ quan đại diện Việt Nam ở nước ngoài" },
+];
+
+export function getVisaLabel(code?: string | null): string {
+  if (!code) return "—";
+  const trimmed = code.trim();
+  const match = VISA_TYPE_OPTIONS.find((v) => v.code.toLowerCase() === trimmed.toLowerCase());
+  if (match) {
+    return `${match.code} - ${match.name}`;
+  }
+  return trimmed;
 }
 

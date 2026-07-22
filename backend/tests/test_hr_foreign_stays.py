@@ -68,7 +68,7 @@ def test_stay_crud_and_single_active_constraint(client: TestClient) -> None:
     # 2. Attempt creating 2nd active stay for same employee -> Expect 400 Bad Request
     res_conflict = client.post("/api/hr-foreign/stays", json=stay_payload)
     assert res_conflict.status_code == 400
-    assert "Đã có đợt lưu trú đang hoạt động" in res_conflict.json()["detail"]
+    assert "Trả phòng cũ" in res_conflict.json()["detail"]
 
     # 3. Get Room Occupancy -> Room 202 should show WANG FANG
     occ_res = client.get("/api/hr-foreign/rooms/occupancy")

@@ -1,20 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { Stay, TamTru, Visa } from "../types";
+import { VISA_TYPE_OPTIONS, getVisaLabel } from "../types";
 import {
   createVisa, deleteVisa, updateVisa,
   createTamTru, deleteTamTru, updateTamTru,
   fetchVisas, fetchTamTrus,
 } from "../api";
-
-
-interface VisaTamTruSectionProps {
-  stays: Stay[];
-  visas: Visa[];
-  tamTrus: TamTru[];
-  onRefresh: () => void;
-}
-
-const VISA_TYPES = ["DN1", "DN", "LĐ1", "LĐ2", "NG", "HH", "DL", "TT"];
 
 const formatDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("vi-VN") : "—";
@@ -45,30 +36,34 @@ const VisaInlineForm: React.FC<{
       <div>
         <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Loại Visa</label>
         <select value={form.visa_type} onChange={(e) => onChange({ ...form, visa_type: e.target.value })}
-          className="w-full p-1.5 border border-slate-300 rounded bg-white">
-          {VISA_TYPES.map((t) => <option key={t}>{t}</option>)}
+          className="w-full p-1.5 border border-slate-300 rounded bg-white font-medium text-xs">
+          {VISA_TYPE_OPTIONS.map((t) => (
+            <option key={t.code} value={t.code}>
+              {t.code} - {t.name}
+            </option>
+          ))}
         </select>
       </div>
-      <div>
-        <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày nhập cảnh</label>
-        <input type="date" value={form.entry_date} onChange={(e) => onChange({ ...form, entry_date: e.target.value })}
-          className="w-full p-1.5 border border-slate-300 rounded bg-white" />
+        <div>
+          <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày nhập cảnh</label>
+          <input type="date" value={form.entry_date} onChange={(e) => onChange({ ...form, entry_date: e.target.value })}
+            className="w-full p-1.5 border border-slate-300 rounded bg-white" />
+        </div>
+        <div>
+          <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày hết hạn</label>
+          <input type="date" value={form.expiry_date} onChange={(e) => onChange({ ...form, expiry_date: e.target.value })}
+            className="w-full p-1.5 border border-slate-300 rounded bg-white" />
+        </div>
       </div>
-      <div>
-        <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày hết hạn</label>
-        <input type="date" value={form.expiry_date} onChange={(e) => onChange({ ...form, expiry_date: e.target.value })}
-          className="w-full p-1.5 border border-slate-300 rounded bg-white" />
+      <div className="flex gap-2">
+        <input type="text" value={form.notes} onChange={(e) => onChange({ ...form, notes: e.target.value })}
+          placeholder="Ghi chú (tùy chọn)" className="flex-1 p-1.5 border border-slate-300 rounded bg-white" />
+        <button type="button" onClick={onCancel} className="px-3 py-1.5 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 cursor-pointer">Huỷ</button>
+        <button type="submit" disabled={saving} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded cursor-pointer disabled:opacity-60">
+          {saving ? "..." : isEdit ? "Cập nhật" : "Thêm Visa"}
+        </button>
       </div>
-    </div>
-    <div className="flex gap-2">
-      <input type="text" value={form.notes} onChange={(e) => onChange({ ...form, notes: e.target.value })}
-        placeholder="Ghi chú (tùy chọn)" className="flex-1 p-1.5 border border-slate-300 rounded bg-white" />
-      <button type="button" onClick={onCancel} className="px-3 py-1.5 border border-slate-300 rounded text-slate-600 hover:bg-slate-100 cursor-pointer">Huỷ</button>
-      <button type="submit" disabled={saving} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded cursor-pointer disabled:opacity-60">
-        {saving ? "..." : isEdit ? "Cập nhật" : "Thêm Visa"}
-      </button>
-    </div>
-  </form>
+    </form>
 );
 
 // ---- TAM TRU SECTION ----
@@ -105,6 +100,13 @@ const TamTruInlineForm: React.FC<{
 );
 
 // ---- MAIN COMPONENT ----
+interface VisaTamTruSectionProps {
+  stays: Stay[];
+  visas: Visa[];
+  tamTrus: TamTru[];
+  onRefresh: () => void;
+}
+
 export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
   stays, visas, tamTrus, onRefresh,
 }) => {
@@ -205,13 +207,15 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-bold text-sm text-slate-800">Visa {v.visa_type}</span>
+                            <span className="font-bold text-sm text-slate-800">
+                              Visa {getVisaLabel(v.visa_type)}
+                            </span>
                             <ExpiryBadge dateStr={v.expiry_date} />
                           </div>
                           <div className="text-xs text-slate-500 font-mono">
                             {formatDate(v.entry_date)} <span className="text-slate-300 mx-1">→</span> <span className="font-semibold text-slate-700">{formatDate(v.expiry_date)}</span>
                           </div>
-                          {v.notes && <div className="text-xs text-slate-400 italic">{v.notes}</div>}
+                          {v.notes && <div className="text-xs text-slate-600 font-medium italic bg-slate-50 border border-slate-100 px-2 py-0.5 rounded inline-block">Ghi chú: {v.notes}</div>}
                           <div className="text-[10px] text-slate-300">Stay #{v.stay_id}</div>
                         </div>
                         <div className="flex gap-2 text-xs shrink-0">
