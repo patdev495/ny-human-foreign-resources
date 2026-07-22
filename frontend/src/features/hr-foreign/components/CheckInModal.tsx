@@ -8,6 +8,7 @@ interface CheckInModalProps {
   onSuccess: () => void;
   defaultAccommodationType?: "KTX" | "HOTEL";
   defaultUnitId?: number;
+  defaultEmployeeId?: number;
 }
 
 export const CheckInModal: React.FC<CheckInModalProps> = ({
@@ -16,13 +17,16 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   onSuccess,
   defaultAccommodationType = "KTX",
   defaultUnitId,
+  defaultEmployeeId,
 }) => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | "">("");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | "">(
+    defaultEmployeeId || ""
+  );
   const [accommodationType, setAccommodationType] = useState<"KTX" | "HOTEL">(
     defaultAccommodationType
   );
@@ -62,6 +66,10 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         setRooms(roomData);
         setHotels(hotelData);
 
+        if (defaultEmployeeId) {
+          setSelectedEmployeeId(defaultEmployeeId);
+        }
+
         if (defaultAccommodationType === "KTX" && defaultUnitId) {
           setRoomId(defaultUnitId);
         } else if (defaultAccommodationType === "HOTEL" && defaultUnitId) {
@@ -74,7 +82,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       }
     };
     loadOptions();
-  }, [isOpen, defaultAccommodationType, defaultUnitId]);
+  }, [isOpen, defaultAccommodationType, defaultUnitId, defaultEmployeeId]);
 
   const handleTypeChange = (type: "KTX" | "HOTEL") => {
     setAccommodationType(type);

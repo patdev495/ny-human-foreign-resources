@@ -1,25 +1,31 @@
 import React, { useState, useEffect } from "react";
-import type { RoomOccupancy, ResidentInfo } from "../types";
-import { fetchRoomOccupancy } from "../api";
+import type { RoomOccupancy, ResidentInfo, ForeignEmployee } from "../types";
+import { fetchRoomOccupancy, fetchEmployees } from "../api";
 import { CheckInModal } from "./CheckInModal";
 import { CheckOutModal } from "./CheckOutModal";
 
 export const RoomOccupancyBoard: React.FC = () => {
   const [occupancy, setOccupancy] = useState<RoomOccupancy[]>([]);
+  const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
 
   // Modals
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
+  const [selectedEmpIdForCheckIn, setSelectedEmpIdForCheckIn] = useState<number | undefined>(undefined);
   const [targetResident, setTargetResident] = useState<ResidentInfo | null>(null);
   const [targetUnitName, setTargetUnitName] = useState<string>("");
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const data = await fetchRoomOccupancy();
-      setOccupancy(data);
+      const [occData, empData] = await Promise.all([
+        fetchRoomOccupancy(),
+        fetchEmployees(),
+      ]);
+      setOccupancy(occData);
+      setEmployees(empData);
     } catch (err) {
       console.error("Failed to fetch room occupancy:", err);
     } finally {
@@ -31,11 +37,20 @@ export const RoomOccupancyBoard: React.FC = () => {
     loadData();
   }, []);
 
+  const handleOpenCheckInForEmployee = (empId?: number) => {
+    setSelectedEmpIdForCheckIn(empId);
+    setIsCheckInOpen(true);
+  };
+
   const handleOpenCheckOut = (res: ResidentInfo, unitName: string) => {
     setTargetResident(res);
     setTargetUnitName(unitName);
     setIsCheckOutOpen(true);
   };
+
+  const unassignedEmployees = employees.filter(
+    (emp) => emp.is_in_vietnam && !emp.current_room_number
+  );
 
   const filteredOccupancy = occupancy.filter((item) => {
     if (filterType === "KTX") return item.accommodation_type === "KTX";
@@ -60,7 +75,7 @@ export const RoomOccupancyBoard: React.FC = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={() => setIsCheckInOpen(true)}
+            onClick={() => handleOpenCheckInForEmployee(undefined)}
             className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
           >
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,6 +92,45 @@ export const RoomOccupancyBoard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Unassigned Employees Section */}
+      {unassignedEmployees.length > 0 && (
+        <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-base">⚠️</span>
+              <h3 className="text-sm font-bold text-amber-900">
+                Cảnh báo: Có {unassignedEmployees.length} nhân sự đang ở Việt Nam nhưng CHƯA ĐƯỢC XẾP CHỖ Ở
+              </h3>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
+              Cần xếp chỗ ngay
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {unassignedEmployees.map((emp) => (
+              <div
+                key={emp.id}
+                className="bg-white p-3 rounded-lg border border-amber-200 shadow-2xs flex items-center justify-between gap-2"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">{emp.name_latin}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                    {emp.employee_code || "Chưa có mã"} &bull; {emp.department || "N/A"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleOpenCheckInForEmployee(emp.id)}
+                  className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-md shadow-2xs whitespace-nowrap cursor-pointer transition-colors"
+                >
+                  + Xếp chỗ ngay
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filter Tabs & Summary stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
@@ -243,6 +297,7 @@ export const RoomOccupancyBoard: React.FC = () => {
         isOpen={isCheckInOpen}
         onClose={() => setIsCheckInOpen(false)}
         onSuccess={loadData}
+        defaultEmployeeId={selectedEmpIdForCheckIn}
       />
 
       <CheckOutModal
