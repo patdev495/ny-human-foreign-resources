@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from typing import Literal
 import datetime
 from pydantic import BaseModel, ConfigDict
 
@@ -15,6 +14,10 @@ class ForeignEmployeeBase(BaseModel):
     date_of_birth: datetime.date | None = None
     passport_number: str | None = None
     passport_expiry: datetime.date | None = None
+    entry_date: datetime.date | None = None
+    expected_entry_date: datetime.date | None = None
+    expected_exit_date: datetime.date | None = None
+    actual_exit_date: datetime.date | None = None
     required_exit_date: datetime.date | None = None
     phone: str | None = None
     department: str | None = None
@@ -33,6 +36,7 @@ class ForeignEmployeeUpdate(ForeignEmployeeBase):
 class ForeignEmployeeRead(ForeignEmployeeBase):
     id: int
     is_in_vietnam: bool = True
+    is_overdue_exit: bool = False
     current_room_number: str | None = None
     # Computed document expiry summaries (for list view status badges)
     latest_visa_expiry: datetime.date | None = None
@@ -44,8 +48,44 @@ class ForeignEmployeeRead(ForeignEmployeeBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# --- TRAVEL RECORD SCHEMAS ---
+
+class TravelRecordBase(BaseModel):
+    entry_date: datetime.date | None = None
+    expected_entry_date: datetime.date | None = None
+    expected_exit_date: datetime.date | None = None
+    actual_exit_date: datetime.date | None = None
+    notes: str | None = None
+
+
+class TravelRecordCreate(TravelRecordBase):
+    pass
+
+
+class TravelRecordUpdate(TravelRecordBase):
+    pass
+
+
+class TravelRecordRead(TravelRecordBase):
+    id: int
+    employee_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExitDateActionRequest(BaseModel):
+    actual_exit_date: datetime.date | None = None
+    expected_exit_date: datetime.date | None = None
+    expected_entry_date: datetime.date | None = None
+    action_type: Literal["CHECK_OUT", "KEEP_ROOM_ABSENCE"] = "CHECK_OUT"
+    notes: str | None = None
+
+
+
+
 
 # --- ROOM SCHEMAS ---
+
 
 class RoomBase(BaseModel):
     room_number: str
@@ -368,10 +408,13 @@ class DailyPresenceItem(BaseModel):
     hotel_name: str | None = None
     hotel_room_number: str | None = None
     bed_location: str | None = None
-    stay_id: int
-    stay_type: str
+    stay_id: int | None = None
+    stay_type: str | None = None
     start_date: datetime.date | None = None
     expected_end_date: datetime.date | None = None
+    actual_exit_date: datetime.date | None = None
+    expected_entry_date: datetime.date | None = None
+    notes: str | None = None
 
 
 class DailyPresenceSummary(BaseModel):
@@ -379,6 +422,7 @@ class DailyPresenceSummary(BaseModel):
     ktx_count: int
     hotel_count: int
     unassigned_count: int = 0
+    exited_count: int = 0
 
 
 class DailyPresenceGroup(BaseModel):
@@ -393,7 +437,9 @@ class DailyPresenceReportResponse(BaseModel):
     ktx_groups: list[DailyPresenceGroup]
     hotel_groups: list[DailyPresenceGroup]
     unassigned_items: list[DailyPresenceItem] = []
+    exited_items: list[DailyPresenceItem] = []
     items: list[DailyPresenceItem]
+
 
 
 # --- EMPLOYEE 360 HISTORY SCHEMA ---
@@ -405,3 +451,20 @@ class EmployeeHistoryResponse(BaseModel):
     stays: list[StayRead]
     visas: list[VisaRead]
     tam_trus: list[TamTruRead]
+    travel_records: list[TravelRecordRead] = []
+
+
+
+# --- DOCUMENT ATTACHMENT SCHEMAS ---
+
+class DocumentAttachmentResponse(BaseModel):
+    id: int
+    entity_type: str
+    entity_id: int
+    file_name: str
+    file_size: int
+    mime_type: str
+    created_at: datetime.datetime
+
+    model_config = ConfigDict(from_attributes=True)
+

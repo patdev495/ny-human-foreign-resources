@@ -67,7 +67,7 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
     setRoomId(stay.room_id || "");
     setStayType(stay.stay_type);
     setHasMeals(stay.has_meals);
-    setStartDate(stay.start_date);
+    setStartDate(stay.start_date || "");
     setEndDate(stay.end_date || "");
     setNotes(stay.notes || "");
     setError(null);

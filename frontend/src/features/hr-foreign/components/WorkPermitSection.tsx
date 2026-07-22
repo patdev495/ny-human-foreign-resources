@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import type { WorkPermit } from "../types";
 import { createWorkPermit, deleteWorkPermit, updateWorkPermit } from "../api";
+import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
+
 
 interface WorkPermitSectionProps {
   employeeId: number;
@@ -326,6 +328,12 @@ export const WorkPermitSection: React.FC<WorkPermitSectionProps> = ({
                       </button>
                     </div>
                   </div>
+
+                  <DocumentAttachmentSection
+                    entityType="WORK_PERMIT"
+                    entityId={wp.id}
+                    title="File đính kèm Giấy phép lao động"
+                  />
                 </div>
 
                 {/* Inline edit form */}

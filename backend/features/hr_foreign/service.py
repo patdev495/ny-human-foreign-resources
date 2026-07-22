@@ -1,16 +1,25 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from features.hr_foreign.schemas import TravelRecordCreate, TravelRecordUpdate
+
 from features.hr_foreign.status_engine import (
     evaluate_employee_statuses,
     get_expiring_documents as status_engine_get_expiring_documents,
 )
 
 import datetime
-from sqlalchemy import or_
+import os
+import uuid
+from fastapi import HTTPException, UploadFile
+from sqlalchemy import case, or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import (
     Contract,
+    DocumentAttachment,
     EventDay,
     ForeignEmployee,
     Hotel,
@@ -19,9 +28,15 @@ from features.hr_foreign.models import (
     Room,
     Stay,
     TamTru,
+    TravelRecord,
     Visa,
     WorkPermit,
 )
+
+UPLOAD_DIR = os.path.join("uploads", "documents")
+MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
+
 from features.hr_foreign.schemas import (
     ContractCreate,
     ContractRead,
@@ -54,6 +69,8 @@ from features.hr_foreign.schemas import (
     TamTruCreate,
     TamTruRead,
     TamTruUpdate,
+    ExitDateActionRequest,
+    TravelRecordRead,
     VisaCreate,
     VisaRead,
     VisaUpdate,
@@ -120,11 +137,72 @@ def to_employee_read(db: Session, emp: ForeignEmployee) -> ForeignEmployeeRead:
 
 
 
+def _validate_travel_dates(
+    payload_entry: datetime.date | None,
+    payload_expected_exit: datetime.date | None,
+    payload_actual_exit: datetime.date | None,
+    existing_entry: datetime.date | None = None,
+    existing_actual_exit: datetime.date | None = None,
+) -> None:
+    """Validate business rules around travel date cycle:
+
+    1. actual_exit_date and expected_exit_date must be >= entry_date.
+    2. If HR tries to set a NEW entry_date while the existing trip is still open
+       (existing entry_date set, existing actual_exit_date not set, and the new
+       entry_date differs from the existing one), that is rejected until the
+       previous trip is closed first.
+    """
+    entry = payload_entry
+    expected_exit = payload_expected_exit
+    actual_exit = payload_actual_exit
+
+    # Rule 1: chronological validity within a trip
+    if entry:
+        if actual_exit and actual_exit < entry:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ngày về thực tế ({actual_exit}) không thể nhỏ hơn ngày đến "
+                    f"Việt Nam ({entry})."
+                ),
+            )
+        if expected_exit and expected_exit < entry:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ngày dự kiến về ({expected_exit}) không thể nhỏ hơn ngày đến "
+                    f"Việt Nam ({entry})."
+                ),
+            )
+
+    # Rule 2: trip cycle integrity — must close previous trip before opening new one
+    if (
+        existing_entry is not None               # there is a previous trip
+        and existing_actual_exit is None         # previous trip is still open
+        and entry is not None                    # new payload has an entry date
+        and entry != existing_entry              # it's a different (new) entry date
+        and actual_exit is None                  # and the new payload doesn't close it
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Nhân sự chưa có Ngày về thực tế cho đợt sang "
+                f"{existing_entry}. Vui lòng cập nhật Ngày về thực tế cho đợt cũ "
+                f"trước khi nhập đợt đến mới, hoặc chỉnh sửa Ngày đến của đợt hiện tại."
+            ),
+        )
+
+
 def get_employee_by_id(db: Session, emp_id: int) -> ForeignEmployee | None:
     return db.query(ForeignEmployee).filter(ForeignEmployee.id == emp_id).first()
 
 
 def create_employee(db: Session, payload: ForeignEmployeeCreate) -> ForeignEmployee:
+    _validate_travel_dates(
+        payload_entry=payload.entry_date,
+        payload_expected_exit=payload.expected_exit_date,
+        payload_actual_exit=payload.actual_exit_date,
+    )
     emp = ForeignEmployee(**payload.model_dump())
     db.add(emp)
     db.flush()
@@ -136,6 +214,13 @@ def create_employee(db: Session, payload: ForeignEmployeeCreate) -> ForeignEmplo
 def update_employee(
     db: Session, emp: ForeignEmployee, payload: ForeignEmployeeUpdate
 ) -> ForeignEmployee:
+    _validate_travel_dates(
+        payload_entry=payload.entry_date,
+        payload_expected_exit=payload.expected_exit_date,
+        payload_actual_exit=payload.actual_exit_date,
+        existing_entry=emp.entry_date,
+        existing_actual_exit=emp.actual_exit_date,
+    )
     for key, value in payload.model_dump().items():
         setattr(emp, key, value)
     db.commit()
@@ -148,6 +233,184 @@ def delete_employee(db: Session, emp: ForeignEmployee) -> None:
     db.commit()
 
 
+# ---------------------------------------------------------------------------
+# TravelRecord CRUD
+# ---------------------------------------------------------------------------
+
+def _validate_travel_record_dates(
+    entry: datetime.date | None,
+    expected_exit: datetime.date | None,
+    actual_exit: datetime.date | None,
+) -> None:
+    """Rule: exit dates must not be before entry_date."""
+    if entry:
+        if actual_exit and actual_exit < entry:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ngày về thực tế ({actual_exit}) không thể nhỏ hơn ngày đến ({entry})."
+                ),
+            )
+        if expected_exit and expected_exit < entry:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Ngày dự kiến về ({expected_exit}) không thể nhỏ hơn ngày đến ({entry})."
+                ),
+            )
+
+
+def list_travel_records(db: Session, emp_id: int) -> list[TravelRecord]:
+    records = (
+        db.query(TravelRecord)
+        .filter(TravelRecord.employee_id == emp_id)
+        .all()
+    )
+    # Sort newest first (in-memory, SQL Server 2008 R2 compat)
+    return sorted(records, key=lambda r: r.entry_date or datetime.date.min, reverse=True)
+
+
+def create_travel_record(
+    db: Session,
+    emp: ForeignEmployee,
+    payload: TravelRecordCreate,
+) -> TravelRecord:
+
+    _validate_travel_record_dates(
+        entry=payload.entry_date,
+        expected_exit=payload.expected_exit_date,
+        actual_exit=payload.actual_exit_date,
+    )
+
+    # Block new trip if there is already an open trip (no actual_exit_date)
+    open_trip = (
+        db.query(TravelRecord)
+        .filter(
+            TravelRecord.employee_id == emp.id,
+            TravelRecord.actual_exit_date.is_(None),
+        )
+        .first()
+    )
+    if open_trip:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Đợt sang ngày {open_trip.entry_date} chưa có Ngày về thực tế. "
+                f"Vui lòng chốt Ngày về thực tế cho đợt cũ trước khi thêm đợt đến mới."
+            ),
+        )
+
+    record = TravelRecord(employee_id=emp.id, **payload.model_dump())
+    db.add(record)
+    # Sync to master employee fields
+    emp.entry_date = record.entry_date
+    emp.expected_entry_date = record.expected_entry_date
+    emp.expected_exit_date = record.expected_exit_date
+    emp.actual_exit_date = record.actual_exit_date
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def update_travel_record(
+    db: Session,
+    record: TravelRecord,
+    payload: "TravelRecordUpdate",  # noqa: F821
+) -> TravelRecord:
+    _validate_travel_record_dates(
+        entry=payload.entry_date,
+        expected_exit=payload.expected_exit_date,
+        actual_exit=payload.actual_exit_date,
+    )
+    for key, value in payload.model_dump().items():
+        setattr(record, key, value)
+    
+    # Sync latest record to employee master
+    emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == record.employee_id).first()
+    if emp:
+        latest = (
+            db.query(TravelRecord)
+            .filter(TravelRecord.employee_id == emp.id)
+            .order_by(
+                case((TravelRecord.entry_date.is_(None), 1), else_=0),
+                TravelRecord.entry_date.desc(),
+                TravelRecord.id.desc(),
+            )
+            .first()
+        )
+        if latest and latest.id == record.id:
+            emp.entry_date = record.entry_date
+            emp.expected_entry_date = record.expected_entry_date
+            emp.expected_exit_date = record.expected_exit_date
+            emp.actual_exit_date = record.actual_exit_date
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+
+def get_travel_record_by_id(db: Session, record_id: int) -> TravelRecord | None:
+    return db.query(TravelRecord).filter(TravelRecord.id == record_id).first()
+
+
+def record_employee_exit(
+    db: Session,
+    emp: ForeignEmployee,
+    payload: ExitDateActionRequest,
+) -> TravelRecord:
+
+    latest_tr = (
+        db.query(TravelRecord)
+        .filter(TravelRecord.employee_id == emp.id)
+        .order_by(
+            case((TravelRecord.entry_date.is_(None), 1), else_=0),
+            TravelRecord.entry_date.desc(),
+            TravelRecord.id.desc(),
+        )
+        .first()
+    )
+    if not latest_tr:
+        latest_tr = TravelRecord(
+            employee_id=emp.id,
+            entry_date=emp.entry_date,
+            expected_exit_date=emp.expected_exit_date,
+        )
+        db.add(latest_tr)
+
+    if payload.actual_exit_date:
+        if latest_tr.entry_date and payload.actual_exit_date < latest_tr.entry_date:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Ngày thực tế đã về ({payload.actual_exit_date}) không thể nhỏ hơn ngày đến ({latest_tr.entry_date})",
+            )
+        latest_tr.actual_exit_date = payload.actual_exit_date
+        emp.actual_exit_date = payload.actual_exit_date
+
+        if payload.action_type == "CHECK_OUT":
+            active_stays = (
+                db.query(Stay)
+                .filter(Stay.employee_id == emp.id, Stay.end_date.is_(None))
+                .all()
+            )
+            for s in active_stays:
+                s.end_date = payload.actual_exit_date
+
+    if payload.expected_exit_date is not None:
+        latest_tr.expected_exit_date = payload.expected_exit_date
+        emp.expected_exit_date = payload.expected_exit_date
+
+    if payload.expected_entry_date is not None:
+        latest_tr.expected_entry_date = payload.expected_entry_date
+        emp.expected_entry_date = payload.expected_entry_date
+
+    if payload.notes:
+        latest_tr.notes = payload.notes
+
+    db.commit()
+    db.refresh(latest_tr)
+    return latest_tr
+
+
 def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | None:
     emp = get_employee_by_id(db, emp_id)
     if not emp:
@@ -156,6 +419,7 @@ def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | 
     work_permits = get_work_permits_by_employee(db, emp_id)
     contracts = get_contracts_by_employee(db, emp_id)
     stays = get_stays(db, employee_id=emp_id)
+    travel_records = list_travel_records(db, emp_id)
     stay_ids = [s.id for s in stays]
 
     visas = db.query(Visa).filter(Visa.stay_id.in_(stay_ids)).all() if stay_ids else []
@@ -175,7 +439,9 @@ def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | 
         stays=stay_reads,
         visas=[VisaRead.model_validate(v) for v in visas],
         tam_trus=[TamTruRead.model_validate(tt) for tt in tam_trus],
+        travel_records=[TravelRecordRead.model_validate(tr) for tr in travel_records],
     )
+
 
 
 # --- CONTRACTS ---
@@ -745,22 +1011,13 @@ def get_daily_presence_report(
         .all()
     )
 
-    if not stays:
-        return DailyPresenceReportResponse(
-            target_date=target_date,
-            summary=DailyPresenceSummary(total_in_vn=0, ktx_count=0, hotel_count=0),
-            ktx_groups=[],
-            hotel_groups=[],
-            items=[],
-        )
-
     stay_ids = [s.id for s in stays]
     absent_stay_ids = set(
         r[0]
         for r in db.query(MealAbsence.stay_id)
         .filter(MealAbsence.stay_id.in_(stay_ids), MealAbsence.absence_date == target_date)
         .all()
-    )
+    ) if stay_ids else set()
 
     items: list[DailyPresenceItem] = []
     unassigned_items: list[DailyPresenceItem] = []
@@ -814,6 +1071,30 @@ def get_daily_presence_report(
         else:
             unassigned_items.append(item)
 
+    # 2. Query all employees to find those who have returned home (exited) on target_date
+    all_employees = get_employees(db)
+    emp_statuses = evaluate_employee_statuses(db, all_employees, today=target_date)
+    
+    exited_items: list[DailyPresenceItem] = []
+    for emp_read in emp_statuses:
+        if not emp_read.is_in_vietnam:
+            exited_items.append(
+                DailyPresenceItem(
+                    employee_id=emp_read.id,
+                    employee_code=emp_read.employee_code,
+                    name_latin=emp_read.name_latin,
+                    name_chinese=emp_read.name_chinese,
+                    gender=emp_read.gender,
+                    department=emp_read.department,
+                    phone=emp_read.phone,
+                    accommodation_type="KTX",
+                    location_name="Đã về nước",
+                    actual_exit_date=emp_read.actual_exit_date,
+                    expected_entry_date=emp_read.expected_entry_date,
+                    notes=emp_read.notes,
+                )
+            )
+
     ktx_groups = [
         DailyPresenceGroup(group_name=k, count=len(v), items=v)
         for k, v in ktx_map.items()
@@ -833,10 +1114,104 @@ def get_daily_presence_report(
             ktx_count=ktx_count,
             hotel_count=hotel_count,
             unassigned_count=len(unassigned_items),
+            exited_count=len(exited_items),
         ),
         ktx_groups=ktx_groups,
         hotel_groups=hotel_groups,
         unassigned_items=unassigned_items,
+        exited_items=exited_items,
         items=items,
     )
+
+
+# --- DOCUMENT ATTACHMENT SERVICES ---
+
+def save_attachment(
+    db: Session,
+    file: UploadFile,
+    entity_type: str,
+    entity_id: int,
+) -> DocumentAttachment:
+    # 1. Validate file extension
+    original_filename = file.filename or "file"
+    _, ext = os.path.splitext(original_filename)
+    ext_lower = ext.lower()
+    if ext_lower not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Định dạng tệp '{ext}' không được hỗ trợ. Chỉ chấp nhận tệp ảnh (.jpg, .jpeg, .png, .webp) hoặc .pdf",
+        )
+
+    # 2. Read content & validate file size (< 20 MB)
+    content = file.file.read()
+    file_size = len(content)
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Dung lượng tệp vượt quá giới hạn tối đa 20 MB ({file_size / (1024 * 1024):.2f} MB)",
+        )
+
+    # 3. Create destination folder if not exists
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    # 4. Save physical file with unique filename
+    unique_filename = f"{entity_type.lower()}_{entity_id}_{uuid.uuid4().hex[:8]}{ext_lower}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # Determine mime_type
+    mime_type = file.content_type or ("application/pdf" if ext_lower == ".pdf" else f"image/{ext_lower.lstrip('.')}")
+
+    # 5. Create database record
+    attachment = DocumentAttachment(
+        entity_type=entity_type.upper(),
+        entity_id=entity_id,
+        file_name=original_filename,
+        file_path=file_path,
+        file_size=file_size,
+        mime_type=mime_type,
+    )
+    db.add(attachment)
+    db.commit()
+    db.refresh(attachment)
+    return attachment
+
+
+def list_attachments(
+    db: Session,
+    entity_type: str,
+    entity_id: int,
+) -> list[DocumentAttachment]:
+    return (
+        db.query(DocumentAttachment)
+        .filter(
+            DocumentAttachment.entity_type == entity_type.upper(),
+            DocumentAttachment.entity_id == entity_id,
+        )
+        .order_by(DocumentAttachment.created_at.desc())
+        .all()
+    )
+
+
+def get_attachment(db: Session, attachment_id: int) -> DocumentAttachment | None:
+    return db.query(DocumentAttachment).filter(DocumentAttachment.id == attachment_id).first()
+
+
+def delete_attachment(db: Session, attachment_id: int) -> bool:
+    attachment = get_attachment(db, attachment_id)
+    if not attachment:
+        return False
+
+    # Remove physical file if exists
+    if os.path.exists(attachment.file_path):
+        try:
+            os.remove(attachment.file_path)
+        except OSError:
+            pass
+
+    db.delete(attachment)
+    db.commit()
+    return True
+
 

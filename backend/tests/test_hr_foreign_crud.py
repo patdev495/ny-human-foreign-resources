@@ -97,6 +97,41 @@ def test_employee_crud(client: TestClient) -> None:
     assert res.status_code == 404
 
 
+def test_employee_travel_date_validation(client: TestClient) -> None:
+    # 1. Reject if actual_exit_date < entry_date
+    bad_dates_payload = {
+        "name_latin": "ZANG SAN",
+        "gender": "Nam",
+        "entry_date": "2026-05-10",
+        "actual_exit_date": "2026-05-01",  # Before entry date
+    }
+    res = client.post("/api/hr-foreign/employees", json=bad_dates_payload)
+    assert res.status_code == 400
+    assert "không thể nhỏ hơn ngày đến" in res.json()["detail"]
+
+    # 2. Create valid employee in VN
+    valid_payload = {
+        "name_latin": "ZANG SAN",
+        "gender": "Nam",
+        "entry_date": "2026-05-10",
+        "expected_exit_date": "2026-08-10",
+        "actual_exit_date": None,
+    }
+    res = client.post("/api/hr-foreign/employees", json=valid_payload)
+    assert res.status_code == 201
+    emp_id = res.json()["id"]
+
+    # 3. Reject creating a new entry date while old trip is still open (no actual_exit_date)
+    new_trip_payload = {
+        **valid_payload,
+        "entry_date": "2026-09-01",       # New trip attempt
+        "expected_exit_date": "2026-11-01",  # Also updated so Rule 1 doesn't fire
+    }
+    res = client.put(f"/api/hr-foreign/employees/{emp_id}", json=new_trip_payload)
+    assert res.status_code == 400
+    assert "chưa có Ngày về thực tế" in res.json()["detail"]
+
+
 def test_room_crud(client: TestClient) -> None:
     res = client.post("/api/hr-foreign/rooms", json={"room_number": "A101", "notes": "Phong VIP"})
     assert res.status_code == 201, res.json()

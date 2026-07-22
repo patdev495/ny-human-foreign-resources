@@ -6,6 +6,8 @@ import {
   createTamTru, deleteTamTru, updateTamTru,
   fetchVisas, fetchTamTrus,
 } from "../api";
+import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
+
 
 const formatDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("vi-VN") : "—";
@@ -223,6 +225,12 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
                           <button onClick={() => deleteV(v.id)} className="text-red-500 hover:text-red-700 font-medium cursor-pointer">Xóa</button>
                         </div>
                       </div>
+
+                      <DocumentAttachmentSection
+                        entityType="VISA"
+                        entityId={v.id}
+                        title="File đính kèm Visa"
+                      />
                     </div>
                     {isEditing && (
                       <div className="border border-t-0 border-blue-400 rounded-b-lg overflow-hidden">
@@ -282,6 +290,12 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
                           <button onClick={() => deleteTT(tt.id)} className="text-red-500 hover:text-red-700 font-medium cursor-pointer">Xóa</button>
                         </div>
                       </div>
+
+                      <DocumentAttachmentSection
+                        entityType="TAM_TRU"
+                        entityId={tt.id}
+                        title="File đính kèm Tạm trú"
+                      />
                     </div>
                     {isEditing && (
                       <div className="border border-t-0 border-emerald-400 rounded-b-lg overflow-hidden">

@@ -4,6 +4,10 @@ import { fetchEmployeeHistory, updateEmployee } from "../api";
 import { WorkPermitSection } from "./WorkPermitSection";
 import { ContractSection } from "./ContractSection";
 import { VisaTamTruSection } from "./VisaTamTruSection";
+import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
+import { TravelRecordModal } from "./TravelRecordModal";
+
+
 
 interface PassportSectionProps {
   employee: ForeignEmployee;
@@ -168,6 +172,12 @@ export const PassportSection: React.FC<PassportSectionProps> = ({
           </div>
         </div>
       )}
+
+      <DocumentAttachmentSection
+        entityType="PASSPORT"
+        entityId={employee.id}
+        title="File đính kèm Hộ chiếu (Ảnh / PDF)"
+      />
     </div>
   );
 };
@@ -185,7 +195,9 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
 }) => {
   const [data, setData] = useState<EmployeeHistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"HOP_DONG" | "GPLD" | "STAYS" | "VISA_TAM_TRU" | "PASSPORT">("HOP_DONG");
+  const [activeTab, setActiveTab] = useState<"HOP_DONG" | "GPLD" | "STAYS" | "VISA_TAM_TRU" | "PASSPORT" | "TRAVEL_RECORDS">("HOP_DONG");
+  const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
+
 
   const loadData = useCallback(async () => {
     if (!employeeId || !isOpen) { setData(null); return; }
@@ -265,6 +277,50 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 <span className="text-slate-500 block mb-0.5">Ngày Sinh:</span>
                 <span className="font-mono text-slate-800">{data.employee.date_of_birth || "-"}</span>
               </div>
+              <div className="col-span-2 sm:col-span-4 pt-3 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+                  <div>
+                    <span className="text-slate-500 block mb-0.5">📅 Ngày đến Việt Nam:</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {data.employee.entry_date && !data.employee.actual_exit_date ? (
+                        data.employee.entry_date
+                      ) : (
+                        <span className="text-slate-400 italic font-normal">Chưa đến Việt Nam</span>
+                      )}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block mb-0.5">
+                      {data.employee.entry_date && !data.employee.actual_exit_date
+                        ? "⏳ Ngày dự kiến về:"
+                        : "⏳ Ngày dự kiến sang:"}
+                    </span>
+                    <span className="font-mono font-bold text-amber-700">
+                      {data.employee.entry_date && !data.employee.actual_exit_date
+                        ? data.employee.expected_exit_date || data.employee.required_exit_date || "-"
+                        : data.employee.expected_entry_date || "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block mb-0.5">✈️ Ngày thực tế đã về:</span>
+                    <span className="font-mono font-bold text-rose-700">
+                      {data.employee.entry_date && !data.employee.actual_exit_date ? (
+                        "Chưa về nước"
+                      ) : (
+                        data.employee.actual_exit_date || "-"
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <button
+                    onClick={() => setIsTravelModalOpen(true)}
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
+                  >
+                    <span>+</span> Cập nhật ngày
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* History Tabs Navigation */}
@@ -288,6 +344,16 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 }`}
               >
                 GPLĐ ({data.work_permits.length})
+              </button>
+              <button
+                onClick={() => setActiveTab("TRAVEL_RECORDS")}
+                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+                  activeTab === "TRAVEL_RECORDS"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                Nhập xuất cảnh ({data.travel_records?.length || 0})
               </button>
               <button
                 onClick={() => setActiveTab("STAYS")}
@@ -396,6 +462,55 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               </div>
             )}
 
+            {/* TAB CONTENT: TRAVEL_RECORDS */}
+            {activeTab === "TRAVEL_RECORDS" && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center pb-2">
+                  <h4 className="text-xs font-bold text-slate-700">Lịch sử Nhập xuất cảnh ({data.travel_records?.length || 0} đợt)</h4>
+                  <button
+                    onClick={() => setIsTravelModalOpen(true)}
+                    className="px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                  >
+                    + Thêm / Cập nhật đợt
+                  </button>
+                </div>
+                {!data.travel_records || data.travel_records.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-4 text-center">Chưa ghi nhận lịch sử đợt nhập xuất cảnh nào.</p>
+                ) : (
+                  data.travel_records.map((tr, index) => {
+                    const isOpenTrip = !tr.actual_exit_date;
+                    return (
+                      <div
+                        key={tr.id || index}
+                        className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-300 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">Đợt #{data.travel_records.length - index}</span>
+                            {isOpenTrip ? (
+                              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
+                                Đang ở Việt Nam
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-medium text-[10px]">
+                                Đã về nước
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 font-mono text-[11px] pt-1">
+                            <div>📅 Đến: <span className="font-bold">{tr.entry_date || "-"}</span></div>
+                            <div>⏳ Dự kiến về: <span className="font-medium text-amber-700">{tr.expected_exit_date || "-"}</span></div>
+                            <div>✈️ Thực tế về: <span className="font-bold text-rose-700">{tr.actual_exit_date || "Chưa về nước"}</span></div>
+                          </div>
+                          {tr.notes && <div className="text-slate-400 italic text-[11px] pt-0.5">{tr.notes}</div>}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
             {/* TAB CONTENT: VISA_TAM_TRU */}
             {activeTab === "VISA_TAM_TRU" && (
               <VisaTamTruSection
@@ -415,6 +530,18 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
             )}
           </div>
         )}
+
+        {/* Travel Record Modal */}
+        {data && (
+          <TravelRecordModal
+            isOpen={isTravelModalOpen}
+            onClose={() => setIsTravelModalOpen(false)}
+            employee={data.employee}
+            activeStay={data.stays.find((s) => !s.end_date)}
+            onSuccess={loadData}
+          />
+        )}
+
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">

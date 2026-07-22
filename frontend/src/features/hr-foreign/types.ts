@@ -10,12 +10,17 @@ export interface ForeignEmployee {
   date_of_birth?: string | null;
   passport_number?: string | null;
   passport_expiry?: string | null;
+  entry_date?: string | null;
+  expected_entry_date?: string | null;
+  expected_exit_date?: string | null;
+  actual_exit_date?: string | null;
   required_exit_date?: string | null;
   phone?: string | null;
   department?: string | null;
   role?: string | null;
   notes?: string | null;
   is_in_vietnam?: boolean;
+  is_overdue_exit?: boolean;
   current_room_number?: string | null;
   // computed document expiry summaries
   latest_visa_expiry?: string | null;
@@ -34,6 +39,9 @@ export interface ForeignEmployeeCreate {
   date_of_birth?: string | null;
   passport_number?: string | null;
   passport_expiry?: string | null;
+  entry_date?: string | null;
+  expected_exit_date?: string | null;
+  actual_exit_date?: string | null;
   required_exit_date?: string | null;
   phone?: string | null;
   department?: string | null;
@@ -293,6 +301,34 @@ export interface MealExpenseReportResponse {
   items: MealExpenseReportItem[];
 }
 
+export interface TravelRecord {
+  id: number;
+  employee_id: number;
+  entry_date?: string | null;
+  expected_entry_date?: string | null;
+  expected_exit_date?: string | null;
+  actual_exit_date?: string | null;
+  notes?: string | null;
+}
+
+export interface TravelRecordCreate {
+  entry_date?: string | null;
+  expected_entry_date?: string | null;
+  expected_exit_date?: string | null;
+  actual_exit_date?: string | null;
+  notes?: string | null;
+}
+
+export interface TravelRecordUpdate extends TravelRecordCreate {}
+
+export interface ExitDateActionPayload {
+  actual_exit_date?: string | null;
+  expected_exit_date?: string | null;
+  expected_entry_date?: string | null;
+  action_type?: "CHECK_OUT" | "KEEP_ROOM_ABSENCE";
+  notes?: string | null;
+}
+
 export interface EmployeeHistoryResponse {
   employee: ForeignEmployee;
   work_permits: WorkPermit[];
@@ -300,7 +336,9 @@ export interface EmployeeHistoryResponse {
   stays: Stay[];
   visas: Visa[];
   tam_trus: TamTru[];
+  travel_records: TravelRecord[];
 }
+
 
 export interface DailyPresenceItem {
   employee_id: number;
@@ -316,10 +354,13 @@ export interface DailyPresenceItem {
   hotel_name?: string | null;
   hotel_room_number?: string | null;
   bed_location?: string | null;
-  stay_id: number;
-  stay_type: string;
+  stay_id?: number | null;
+  stay_type?: string | null;
   start_date?: string | null;
   expected_end_date?: string | null;
+  actual_exit_date?: string | null;
+  expected_entry_date?: string | null;
+  notes?: string | null;
 }
 
 export interface DailyPresenceSummary {
@@ -327,6 +368,7 @@ export interface DailyPresenceSummary {
   ktx_count: number;
   hotel_count: number;
   unassigned_count?: number;
+  exited_count?: number;
 }
 
 export interface DailyPresenceGroup {
@@ -339,7 +381,9 @@ export interface DailyPresenceReportResponse {
   target_date: string;
   summary: DailyPresenceSummary;
   ktx_groups: DailyPresenceGroup[];
+  hotel_groups: DailyPresenceGroup[];
   unassigned_items?: DailyPresenceItem[];
+  exited_items?: DailyPresenceItem[];
   items: DailyPresenceItem[];
 }
 
@@ -375,4 +419,17 @@ export function getVisaLabel(code?: string | null): string {
   }
   return trimmed;
 }
+
+export type DocumentEntityType = "PASSPORT" | "VISA" | "TAM_TRU" | "WORK_PERMIT" | "CONTRACT";
+
+export interface DocumentAttachment {
+  id: number;
+  entity_type: DocumentEntityType | string;
+  entity_id: number;
+  file_name: string;
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+}
+
 

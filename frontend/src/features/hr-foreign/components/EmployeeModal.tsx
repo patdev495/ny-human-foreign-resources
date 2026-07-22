@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { ForeignEmployee, ForeignEmployeeCreate } from "../types";
 
+
 interface EmployeeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -117,6 +118,13 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             </div>
           )}
 
+          <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-lg flex items-center gap-2">
+            <span>✈️</span>
+            <span>
+              Lịch trình Nhập xuất cảnh (Ngày đến, Ngày dự kiến, Ngày về) được quản lý và cập nhật tập trung tại tab <strong>"Nhật ký Nhập xuất cảnh"</strong>.
+            </span>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -207,6 +215,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"
               />
             </div>
+
+
           </div>
 
           <div>
@@ -218,6 +228,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800"
             />
           </div>
+
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <button

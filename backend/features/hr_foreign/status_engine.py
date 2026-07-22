@@ -99,13 +99,44 @@ def evaluate_employee_statuses(
     results: list[ForeignEmployeeRead] = []
     for emp in employees:
         res = ForeignEmployeeRead.model_validate(emp)
-        emp_stays = stays_by_emp.get(emp.id, [])
+        emp_stays = sorted(
+            stays_by_emp.get(emp.id, []),
+            key=lambda s: s.start_date or datetime.date.min,
+            reverse=True,
+        )
+        latest_stay = emp_stays[0] if emp_stays else None
 
         active_stay = next(
             (s for s in emp_stays if s.end_date is None or s.end_date >= today), None
         )
-        has_exited = bool(emp.required_exit_date and emp.required_exit_date < today)
-        res.is_in_vietnam = bool(active_stay and not has_exited)
+
+        # Fallback travel dates from latest stay record if profile level is empty
+        effective_entry = emp.entry_date or (latest_stay.start_date if latest_stay else None)
+        effective_expected_exit = (
+            emp.expected_exit_date
+            or (latest_stay.expected_end_date if latest_stay else None)
+            or emp.required_exit_date
+        )
+        effective_actual_exit = emp.actual_exit_date or (latest_stay.end_date if latest_stay else None)
+
+        res.entry_date = effective_entry
+        res.expected_exit_date = effective_expected_exit
+        res.actual_exit_date = effective_actual_exit
+        
+        # 1. Determine presence status (is_in_vietnam)
+        if effective_actual_exit and effective_actual_exit <= today:
+            res.is_in_vietnam = False
+        elif effective_entry and effective_entry <= today:
+            res.is_in_vietnam = True
+        else:
+            has_exited_legacy = bool(emp.required_exit_date and emp.required_exit_date < today)
+            res.is_in_vietnam = bool(active_stay and not has_exited_legacy)
+
+        # 2. Determine overdue return status (is_overdue_exit)
+        if res.is_in_vietnam and effective_actual_exit is None and effective_expected_exit and effective_expected_exit < today:
+            res.is_overdue_exit = True
+        else:
+            res.is_overdue_exit = False
 
         if active_stay:
             if active_stay.room:

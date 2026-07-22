@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import type { Contract } from "../types";
 import { createContract, deleteContract, updateContract } from "../api";
+import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
+
 
 interface ContractSectionProps {
   employeeId: number;
@@ -325,6 +327,12 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
                       </button>
                     </div>
                   </div>
+
+                  <DocumentAttachmentSection
+                    entityType="CONTRACT"
+                    entityId={c.id}
+                    title="File đính kèm Hợp đồng lao động"
+                  />
                 </div>
 
                 {/* Inline edit form — appears directly below the card */}

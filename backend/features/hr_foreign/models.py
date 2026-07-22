@@ -5,6 +5,7 @@ from sqlalchemy import (
     Boolean,
     Column,
     Date,
+    DateTime,
     Float,
     ForeignKey,
     Integer,
@@ -28,7 +29,11 @@ class ForeignEmployee(Base):
     date_of_birth = Column(Date, nullable=True)
     passport_number = Column(Unicode(100), nullable=True, index=True)
     passport_expiry = Column(Date, nullable=True)
-    required_exit_date = Column(Date, nullable=True)  # NGÀY PHẢI VỀ NƯỚC (từ Excel KTX)
+    entry_date = Column(Date, nullable=True)           # NGÀY ĐẾN VIỆT NAM
+    expected_entry_date = Column(Date, nullable=True)  # NGÀY DỰ KIẾN SANG VIỆT NAM
+    expected_exit_date = Column(Date, nullable=True)   # NGÀY DỰ KIẾN VỀ NƯỚC
+    actual_exit_date = Column(Date, nullable=True)     # NGÀY THỰC TẾ ĐÃ VỀ NƯỚC
+    required_exit_date = Column(Date, nullable=True)  # NGÀY PHẢI VỀ NƯỚC (từ Excel KTX / legacy)
     phone = Column(Unicode(100), nullable=True)
     department = Column(Unicode(100), nullable=True)  # Vị trí công việc (Lao động kỹ thuật, Giám đốc...)
     role = Column(Unicode(255), nullable=True)         # Chức danh công việc chi tiết
@@ -37,7 +42,22 @@ class ForeignEmployee(Base):
     stays = relationship("Stay", back_populates="employee", cascade="all, delete-orphan")
     work_permits = relationship("WorkPermit", back_populates="employee", cascade="all, delete-orphan", order_by="WorkPermit.valid_from")
     contracts = relationship("Contract", back_populates="employee", cascade="all, delete-orphan", order_by="Contract.start_date")
+    travel_records = relationship("TravelRecord", back_populates="employee", cascade="all, delete-orphan", order_by="TravelRecord.entry_date")
 
+
+class TravelRecord(Base):
+    """Lịch sử các đợt sang Việt Nam của nhân sự nước ngoài."""
+    __tablename__ = "travel_records"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
+    entry_date = Column(Date, nullable=True)           # Ngày đến Việt Nam
+    expected_entry_date = Column(Date, nullable=True)  # Ngày dự kiến sang Việt Nam đợt tiếp theo
+    expected_exit_date = Column(Date, nullable=True)   # Ngày dự kiến về nước
+    actual_exit_date = Column(Date, nullable=True)     # Ngày thực tế đã về (NULL = đang ở VN)
+    notes = Column(UnicodeText, nullable=True)
+
+    employee = relationship("ForeignEmployee", back_populates="travel_records")
 
 
 class Room(Base):
@@ -169,3 +189,18 @@ class MealPriceConfig(Base):
     day_type = Column(Unicode(100), nullable=False)  # NORMAL, PRESIDENT_VISIT
     price_per_meal = Column(Float, nullable=False)
     effective_from = Column(Date, nullable=False, default=datetime.date(2020, 1, 1))
+
+
+class DocumentAttachment(Base):
+    """Tệp đính kèm hình ảnh/PDF cho các loại giấy tờ (PASSPORT, VISA, TAM_TRU, WORK_PERMIT, CONTRACT)."""
+    __tablename__ = "document_attachments"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    entity_type = Column(Unicode(50), nullable=False, index=True)  # PASSPORT, VISA, TAM_TRU, WORK_PERMIT, CONTRACT
+    entity_id = Column(Integer, nullable=False, index=True)
+    file_name = Column(Unicode(255), nullable=False)
+    file_path = Column(Unicode(500), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    mime_type = Column(Unicode(100), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+

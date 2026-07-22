@@ -59,6 +59,24 @@ Dịch vụ đăng ký đưa đón Nhân viên nước ngoài di chuyển giữa
 **Tra cứu 360°** (360° History Profile):
 Giao diện tra cứu tập trung toàn bộ dữ liệu lịch sử của một Nhân viên nước ngoài bao gồm Hồ sơ cá nhân master, Dòng thời gian Lưu trú/Chỗ ở, Lịch sử Visa, Lịch sử Tạm trú và Nhật ký Vắng ăn.
 
+**Tài liệu đính kèm** (Document Attachment):
+Tệp tin hình ảnh (PNG, JPEG, WEBP...) hoặc tệp tài liệu PDF được đính kèm vào các bản ghi giấy tờ của Nhân viên nước ngoài (Hộ chiếu, Visa, Tạm trú, Giấy phép lao động, Hợp đồng lao động). Một bản ghi giấy tờ có thể đính kèm nhiều tệp tin.
+
+**Nhật ký Nhập xuất cảnh** (Travel Record):
+Bản ghi theo dõi các đợt di chuyển giữa Việt Nam và nước ngoài của Nhân viên nước ngoài. Mỗi đợt có **Ngày đến Việt Nam** (entry_date), **Ngày dự kiến sang** (expected_entry_date), **Ngày dự kiến về** (expected_exit_date) và **Ngày thực tế đã về** (actual_exit_date).
+- Khi nhân sự đang ở Việt Nam $\rightarrow$ Nhãn hiển thị là **Ngày dự kiến về**.
+- Khi nhân sự đang ở nước ngoài (đã về nước) $\rightarrow$ Nhãn hiển thị chuyển thành **Ngày dự kiến sang** đợt tiếp theo để theo dõi và chuẩn bị cảnh báo.
+
+**Thống kê Hiện diện & Chỗ ở** (Daily Presence Report):
+Báo cáo theo mốc ngày chọn chia làm 2 phân vùng lớn:
+- **Đang ở Việt Nam**: Thống kê chi tiết theo Ký túc xá (KTX), Khách sạn và Chưa xếp chỗ. Hỗ trợ xem dạng nhóm theo phòng hoặc danh sách nhân viên.
+- **Đã về nước**: Thống kê danh sách nhân sự không có mặt tại Việt Nam tính đến mốc ngày chọn (ngày thực tế đã về, ngày dự kiến sang đợt tới).
+**Modal Cảnh báo Xóa Hồ sơ** (Confirm Delete Modal):
+Hộp thoại cảnh báo bảo mật nguy hiểm trước khi xóa một Nhân viên nước ngoài. Hiển thị thông tin nhận dạng nhân sự (Tên Latin, Tên Trung Quốc, Mã NV, Hộ chiếu, Bộ phận), đưa ra cảnh báo về các dữ liệu liên quan sẽ bị xóa vĩnh viễn (Lưu trú, Visa, Tạm trú, GPLĐ, Nhập xuất cảnh) và yêu cầu người dùng bấm "Xóa vĩnh viễn" để xác nhận.
+
+
+
+
 ## Relationships
 
 - Một **Nhân viên nước ngoài** có nhiều **Lưu trú** theo thời gian.
@@ -67,6 +85,7 @@ Giao diện tra cứu tập trung toàn bộ dữ liệu lịch sử của một
 - Một **Lưu trú** có nhiều **Visa** và nhiều **Tạm trú** (gia hạn giữa chừng không về nước).
 - Một **Lưu trú** có nhiều **Vắng ăn** (những ngày không tính tiền ăn).
 - **Đơn giá bữa ăn** áp dụng cho một ngày được tra theo bản ghi hiệu lực gần nhất ứng với loại ngày (Đầy đủ hay Ngày sự kiện).
+- Khi ghi nhận **Ngày thực tế đã về nước** (`actual_exit_date`), trạng thái nhân sự chuyển thành "Đã về nước". Nếu nhân sự đang ở KTX, HR chọn 1 trong 2 phương án: (1) **Trả phòng**: kết thúc Lưu trú (`end_date = actual_exit_date`), giải phóng giường; hoặc (2) **Giữ phòng**: duy trì Đợt lưu trú nhưng đánh dấu vắng ăn trong thời gian về nước để không tính tiền cơm.
 
 ## Flagged ambiguities
 

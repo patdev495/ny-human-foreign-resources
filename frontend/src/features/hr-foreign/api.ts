@@ -3,6 +3,8 @@ import type {
   ContractCreate,
   ContractUpdate,
   DailyPresenceReportResponse,
+  DocumentAttachment,
+  DocumentEntityType,
   EmployeeHistoryResponse,
   EventDay,
   EventDayCreate,
@@ -26,6 +28,10 @@ import type {
   StayCreate,
   StayUpdate,
   TamTru,
+  TravelRecord,
+  TravelRecordCreate,
+  TravelRecordUpdate,
+  ExitDateActionPayload,
   TamTruCreate,
   TamTruUpdate,
   Visa,
@@ -37,6 +43,18 @@ import type {
 } from "./types";
 
 const BASE = "/api/hr-foreign";
+
+function formatApiError(err: any, fallbackMessage: string): string {
+  if (!err || !err.detail) return fallbackMessage;
+  if (typeof err.detail === "string") return err.detail;
+  if (Array.isArray(err.detail)) {
+    return err.detail.map((e: any) => e.msg || JSON.stringify(e)).join("; ");
+  }
+  if (typeof err.detail === "object") {
+    return err.detail.message || err.detail.msg || JSON.stringify(err.detail);
+  }
+  return fallbackMessage;
+}
 
 // --- EMPLOYEES API ---
 
@@ -501,4 +519,115 @@ export async function fetchDailyPresenceReport(
   }
   return res.json() as Promise<DailyPresenceReportResponse>;
 }
+
+// --- DOCUMENT ATTACHMENT API ---
+
+export async function fetchAttachments(
+  entityType: DocumentEntityType,
+  entityId: number
+): Promise<DocumentAttachment[]> {
+  const res = await fetch(
+    `${BASE}/attachments?entity_type=${encodeURIComponent(entityType)}&entity_id=${entityId}`
+  );
+  if (!res.ok) throw new Error("Failed to fetch document attachments");
+  return res.json() as Promise<DocumentAttachment[]>;
+}
+
+export async function uploadAttachment(
+  entityType: DocumentEntityType,
+  entityId: number,
+  file: File
+): Promise<DocumentAttachment> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("entity_type", entityType);
+  formData.append("entity_id", String(entityId));
+
+  const res = await fetch(`${BASE}/attachments`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to upload document attachment");
+  }
+
+  return res.json() as Promise<DocumentAttachment>;
+}
+
+export async function deleteAttachment(attachmentId: number): Promise<void> {
+  const res = await fetch(`${BASE}/attachments/${attachmentId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to delete document attachment");
+}
+
+export function getAttachmentPreviewUrl(attachmentId: number): string {
+  return `${BASE}/attachments/${attachmentId}/preview`;
+}
+
+export function getAttachmentDownloadUrl(attachmentId: number): string {
+  return `${BASE}/attachments/${attachmentId}/download`;
+}
+
+
+// --- TRAVEL RECORDS API ---
+
+export async function fetchTravelRecords(empId: number): Promise<TravelRecord[]> {
+  const res = await fetch(`${BASE}/employees/${empId}/travel-records`);
+  if (!res.ok) throw new Error("Failed to fetch travel records");
+  return res.json() as Promise<TravelRecord[]>;
+}
+
+export async function createTravelRecord(
+  empId: number,
+  payload: TravelRecordCreate
+): Promise<TravelRecord> {
+  const res = await fetch(`${BASE}/employees/${empId}/travel-records`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to create travel record");
+  }
+  return res.json() as Promise<TravelRecord>;
+}
+
+export async function updateTravelRecord(
+  empId: number,
+  recordId: number,
+  payload: TravelRecordUpdate
+): Promise<TravelRecord> {
+  const res = await fetch(`${BASE}/employees/${empId}/travel-records/${recordId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to update travel record");
+  }
+  return res.json() as Promise<TravelRecord>;
+}
+
+export async function recordEmployeeExit(
+  empId: number,
+  payload: ExitDateActionPayload
+): Promise<TravelRecord> {
+  const res = await fetch(`${BASE}/employees/${empId}/record-exit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to record exit date"));
+  }
+  return res.json() as Promise<TravelRecord>;
+}
+
+
 

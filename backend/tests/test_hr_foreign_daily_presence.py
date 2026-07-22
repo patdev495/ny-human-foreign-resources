@@ -101,3 +101,32 @@ def test_daily_presence_report(client: TestClient) -> None:
     assert report2["summary"]["total_in_vn"] == 2
     assert report2["summary"]["ktx_count"] == 1
     assert report2["summary"]["hotel_count"] == 1
+
+
+def test_daily_presence_report_with_exited_employees(client: TestClient) -> None:
+    # Create an employee who has exited Vietnam
+    emp = client.post(
+        "/api/hr-foreign/employees",
+        json={"name_latin": "LIU QIANG", "gender": "Nam", "department": "Quản lý"},
+    ).json()
+
+    # Record exit for emp
+    client.post(
+        f"/api/hr-foreign/employees/{emp['id']}/record-exit",
+        json={
+            "actual_exit_date": "2026-07-20",
+            "action_type": "CHECK_OUT",
+            "expected_entry_date": "2026-09-01",
+        },
+    )
+
+    res = client.get("/api/hr-foreign/reports/daily-presence?target_date=2026-07-22")
+    assert res.status_code == 200, res.json()
+    data = res.json()
+
+    assert data["summary"]["exited_count"] == 1
+    assert len(data["exited_items"]) == 1
+    assert data["exited_items"][0]["employee_id"] == emp["id"]
+    assert data["exited_items"][0]["actual_exit_date"] == "2026-07-20"
+    assert data["exited_items"][0]["expected_entry_date"] == "2026-09-01"
+

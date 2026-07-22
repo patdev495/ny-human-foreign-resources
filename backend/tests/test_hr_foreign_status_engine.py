@@ -159,3 +159,99 @@ def test_get_expiring_documents_all_types(db_session):
     assert resp.expiring_gpl_ds[0].days_remaining == 20
     assert len(resp.expiring_contracts) == 1
     assert resp.expiring_contracts[0].days_remaining == 25
+
+
+def test_evaluate_employee_statuses_travel_dates(db_session):
+    today = datetime.date(2026, 7, 22)
+
+    # 1. Emp with entry_date in past and actual_exit_date set (returned home)
+    emp_returned = ForeignEmployee(
+        name_latin="CHEN WEI",
+        gender="Nam",
+        passport_number="E4444444",
+        entry_date=datetime.date(2026, 5, 1),
+        expected_exit_date=datetime.date(2026, 7, 15),
+        actual_exit_date=datetime.date(2026, 7, 10),
+    )
+
+    # 2. Emp in Vietnam with entry_date in past, actual_exit_date None
+    emp_in_vn = ForeignEmployee(
+        name_latin="LIN TAO",
+        gender="Nam",
+        passport_number="E5555555",
+        entry_date=datetime.date(2026, 6, 1),
+        expected_exit_date=datetime.date(2026, 8, 1),
+        actual_exit_date=None,
+    )
+
+    # 3. Emp overdue return: in VN but expected_exit_date < today and actual_exit_date None
+    emp_overdue = ForeignEmployee(
+        name_latin="ZHANG MIN",
+        gender="Nữ",
+        passport_number="E6666666",
+        entry_date=datetime.date(2026, 5, 1),
+        expected_exit_date=datetime.date(2026, 7, 1),
+        actual_exit_date=None,
+    )
+
+    db_session.add_all([emp_returned, emp_in_vn, emp_overdue])
+    db_session.commit()
+
+    reads = evaluate_employee_statuses(
+        db_session, [emp_returned, emp_in_vn, emp_overdue], today=today
+    )
+
+    r_returned = next(r for r in reads if r.id == emp_returned.id)
+    r_in_vn = next(r for r in reads if r.id == emp_in_vn.id)
+    r_overdue = next(r for r in reads if r.id == emp_overdue.id)
+
+    # Check returned status
+    assert r_returned.is_in_vietnam is False
+    assert r_returned.is_overdue_exit is False
+    assert r_returned.entry_date == datetime.date(2026, 5, 1)
+    assert r_returned.actual_exit_date == datetime.date(2026, 7, 10)
+
+    # Check in VN status
+    assert r_in_vn.is_in_vietnam is True
+    assert r_in_vn.is_overdue_exit is False
+
+    # Check overdue status
+    assert r_overdue.is_in_vietnam is True
+    assert r_overdue.is_overdue_exit is True
+
+
+def test_evaluate_employee_statuses_fallback_from_stay(db_session):
+    today = datetime.date(2026, 7, 22)
+
+    # Emp without entry_date on profile, but with a Stay record
+    emp = ForeignEmployee(
+        name_latin="WANG LEI",
+        gender="Nam",
+        passport_number="E7777777",
+        entry_date=None,
+        expected_exit_date=None,
+        actual_exit_date=None,
+    )
+    db_session.add(emp)
+    db_session.flush()
+
+    stay = Stay(
+        employee_id=emp.id,
+        accommodation_type="KTX",
+        start_date=datetime.date(2026, 3, 15),
+        expected_end_date=datetime.date(2026, 9, 30),
+        end_date=None,
+    )
+    db_session.add(stay)
+    db_session.commit()
+
+    reads = evaluate_employee_statuses(db_session, [emp], today=today)
+    r = reads[0]
+
+    assert r.entry_date == datetime.date(2026, 3, 15)
+    assert r.expected_exit_date == datetime.date(2026, 9, 30)
+    assert r.actual_exit_date is None
+    assert r.is_in_vietnam is True
+    assert r.is_overdue_exit is False
+
+

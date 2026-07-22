@@ -4,6 +4,7 @@ import { getVisaLabel } from "../types";
 import { fetchEmployees, createEmployee, updateEmployee, deleteEmployee } from "../api";
 import { EmployeeModal } from "./EmployeeModal";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
+import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 
 interface EmployeeListProps {
   onSelectEmployee?: (emp: ForeignEmployee) => void;
@@ -97,6 +98,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const [editingEmp, setEditingEmp] = useState<ForeignEmployee | null>(null);
   const [profileEmpId, setProfileEmpId] = useState<number | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ForeignEmployee | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const loadData = async (q?: string) => {
     try {
@@ -121,15 +124,15 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
     loadData(searchQuery);
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa hồ sơ nhân sự này?")) return;
-    try {
-      await deleteEmployee(id);
-      loadData(searchQuery);
-    } catch (err) {
-      console.error(err);
-      alert("Xóa không thành công.");
-    }
+  const handlePromptDelete = (emp: ForeignEmployee) => {
+    setDeleteTarget(emp);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await deleteEmployee(deleteTarget.id);
+    loadData(searchQuery);
   };
 
   const openProfile = (emp: ForeignEmployee) => {
@@ -307,17 +310,31 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
                   {/* Hiện diện */}
                   <td className="px-4 py-3">
-                    {emp.is_in_vietnam ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Đang ở VN{emp.current_room_number ? ` (${emp.current_room_number})` : ""}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                        Đã về nước
-                      </span>
-                    )}
+                    <div className="flex flex-col gap-1 items-start">
+                      {emp.is_in_vietnam ? (
+                        <>
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            Đang ở VN{emp.current_room_number ? ` (${emp.current_room_number})` : ""}
+                          </span>
+                          {!emp.current_room_number && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              ⚠️ Chưa xếp phòng
+                            </span>
+                          )}
+                          {emp.is_overdue_exit && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                              ⏰ Quá hạn dự kiến về
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                          Đã về nước
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Hộ chiếu */}
@@ -371,7 +388,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
                       Sửa
                     </button>
                     <button
-                      onClick={() => handleDelete(emp.id)}
+                      onClick={() => handlePromptDelete(emp)}
                       className="px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
                     >
                       Xóa
@@ -395,6 +412,21 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
       />
+
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
+          }}
+          onConfirm={handleConfirmDelete}
+          employeeName={`${deleteTarget.name_latin}${deleteTarget.name_chinese ? ` (${deleteTarget.name_chinese})` : ""}`}
+          employeeCode={deleteTarget.employee_code}
+          passportNumber={deleteTarget.passport_number}
+          department={deleteTarget.department}
+        />
+      )}
     </div>
   );
 };

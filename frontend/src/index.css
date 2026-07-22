@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* Tự động kéo zoom về 80% đối với màn hình laptop (chiều rộng <= 1600px) */
+@media screen and (max-width: 1600px) {
+  #root {
+    zoom: 0.8;
+  }
+}
+
+
