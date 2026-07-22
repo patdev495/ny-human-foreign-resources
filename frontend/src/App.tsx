@@ -1,32 +1,26 @@
 import React, { useState } from "react";
 import { EmployeeList } from "./features/hr-foreign/components/EmployeeList";
-import { RoomList } from "./features/hr-foreign/components/RoomList";
-import { StayList } from "./features/hr-foreign/components/StayList";
-import { RoomOccupancyBoard } from "./features/hr-foreign/components/RoomOccupancyBoard";
+import { AccommodationManagement } from "./features/hr-foreign/components/AccommodationManagement";
 import { ExpiringDocsAlert } from "./features/hr-foreign/components/ExpiringDocsAlert";
 import { MealConfigAndEvents } from "./features/hr-foreign/components/MealConfigAndEvents";
 import { MealExpenseReport } from "./features/hr-foreign/components/MealExpenseReport";
-import { StayVisaTamTruSection } from "./features/hr-foreign/components/VisaTamTruSection";
-import type { Stay } from "./features/hr-foreign/types";
+import { DailyPresenceReport } from "./features/hr-foreign/components/DailyPresenceReport";
 
 export type NavTab =
   | "EMPLOYEES"
-  | "ROOMS"
-  | "STAYS"
-  | "OCCUPANCY"
+  | "ACCOMMODATION"
+  | "DAILY_PRESENCE"
   | "EXPIRING_DOCS"
   | "MEAL_CONFIG"
   | "MEAL_REPORT";
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>("EMPLOYEES");
-  const [selectedStay, setSelectedStay] = useState<Stay | null>(null);
 
   const navItems: { key: NavTab; label: string; badge?: string }[] = [
     { key: "EMPLOYEES", label: "Hồ sơ Nhân sự" },
-    { key: "STAYS", label: "Đợt Lưu Trú" },
-    { key: "ROOMS", label: "Danh mục Phòng KTX" },
-    { key: "OCCUPANCY", label: "Hiện trạng Phòng KTX" },
+    { key: "ACCOMMODATION", label: "Quản lý Chỗ ở & Lưu trú" },
+    { key: "DAILY_PRESENCE", label: "Thống kê Hiện diện", badge: "NEW" },
     { key: "EXPIRING_DOCS", label: "Cảnh báo Giấy tờ", badge: "HOT" },
     { key: "MEAL_CONFIG", label: "Cấu hình Giá & Sự kiện" },
     { key: "MEAL_REPORT", label: "Báo cáo Chi phí Bữa ăn" },
@@ -65,7 +59,6 @@ export const App: React.FC = () => {
                   key={item.key}
                   onClick={() => {
                     setActiveTab(item.key);
-                    setSelectedStay(null);
                   }}
                   className={`px-4 py-2 text-xs font-bold rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                     isActive
@@ -94,16 +87,9 @@ export const App: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
         {activeTab === "EMPLOYEES" && <EmployeeList />}
 
-        {activeTab === "STAYS" && (
-          <div className="space-y-6">
-            <StayList onSelectStay={(stay) => setSelectedStay(stay)} />
-            {selectedStay && <StayVisaTamTruSection stay={selectedStay} />}
-          </div>
-        )}
+        {activeTab === "ACCOMMODATION" && <AccommodationManagement />}
 
-        {activeTab === "ROOMS" && <RoomList />}
-
-        {activeTab === "OCCUPANCY" && <RoomOccupancyBoard />}
+        {activeTab === "DAILY_PRESENCE" && <DailyPresenceReport />}
 
         {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
 

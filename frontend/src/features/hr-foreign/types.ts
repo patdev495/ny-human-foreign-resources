@@ -96,16 +96,37 @@ export interface RoomCreate {
 
 export interface RoomUpdate extends RoomCreate {}
 
+export interface Hotel {
+  id: number;
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface HotelCreate {
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+  notes?: string | null;
+}
+
+export interface HotelUpdate extends HotelCreate {}
+
 export interface Stay {
   id: number;
   employee_id: number;
   accommodation_type: "KTX" | "HOTEL";
   room_id?: number | null;
   room_number?: string | null;
+  hotel_id?: number | null;
+  hotel_name?: string | null;
+  hotel_room_number?: string | null;
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
   start_date?: string | null;
+  expected_end_date?: string | null;
   end_date?: string | null;
   notes?: string | null;
 }
@@ -114,15 +135,22 @@ export interface StayCreate {
   employee_id: number;
   accommodation_type: "KTX" | "HOTEL";
   room_id?: number | null;
+  hotel_id?: number | null;
+  hotel_room_number?: string | null;
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
   start_date?: string | null;
+  expected_end_date?: string | null;
   end_date?: string | null;
   notes?: string | null;
 }
 
 export interface StayUpdate extends StayCreate {}
+
+export interface StayCheckout {
+  end_date: string;
+}
 
 export interface ResidentInfo {
   employee_id: number;
@@ -138,8 +166,12 @@ export interface ResidentInfo {
 }
 
 export interface RoomOccupancy {
-  room_id: number;
-  room_number: string;
+  accommodation_type: "KTX" | "HOTEL";
+  unit_id: number;
+  unit_name: string;
+  room_id?: number | null;
+  room_number?: string | null;
+  address?: string | null;
   notes?: string | null;
   active_residents: ResidentInfo[];
 }
@@ -267,3 +299,44 @@ export interface EmployeeHistoryResponse {
   visas: Visa[];
   tam_trus: TamTru[];
 }
+
+export interface DailyPresenceItem {
+  employee_id: number;
+  employee_code?: string | null;
+  name_latin: string;
+  name_chinese?: string | null;
+  gender: string;
+  department?: string | null;
+  phone?: string | null;
+  accommodation_type: "KTX" | "HOTEL";
+  location_name: string;
+  room_number?: string | null;
+  hotel_name?: string | null;
+  hotel_room_number?: string | null;
+  bed_location?: string | null;
+  stay_id: number;
+  stay_type: string;
+  start_date?: string | null;
+  expected_end_date?: string | null;
+}
+
+export interface DailyPresenceSummary {
+  total_in_vn: number;
+  ktx_count: number;
+  hotel_count: number;
+}
+
+export interface DailyPresenceGroup {
+  group_name: string;
+  count: number;
+  items: DailyPresenceItem[];
+}
+
+export interface DailyPresenceReportResponse {
+  target_date: string;
+  summary: DailyPresenceSummary;
+  ktx_groups: DailyPresenceGroup[];
+  hotel_groups: DailyPresenceGroup[];
+  items: DailyPresenceItem[];
+}
+

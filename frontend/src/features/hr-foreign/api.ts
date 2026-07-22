@@ -2,6 +2,7 @@ import type {
   Contract,
   ContractCreate,
   ContractUpdate,
+  DailyPresenceReportResponse,
   EmployeeHistoryResponse,
   EventDay,
   EventDayCreate,
@@ -9,6 +10,9 @@ import type {
   ForeignEmployee,
   ForeignEmployeeCreate,
   ForeignEmployeeUpdate,
+  Hotel,
+  HotelCreate,
+  HotelUpdate,
   MealAbsence,
   MealAbsenceCreate,
   MealExpenseReportResponse,
@@ -221,6 +225,45 @@ export async function deleteRoom(id: number): Promise<void> {
   if (!res.ok) throw new Error("Failed to delete room");
 }
 
+// --- HOTELS API ---
+
+export async function fetchHotels(): Promise<Hotel[]> {
+  const res = await fetch(`${BASE}/hotels`);
+  if (!res.ok) throw new Error("Failed to fetch hotels");
+  return res.json() as Promise<Hotel[]>;
+}
+
+export async function createHotel(payload: HotelCreate): Promise<Hotel> {
+  const res = await fetch(`${BASE}/hotels`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to create hotel");
+  }
+  return res.json() as Promise<Hotel>;
+}
+
+export async function updateHotel(id: number, payload: HotelUpdate): Promise<Hotel> {
+  const res = await fetch(`${BASE}/hotels/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to update hotel");
+  }
+  return res.json() as Promise<Hotel>;
+}
+
+export async function deleteHotel(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/hotels/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete hotel");
+}
+
 // --- STAYS API ---
 
 export async function fetchStays(employeeId?: number, status?: string): Promise<Stay[]> {
@@ -256,6 +299,19 @@ export async function updateStay(id: number, payload: StayUpdate): Promise<Stay>
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.detail || "Failed to update stay");
+  }
+  return res.json() as Promise<Stay>;
+}
+
+export async function checkoutStay(stayId: number, endDate: string): Promise<Stay> {
+  const res = await fetch(`${BASE}/stays/${stayId}/checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ end_date: endDate }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to check out");
   }
   return res.json() as Promise<Stay>;
 }
@@ -430,3 +486,19 @@ export async function fetchMealExpenseReport(
   }
   return res.json() as Promise<MealExpenseReportResponse>;
 }
+
+// --- DAILY PRESENCE REPORT API ---
+
+export async function fetchDailyPresenceReport(
+  targetDate: string
+): Promise<DailyPresenceReportResponse> {
+  const res = await fetch(
+    `${BASE}/reports/daily-presence?target_date=${encodeURIComponent(targetDate)}`
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to fetch daily presence report");
+  }
+  return res.json() as Promise<DailyPresenceReportResponse>;
+}
+

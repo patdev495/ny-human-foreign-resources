@@ -50,6 +50,18 @@ class Room(Base):
     stays = relationship("Stay", back_populates="room")
 
 
+class Hotel(Base):
+    __tablename__ = "hotels"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(Unicode(255), nullable=False, index=True)
+    address = Column(Unicode(255), nullable=True)
+    phone = Column(Unicode(100), nullable=True)
+    notes = Column(UnicodeText, nullable=True)
+
+    stays = relationship("Stay", back_populates="hotel")
+
+
 class Stay(Base):
     __tablename__ = "stays"
 
@@ -57,15 +69,19 @@ class Stay(Base):
     employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
     accommodation_type = Column(Unicode(50), nullable=False, default="KTX")  # KTX, HOTEL
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True, index=True)
+    hotel_id = Column(Integer, ForeignKey("hotels.id"), nullable=True, index=True)
+    hotel_room_number = Column(Unicode(100), nullable=True)  # Số phòng tại khách sạn (vd: P201)
     bed_location = Column(Unicode(50), nullable=True)  # Vị trí giường (A, B, 2 giường...) từ Excel
     stay_type = Column(Unicode(50), nullable=False, default="CO_DINH")  # CO_DINH, CONG_TAC
     has_meals = Column(Boolean, nullable=False, default=True)
     start_date = Column(Date, nullable=True)
+    expected_end_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
     employee = relationship("ForeignEmployee", back_populates="stays")
     room = relationship("Room", back_populates="stays")
+    hotel = relationship("Hotel", back_populates="stays")
     visas = relationship("Visa", back_populates="stay", cascade="all, delete-orphan")
     tam_trus = relationship("TamTru", back_populates="stay", cascade="all, delete-orphan")
     meal_absences = relationship("MealAbsence", back_populates="stay", cascade="all, delete-orphan")

@@ -11,14 +11,17 @@ _Avoid_: expat, lao động nước ngoài, người nước ngoài, cán bộ n
 **KTX** (Ký túc xá / Dormitory):
 Nơi ở do công ty cung cấp cho Nhân viên nước ngoài. Được tổ chức theo Phòng.
 
-**Phòng** (Room):
-Đơn vị ở trong KTX. Định danh bằng **số phòng** (vd: 1601, 1607…). Một Phòng có thể chứa nhiều Nhân viên nước ngoài cùng lúc.
+**Phòng KTX** (Dormitory Room):
+Đơn vị ở thuộc KTX của công ty (vd: 1601, 1607). Được quản lý độc lập trong Danh mục phòng KTX.
 
-**Vị trí giường** (Bed Location):
-Vị trí chỗ ngủ được phân bổ cụ thể trong một **Phòng** KTX (vd: Giường A, Giường B, 2 giường, 1 giường…). Thuộc về một **Lưu trú** cụ thể ở KTX.
+**Khách sạn** (Hotel):
+Cơ sở lưu trú đối tác (vd: Khách sạn Mường Thanh, Khách sạn Rex, Khách sạn Hòa Bình). Được quản lý trong Danh mục Khách sạn.
 
 **Loại chỗ ở** (Accommodation Type):
-Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Chỉ người ở KTX mới phát sinh chi phí ăn uống. Người ở khách sạn không có chi phí ăn.
+Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Một Lưu trú sẽ liên kết tới một **Phòng KTX** (nếu là KTX) hoặc một **Khách sạn** + **Số phòng khách sạn** (nếu là Khách sạn). Chỉ người ở KTX mới phát sinh chi phí ăn uống (`has_meals = True`). Người ở Khách sạn không phát sinh chi phí ăn (`has_meals = False`).
+
+**Vị trí giường** (Bed Location):
+Vị trí chỗ ngủ được phân bổ cụ thể trong một **Phòng KTX** hoặc **Khách sạn** (vd: Giường A, Giường B, 2 giường, 1 giường…). Thuộc về một **Lưu trú** cụ thể.
 
 **Lưu trú** (Stay):
 Một chuyến sang Việt Nam của Nhân viên nước ngoài — từ ngày đến đến ngày về nước. Trong 1 Lưu trú: Phòng KTX là cố định; lần sang tiếp theo là Lưu trú mới.
@@ -59,7 +62,7 @@ Giao diện tra cứu tập trung toàn bộ dữ liệu lịch sử của một
 ## Relationships
 
 - Một **Nhân viên nước ngoài** có nhiều **Lưu trú** theo thời gian.
-- Tại một thời điểm, một **Nhân viên nước ngoài** chỉ có một **Lưu trú** đang active (end_date = null).
+- Tại một thời điểm, một **Nhân viên nước ngoài** chỉ có một **Lưu trú** đang active (end_date = null). Khi thêm nhân viên vào chỗ ở mới, nếu nhân viên đang có lượt ở active ở nơi khác, hệ thống phải cảnh báo xung đột và dừng thao tác để người dùng tự xử lý (ví dụ: làm thủ tục trả phòng cũ trước).
 - Một **Phòng** có thể có nhiều **Lưu trú** đồng thời (nhiều người cùng phòng). Mỗi lưu trú có thể gán **Vị trí giường** (A, B...).
 - Một **Lưu trú** có nhiều **Visa** và nhiều **Tạm trú** (gia hạn giữa chừng không về nước).
 - Một **Lưu trú** có nhiều **Vắng ăn** (những ngày không tính tiền ăn).

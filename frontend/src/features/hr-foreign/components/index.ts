@@ -1,2 +1,8 @@
-// React components for hr-foreign feature
-// To be added after feature discussion
+export { AccommodationManagement } from "./AccommodationManagement";
+export { RoomList } from "./RoomList";
+export { HotelList } from "./HotelList";
+export { RoomOccupancyBoard } from "./RoomOccupancyBoard";
+export { CheckInModal } from "./CheckInModal";
+export { CheckOutModal } from "./CheckOutModal";
+export { DailyPresenceReport } from "./DailyPresenceReport";
+

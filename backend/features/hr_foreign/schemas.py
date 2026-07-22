@@ -66,16 +66,42 @@ class RoomRead(RoomBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# --- HOTEL SCHEMAS ---
+
+class HotelBase(BaseModel):
+    name: str
+    address: str | None = None
+    phone: str | None = None
+    notes: str | None = None
+
+
+class HotelCreate(HotelBase):
+    pass
+
+
+class HotelUpdate(HotelBase):
+    pass
+
+
+class HotelRead(HotelBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # --- STAY SCHEMAS ---
 
 class StayBase(BaseModel):
     employee_id: int
     accommodation_type: str  # "KTX" | "HOTEL"
     room_id: int | None = None
+    hotel_id: int | None = None
+    hotel_room_number: str | None = None
     bed_location: str | None = None
     stay_type: str  # "CO_DINH" | "CONG_TAC"
     has_meals: bool = True
     start_date: datetime.date | None = None
+    expected_end_date: datetime.date | None = None
     end_date: datetime.date | None = None
     notes: str | None = None
 
@@ -88,9 +114,14 @@ class StayUpdate(StayBase):
     pass
 
 
+class StayCheckout(BaseModel):
+    end_date: datetime.date
+
+
 class StayRead(StayBase):
     id: int
     room_number: str | None = None
+    hotel_name: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -111,8 +142,12 @@ class ResidentInfo(BaseModel):
 
 
 class RoomOccupancyRead(BaseModel):
-    room_id: int
-    room_number: str
+    accommodation_type: str = "KTX"  # KTX or HOTEL
+    unit_id: int                    # room_id or hotel_id
+    unit_name: str                  # room_number or hotel_name
+    room_id: int | None = None      # backward compatibility for KTX
+    room_number: str | None = None  # backward compatibility for KTX
+    address: str | None = None
     notes: str | None = None
     active_residents: list[ResidentInfo]
 
@@ -313,6 +348,48 @@ class MealExpenseReportResponse(BaseModel):
     total_meals: int
     total_expense: float
     items: list[MealExpenseReportItem]
+
+
+# --- DAILY PRESENCE REPORT SCHEMAS ---
+
+class DailyPresenceItem(BaseModel):
+    employee_id: int
+    employee_code: str | None = None
+    name_latin: str
+    name_chinese: str | None = None
+    gender: str
+    department: str | None = None
+    phone: str | None = None
+    accommodation_type: str  # KTX or HOTEL
+    location_name: str
+    room_number: str | None = None
+    hotel_name: str | None = None
+    hotel_room_number: str | None = None
+    bed_location: str | None = None
+    stay_id: int
+    stay_type: str
+    start_date: datetime.date | None = None
+    expected_end_date: datetime.date | None = None
+
+
+class DailyPresenceSummary(BaseModel):
+    total_in_vn: int
+    ktx_count: int
+    hotel_count: int
+
+
+class DailyPresenceGroup(BaseModel):
+    group_name: str
+    count: int
+    items: list[DailyPresenceItem]
+
+
+class DailyPresenceReportResponse(BaseModel):
+    target_date: datetime.date
+    summary: DailyPresenceSummary
+    ktx_groups: list[DailyPresenceGroup]
+    hotel_groups: list[DailyPresenceGroup]
+    items: list[DailyPresenceItem]
 
 
 # --- EMPLOYEE 360 HISTORY SCHEMA ---

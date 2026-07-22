@@ -94,3 +94,29 @@ def test_stay_crud_and_single_active_constraint(client: TestClient) -> None:
     }
     res_new = client.post("/api/hr-foreign/stays", json=stay_payload_2)
     assert res_new.status_code == 201
+
+
+def test_stay_with_expected_end_date(client: TestClient) -> None:
+    emp_res = client.post(
+        "/api/hr-foreign/employees",
+        json={
+            "name_latin": "LI WEI",
+            "gender": "Nam",
+            "nationality": "Trung Quoc",
+        },
+    )
+    emp_id = emp_res.json()["id"]
+
+    stay_payload = {
+        "employee_id": emp_id,
+        "accommodation_type": "KTX",
+        "stay_type": "CO_DINH",
+        "has_meals": True,
+        "start_date": "2026-05-01",
+        "expected_end_date": "2026-10-31",
+    }
+    res = client.post("/api/hr-foreign/stays", json=stay_payload)
+    assert res.status_code == 201
+    stay_data = res.json()
+    assert stay_data["expected_end_date"] == "2026-10-31"
+

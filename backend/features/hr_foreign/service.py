@@ -8,6 +8,7 @@ from features.hr_foreign.models import (
     Contract,
     EventDay,
     ForeignEmployee,
+    Hotel,
     MealAbsence,
     MealPriceConfig,
     Room,
@@ -20,6 +21,10 @@ from features.hr_foreign.schemas import (
     ContractCreate,
     ContractRead,
     ContractUpdate,
+    DailyPresenceGroup,
+    DailyPresenceItem,
+    DailyPresenceReportResponse,
+    DailyPresenceSummary,
     EventDayCreate,
     ExpiringDocumentItem,
     ExpiringDocumentsResponse,
@@ -27,6 +32,9 @@ from features.hr_foreign.schemas import (
     ForeignEmployeeRead,
     ForeignEmployeeUpdate,
     EmployeeHistoryResponse,
+    HotelCreate,
+    HotelRead,
+    HotelUpdate,
     MealAbsenceCreate,
     MealExpenseReportItem,
     MealExpenseReportResponse,
@@ -330,6 +338,38 @@ def delete_room(db: Session, room: Room) -> None:
     db.commit()
 
 
+# --- HOTELS ---
+
+def get_hotels(db: Session) -> list[Hotel]:
+    return db.query(Hotel).all()
+
+
+def get_hotel_by_id(db: Session, hotel_id: int) -> Hotel | None:
+    return db.query(Hotel).filter(Hotel.id == hotel_id).first()
+
+
+def create_hotel(db: Session, payload: HotelCreate) -> Hotel:
+    hotel = Hotel(**payload.model_dump())
+    db.add(hotel)
+    db.flush()
+    db.commit()
+    db.refresh(hotel)
+    return hotel
+
+
+def update_hotel(db: Session, hotel: Hotel, payload: HotelUpdate) -> Hotel:
+    for key, value in payload.model_dump().items():
+        setattr(hotel, key, value)
+    db.commit()
+    db.refresh(hotel)
+    return hotel
+
+
+def delete_hotel(db: Session, hotel: Hotel) -> None:
+    db.delete(hotel)
+    db.commit()
+
+
 # --- STAYS ---
 
 def get_active_stay_for_employee(
@@ -377,11 +417,19 @@ def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
     return stay
 
 
+def checkout_stay(db: Session, stay: Stay, end_date: datetime.date) -> Stay:
+    stay.end_date = end_date
+    db.commit()
+    db.refresh(stay)
+    return stay
+
+
 def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
-    rooms = db.query(Room).all()
     today = datetime.date.today()
     result: list[RoomOccupancyRead] = []
 
+    # 1. KTX Rooms
+    rooms = db.query(Room).all()
     for room in rooms:
         active_stays = (
             db.query(Stay)
@@ -413,10 +461,60 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
 
         result.append(
             RoomOccupancyRead(
+                accommodation_type="KTX",
+                unit_id=room.id,
+                unit_name=room.room_number,
                 room_id=room.id,
                 room_number=room.room_number,
                 notes=room.notes,
                 active_residents=residents,
+            )
+        )
+
+    # 2. Hotels
+    hotels = db.query(Hotel).all()
+    for hotel in hotels:
+        active_stays = (
+            db.query(Stay)
+            .filter(
+                Stay.hotel_id == hotel.id,
+                Stay.accommodation_type == "HOTEL",
+                or_(Stay.end_date.is_(None), Stay.end_date >= today),
+            )
+            .all()
+        )
+        hotel_residents: list[ResidentInfo] = []
+        for stay in active_stays:
+            emp = stay.employee
+            if emp:
+                bed_loc = (
+                    f"{stay.hotel_room_number} ({stay.bed_location})"
+                    if stay.hotel_room_number and stay.bed_location
+                    else (stay.hotel_room_number or stay.bed_location)
+                )
+                hotel_residents.append(
+                    ResidentInfo(
+                        employee_id=emp.id,
+                        name_latin=emp.name_latin,
+                        name_chinese=emp.name_chinese,
+                        passport_number=emp.passport_number,
+                        stay_id=stay.id,
+                        stay_type=stay.stay_type,
+                        has_meals=stay.has_meals,
+                        bed_location=bed_loc,
+                        start_date=stay.start_date,
+                        end_date=stay.end_date,
+                    )
+                )
+
+        result.append(
+            RoomOccupancyRead(
+                accommodation_type="HOTEL",
+                unit_id=hotel.id,
+                unit_name=hotel.name,
+                address=hotel.address,
+                notes=hotel.notes,
+                active_residents=hotel_residents,
             )
         )
 
@@ -731,3 +829,108 @@ def calculate_meal_expenses(
         total_expense=total_expense,
         items=items,
     )
+
+
+def get_daily_presence_report(
+    db: Session, target_date: datetime.date
+) -> DailyPresenceReportResponse:
+    # 1. Query stays valid on target_date
+    stays = (
+        db.query(Stay)
+        .filter(
+            or_(Stay.start_date.is_(None), Stay.start_date <= target_date),
+            or_(Stay.end_date.is_(None), Stay.end_date >= target_date),
+        )
+        .all()
+    )
+
+    if not stays:
+        return DailyPresenceReportResponse(
+            target_date=target_date,
+            summary=DailyPresenceSummary(total_in_vn=0, ktx_count=0, hotel_count=0),
+            ktx_groups=[],
+            hotel_groups=[],
+            items=[],
+        )
+
+    stay_ids = [s.id for s in stays]
+    absent_stay_ids = set(
+        r[0]
+        for r in db.query(MealAbsence.stay_id)
+        .filter(MealAbsence.stay_id.in_(stay_ids), MealAbsence.absence_date == target_date)
+        .all()
+    )
+
+    items: list[DailyPresenceItem] = []
+    ktx_map: dict[str, list[DailyPresenceItem]] = {}
+    hotel_map: dict[str, list[DailyPresenceItem]] = {}
+
+    for stay in stays:
+        if stay.id in absent_stay_ids:
+            continue
+
+        emp = stay.employee
+        if not emp:
+            continue
+
+        room_num = stay.room.room_number if stay.room else None
+        hotel_n = stay.hotel.name if stay.hotel else None
+        hotel_rm = stay.hotel_room_number
+
+        if stay.accommodation_type == "KTX":
+            loc_name = f"Phòng {room_num}" if room_num else "KTX"
+        else:
+            loc_name = f"{hotel_n or 'Khách sạn'}" + (f" - P.{hotel_rm}" if hotel_rm else "")
+
+        item = DailyPresenceItem(
+            employee_id=emp.id,
+            employee_code=emp.employee_code,
+            name_latin=emp.name_latin,
+            name_chinese=emp.name_chinese,
+            gender=emp.gender,
+            department=emp.department,
+            phone=emp.phone,
+            accommodation_type=stay.accommodation_type,
+            location_name=loc_name,
+            room_number=room_num,
+            hotel_name=hotel_n,
+            hotel_room_number=hotel_rm,
+            bed_location=stay.bed_location,
+            stay_id=stay.id,
+            stay_type=stay.stay_type,
+            start_date=stay.start_date,
+            expected_end_date=stay.expected_end_date,
+        )
+        items.append(item)
+
+        if stay.accommodation_type == "KTX":
+            grp_key = room_num or "KTX Khác"
+            ktx_map.setdefault(grp_key, []).append(item)
+        else:
+            grp_key = hotel_n or "Khách sạn Khác"
+            hotel_map.setdefault(grp_key, []).append(item)
+
+    ktx_groups = [
+        DailyPresenceGroup(group_name=k, count=len(v), items=v)
+        for k, v in ktx_map.items()
+    ]
+    hotel_groups = [
+        DailyPresenceGroup(group_name=k, count=len(v), items=v)
+        for k, v in hotel_map.items()
+    ]
+
+    ktx_count = sum(g.count for g in ktx_groups)
+    hotel_count = sum(g.count for g in hotel_groups)
+
+    return DailyPresenceReportResponse(
+        target_date=target_date,
+        summary=DailyPresenceSummary(
+            total_in_vn=len(items),
+            ktx_count=ktx_count,
+            hotel_count=hotel_count,
+        ),
+        ktx_groups=ktx_groups,
+        hotel_groups=hotel_groups,
+        items=items,
+    )
+

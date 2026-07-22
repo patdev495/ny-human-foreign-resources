@@ -11,12 +11,16 @@ from features.hr_foreign.schemas import (
     ContractCreate,
     ContractRead,
     ContractUpdate,
+    DailyPresenceReportResponse,
     EventDayCreate,
     EventDayRead,
     ExpiringDocumentsResponse,
     ForeignEmployeeCreate,
     ForeignEmployeeRead,
     ForeignEmployeeUpdate,
+    HotelCreate,
+    HotelRead,
+    HotelUpdate,
     MealAbsenceCreate,
     MealAbsenceRead,
     MealExpenseReportResponse,
@@ -26,6 +30,7 @@ from features.hr_foreign.schemas import (
     RoomOccupancyRead,
     RoomRead,
     RoomUpdate,
+    StayCheckout,
     StayCreate,
     StayRead,
     StayUpdate,
@@ -185,6 +190,7 @@ def delete_work_permit(permit_id: int, db: Session = Depends(get_db)) -> None:
 # --- ROOMS & OCCUPANCY ENDPOINTS ---
 
 @router.get("/rooms/occupancy", response_model=list[RoomOccupancyRead])
+@router.get("/room-occupancy", response_model=list[RoomOccupancyRead])
 def get_room_occupancy(db: Session = Depends(get_db)) -> list[RoomOccupancyRead]:
     return service.get_room_occupancy(db)
 
@@ -228,12 +234,52 @@ def delete_room(room_id: int, db: Session = Depends(get_db)) -> None:
     service.delete_room(db, room)
 
 
+# --- HOTELS ENDPOINTS ---
+
+@router.get("/hotels", response_model=list[HotelRead])
+def list_hotels(db: Session = Depends(get_db)) -> list[HotelRead]:
+    return service.get_hotels(db)
+
+
+@router.get("/hotels/{hotel_id}", response_model=HotelRead)
+def get_hotel(hotel_id: int, db: Session = Depends(get_db)) -> HotelRead:
+    hotel = service.get_hotel_by_id(db, hotel_id)
+    if not hotel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+    return hotel
+
+
+@router.post("/hotels", response_model=HotelRead, status_code=status.HTTP_201_CREATED)
+def create_hotel(payload: HotelCreate, db: Session = Depends(get_db)) -> HotelRead:
+    return service.create_hotel(db, payload)
+
+
+@router.put("/hotels/{hotel_id}", response_model=HotelRead)
+def update_hotel(
+    hotel_id: int, payload: HotelUpdate, db: Session = Depends(get_db)
+) -> HotelRead:
+    hotel = service.get_hotel_by_id(db, hotel_id)
+    if not hotel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+    return service.update_hotel(db, hotel, payload)
+
+
+@router.delete("/hotels/{hotel_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_hotel(hotel_id: int, db: Session = Depends(get_db)) -> None:
+    hotel = service.get_hotel_by_id(db, hotel_id)
+    if not hotel:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
+    service.delete_hotel(db, hotel)
+
+
 # --- STAYS ENDPOINTS ---
 
 def _to_stay_read(stay: models.Stay) -> StayRead:
     res = StayRead.model_validate(stay)
     if stay.room:
         res.room_number = stay.room.room_number
+    if stay.hotel:
+        res.hotel_name = stay.hotel.name
     return res
 
 
@@ -265,6 +311,10 @@ def create_stay(payload: StayCreate, db: Session = Depends(get_db)) -> StayRead:
         room = service.get_room_by_id(db, payload.room_id)
         if not room:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    elif payload.accommodation_type == "HOTEL" and payload.hotel_id:
+        hotel = service.get_hotel_by_id(db, payload.hotel_id)
+        if not hotel:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
     active_stay = service.get_active_stay_for_employee(
         db, payload.employee_id, target_date=payload.start_date
@@ -272,7 +322,7 @@ def create_stay(payload: StayCreate, db: Session = Depends(get_db)) -> StayRead:
     if active_stay:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nhân sự này hiện Đã có đợt lưu trú đang hoạt động.",
+            detail="Nhân sự này hiện Đã có đợt lưu trú đang hoạt động. Vui lòng làm thủ tục Trả phòng trước khi xếp chỗ ở mới.",
         )
 
     stay = service.create_stay(db, payload)
@@ -291,8 +341,28 @@ def update_stay(
         room = service.get_room_by_id(db, payload.room_id)
         if not room:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    elif payload.accommodation_type == "HOTEL" and payload.hotel_id:
+        hotel = service.get_hotel_by_id(db, payload.hotel_id)
+        if not hotel:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hotel not found")
 
     return service.update_stay(db, stay, payload)
+
+
+@router.post("/stays/{stay_id}/checkout", response_model=StayRead)
+def checkout_stay(
+    stay_id: int, payload: StayCheckout, db: Session = Depends(get_db)
+) -> StayRead:
+    stay = service.get_stay_by_id(db, stay_id)
+    if not stay:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
+    if stay.start_date and payload.end_date < stay.start_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ngày trả phòng không thể nhỏ hơn ngày bắt đầu ở",
+        )
+    checkout_stay_obj = service.checkout_stay(db, stay, payload.end_date)
+    return _to_stay_read(checkout_stay_obj)
 
 
 # --- VISAS ENDPOINTS ---
@@ -476,3 +546,14 @@ def get_meal_expense_report(
             status_code=status.HTTP_400_BAD_REQUEST, detail="start_date cannot be after end_date"
         )
     return service.calculate_meal_expenses(db, start_date=start_date, end_date=end_date)
+
+
+# --- DAILY PRESENCE REPORTS ENDPOINT ---
+
+@router.get("/reports/daily-presence", response_model=DailyPresenceReportResponse)
+def get_daily_presence_report(
+    target_date: datetime.date = Query(default_factory=datetime.date.today),
+    db: Session = Depends(get_db),
+) -> DailyPresenceReportResponse:
+    return service.get_daily_presence_report(db, target_date=target_date)
+
