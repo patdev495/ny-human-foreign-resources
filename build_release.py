@@ -36,8 +36,12 @@ def build_backend() -> None:
     # Ensure pyinstaller is installed via uv
     subprocess.run("uv add --dev pyinstaller", shell=True, cwd=BACKEND_DIR)
 
-    # Run PyInstaller onedir build
-    cmd = "uv run pyinstaller --noconfirm --onedir --name ny_hr_server --clean server.py"
+    cmd = (
+        "uv run pyinstaller --noconfirm --onedir --name ny_hr_server --clean "
+        "--hidden-import pyodbc "
+        "--hidden-import sqlalchemy.dialects.mssql.pyodbc "
+        "server.py"
+    )
     res = subprocess.run(cmd, shell=True, cwd=BACKEND_DIR)
     if res.returncode != 0:
         print("[ERROR] PyInstaller backend build failed!")
@@ -100,6 +104,10 @@ if not exist ".env" (
     copy .env.example .env
     echo [INFO] Please update .env with your SQL Server connection details.
     echo.
+)
+
+if exist ".env" (
+    copy /Y .env server\.env > NUL
 )
 
 if not exist "uploads" (
