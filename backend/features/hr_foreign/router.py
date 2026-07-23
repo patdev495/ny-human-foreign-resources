@@ -17,7 +17,10 @@ from features.hr_foreign.schemas import (
     ContractRead,
     ContractUpdate,
     DailyPresenceReportResponse,
+    DocWarningConfigResponse,
+    DocWarningConfigUpdateItem,
     EventDayCreate,
+
     EventDayRead,
     ExpiringDocumentsResponse,
     ForeignEmployeeCreate,
@@ -504,13 +507,28 @@ def update_tam_tru(
     return service.update_tam_tru(db, tam_tru, payload)
 
 
-# --- EXPIRING DOCUMENTS ENDPOINT ---
+# --- EXPIRING DOCUMENTS & WARNING CONFIG ENDPOINTS ---
+
+@router.get("/doc-warning-configs", response_model=DocWarningConfigResponse)
+def get_doc_warning_configs(db: Session = Depends(get_db)) -> DocWarningConfigResponse:
+    configs = service.get_warning_configs(db)
+    return DocWarningConfigResponse(configs=configs)
+
+
+@router.put("/doc-warning-configs", response_model=DocWarningConfigResponse)
+def update_doc_warning_configs(
+    payload: list[DocWarningConfigUpdateItem], db: Session = Depends(get_db)
+) -> DocWarningConfigResponse:
+    configs = service.update_warning_configs(db, payload)
+    return DocWarningConfigResponse(configs=configs)
+
 
 @router.get("/expiring-documents", response_model=ExpiringDocumentsResponse)
 def get_expiring_documents(
-    days: int = Query(default=30, ge=1, le=365), db: Session = Depends(get_db)
+    days: int | None = Query(default=None, ge=1, le=365), db: Session = Depends(get_db)
 ) -> ExpiringDocumentsResponse:
     return service.get_expiring_documents(db, days=days)
+
 
 
 # --- MEAL ABSENCES ENDPOINTS ---

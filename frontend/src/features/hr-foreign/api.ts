@@ -3,7 +3,10 @@ import type {
   ContractCreate,
   ContractUpdate,
   DailyPresenceReportResponse,
+  DocWarningConfigResponse,
+  DocWarningConfigUpdateItem,
   DocumentAttachment,
+
   DocumentEntityType,
   EmployeeHistoryResponse,
   EventDay,
@@ -407,13 +410,33 @@ export async function updateTamTru(
   return res.json() as Promise<TamTru>;
 }
 
-// --- EXPIRING DOCUMENTS API ---
+// --- EXPIRING DOCUMENTS & WARNING CONFIGS API ---
 
-export async function fetchExpiringDocuments(days = 30): Promise<ExpiringDocumentsResponse> {
-  const res = await fetch(`${BASE}/expiring-documents?days=${days}`);
+export async function fetchDocWarningConfigs(): Promise<DocWarningConfigResponse> {
+  const res = await fetch(`${BASE}/doc-warning-configs`);
+  if (!res.ok) throw new Error("Failed to fetch doc warning configs");
+  return res.json() as Promise<DocWarningConfigResponse>;
+}
+
+export async function updateDocWarningConfigs(
+  payload: DocWarningConfigUpdateItem[]
+): Promise<DocWarningConfigResponse> {
+  const res = await fetch(`${BASE}/doc-warning-configs`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to update doc warning configs");
+  return res.json() as Promise<DocWarningConfigResponse>;
+}
+
+export async function fetchExpiringDocuments(days?: number): Promise<ExpiringDocumentsResponse> {
+  const url = days !== undefined ? `${BASE}/expiring-documents?days=${days}` : `${BASE}/expiring-documents`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch expiring documents");
   return res.json() as Promise<ExpiringDocumentsResponse>;
 }
+
 
 // --- MEAL ABSENCES API ---
 

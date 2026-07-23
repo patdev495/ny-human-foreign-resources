@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import type { EmployeeHistoryResponse, ForeignEmployee } from "../types";
-import { fetchEmployeeHistory, updateEmployee } from "../api";
+import type { EmployeeHistoryResponse, ForeignEmployee, ProfileTab } from "../types";
+import { fetchEmployeeHistory, updateEmployee, fetchDocWarningConfigs } from "../api";
+
 import { WorkPermitSection } from "./WorkPermitSection";
 import { ContractSection } from "./ContractSection";
 import { VisaTamTruSection } from "./VisaTamTruSection";
@@ -57,6 +58,20 @@ export const PassportSection: React.FC<PassportSectionProps> = ({
     }
   };
 
+  const [passportWarningDays, setPassportWarningDays] = useState(90);
+
+  useEffect(() => {
+    fetchDocWarningConfigs()
+      .then((res) => {
+        const passportCfg = res.configs.find((c) => c.doc_type === "PASSPORT");
+        if (passportCfg) {
+          const days = passportCfg.warning_unit === "MONTH" ? passportCfg.warning_value * 30 : passportCfg.warning_value;
+          setPassportWarningDays(days);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const getDaysRemaining = (dateStr?: string | null): number | null => {
     if (!dateStr) return null;
     return Math.ceil((new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
@@ -64,7 +79,8 @@ export const PassportSection: React.FC<PassportSectionProps> = ({
 
   const daysRem = getDaysRemaining(employee.passport_expiry);
   const isExpired = daysRem !== null && daysRem < 0;
-  const isExpiringSoon = daysRem !== null && daysRem >= 0 && daysRem <= 90;
+  const isExpiringSoon = daysRem !== null && daysRem >= 0 && daysRem <= passportWarningDays;
+
 
   return (
     <div className="p-5 bg-white rounded-xl border border-slate-200 space-y-4">
@@ -182,21 +198,32 @@ export const PassportSection: React.FC<PassportSectionProps> = ({
   );
 };
 
+export type { ProfileTab };
+
 interface EmployeeProfileModalProps {
   employeeId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: ProfileTab;
 }
 
 export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
   employeeId,
   isOpen,
   onClose,
+  initialTab,
 }) => {
   const [data, setData] = useState<EmployeeHistoryResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"HOP_DONG" | "GPLD" | "STAYS" | "VISA_TAM_TRU" | "PASSPORT" | "TRAVEL_RECORDS">("HOP_DONG");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("HOP_DONG");
   const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [isOpen, initialTab]);
+
 
 
   const loadData = useCallback(async () => {

@@ -295,15 +295,18 @@ class ContractRead(ContractBase):
 # --- EXPIRING DOCUMENTS SCHEMAS ---
 
 class ExpiringDocumentItem(BaseModel):
-    id: int
+    id: int | None = None
     stay_id: int | None = None
     employee_id: int
     employee_name: str
     passport_number: str | None = None
-    doc_type: str  # "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT"
+    doc_type: str  # "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT" | "PASSPORT"
     type_name: str | None = None
     expiry_date: datetime.date | None = None
     days_remaining: int | None = None
+    is_missing_info: bool = False
+    missing_reason: str | None = None
+
 
 
 class ExpiringDocumentsResponse(BaseModel):
@@ -311,6 +314,29 @@ class ExpiringDocumentsResponse(BaseModel):
     expiring_tam_trus: list[ExpiringDocumentItem] = []
     expiring_gpl_ds: list[ExpiringDocumentItem] = []
     expiring_contracts: list[ExpiringDocumentItem] = []
+    expiring_passports: list[ExpiringDocumentItem] = []
+
+
+# --- DOCUMENT WARNING CONFIG SCHEMAS ---
+
+class DocWarningConfigItem(BaseModel):
+    id: int
+    doc_type: str
+    warning_value: int
+    warning_unit: str  # "DAY" | "MONTH"
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocWarningConfigUpdateItem(BaseModel):
+    doc_type: str
+    warning_value: int
+    warning_unit: str  # "DAY" | "MONTH"
+
+
+class DocWarningConfigResponse(BaseModel):
+    configs: list[DocWarningConfigItem]
+
 
 
 # --- MEAL ABSENCE SCHEMAS ---

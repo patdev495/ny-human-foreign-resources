@@ -80,7 +80,8 @@ Báo cáo Excel 3 Tab gồm:
 - **Sheet 1 (`[Sơ đồ KTX & Khách sạn]`)**: Danh sách nhân sự đang ở Việt Nam và đã xếp chỗ (KTX / Khách sạn).
 - **Sheet 2 (`[Chưa xếp chỗ ở]`)**: Danh sách nhân sự đang ở Việt Nam nhưng chưa được phân bổ phòng.
 - **Sheet 3 (`[Đã về nước]`)**: Danh sách nhân sự hiện không ở Việt Nam (kèm ngày thực tế đã về và ngày dự kiến sang đợt tới).
-
+**Cấu hình Mốc Cảnh báo Giấy tờ** (Document Warning Threshold Config):
+Cấu hình mốc thời gian cảnh báo hết hạn cho 5 loại giấy tờ pháp lý của Nhân viên nước ngoài: Visa, Tạm trú, Giấy phép lao động (GPLĐ), Hợp đồng lao động và Hộ chiếu. Mỗi loại giấy tờ có thể thiết lập số lượng đi kèm đơn vị tính theo **Ngày** (DAYS) hoặc **Tháng** (MONTHS) (mặc định ban đầu tất cả 5 loại là 30 Ngày). Các mốc được lưu trữ tập trung ở Backend Database để phục vụ hiển thị phân loại trên UI cũng như làm căn cứ gửi Email thông báo cảnh báo tự động.
 
 
 

@@ -224,23 +224,49 @@ export interface TamTruCreate {
 export interface TamTruUpdate extends TamTruCreate {}
 
 export interface ExpiringDocumentItem {
-  id: number;
+  id?: number | null;
   stay_id?: number | null;
   employee_id: number;
   employee_name: string;
   passport_number?: string | null;
-  doc_type: "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT";
+  doc_type: "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT" | "PASSPORT";
   type_name?: string | null;
   expiry_date?: string | null;
   days_remaining?: number | null;
+  is_missing_info?: boolean;
+  missing_reason?: string | null;
 }
+
+export type ProfileTab = "HOP_DONG" | "GPLD" | "STAYS" | "VISA_TAM_TRU" | "PASSPORT" | "TRAVEL_RECORDS";
+
+
+
 
 export interface ExpiringDocumentsResponse {
   expiring_visas: ExpiringDocumentItem[];
   expiring_tam_trus: ExpiringDocumentItem[];
   expiring_gpl_ds?: ExpiringDocumentItem[];
   expiring_contracts?: ExpiringDocumentItem[];
+  expiring_passports?: ExpiringDocumentItem[];
 }
+
+export interface DocWarningConfigItem {
+  id: number;
+  doc_type: "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT" | "PASSPORT";
+  warning_value: number;
+  warning_unit: "DAY" | "MONTH";
+}
+
+export interface DocWarningConfigUpdateItem {
+  doc_type: "VISA" | "TAM_TRU" | "GPLD" | "CONTRACT" | "PASSPORT";
+  warning_value: number;
+  warning_unit: "DAY" | "MONTH";
+}
+
+export interface DocWarningConfigResponse {
+  configs: DocWarningConfigItem[];
+}
+
 
 export interface MealAbsence {
   id: number;

@@ -8,7 +8,10 @@ if TYPE_CHECKING:
 from features.hr_foreign.status_engine import (
     evaluate_employee_statuses,
     get_expiring_documents as status_engine_get_expiring_documents,
+    get_warning_configs as status_engine_get_warning_configs,
+    update_warning_configs as status_engine_update_warning_configs,
 )
+
 
 import datetime
 import os
@@ -801,10 +804,22 @@ def update_tam_tru(db: Session, tam_tru: TamTru, payload: TamTruUpdate) -> TamTr
     return tam_tru
 
 
-# --- EXPIRING DOCUMENTS ---
+# --- EXPIRING DOCUMENTS & WARNING CONFIGS ---
 
-def get_expiring_documents(db: Session, days: int = 30) -> ExpiringDocumentsResponse:
-    return status_engine_get_expiring_documents(db, days=days)
+def get_warning_configs(db: Session):
+    return status_engine_get_warning_configs(db)
+
+
+def update_warning_configs(db: Session, updates):
+    return status_engine_update_warning_configs(db, updates)
+
+
+def get_expiring_documents(
+    db: Session, days: int | None = None, today: datetime.date | None = None
+) -> ExpiringDocumentsResponse:
+    return status_engine_get_expiring_documents(db, days=days, today=today)
+
+
 
 
 # --- MEAL ABSENCES ---

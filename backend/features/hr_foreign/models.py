@@ -194,6 +194,7 @@ class MealPriceConfig(Base):
     effective_from = Column(Date, nullable=False, default=datetime.date(2020, 1, 1))
 
 
+
 class DocumentAttachment(Base):
     """Tệp đính kèm hình ảnh/PDF cho các loại giấy tờ (PASSPORT, VISA, TAM_TRU, WORK_PERMIT, CONTRACT)."""
     __tablename__ = "document_attachments"
@@ -206,4 +207,15 @@ class DocumentAttachment(Base):
     file_size = Column(Integer, nullable=False)
     mime_type = Column(Unicode(100), nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+
+
+class DocWarningConfig(Base):
+    """Cấu hình mốc cảnh báo hết hạn cho 5 loại giấy tờ (VISA, TAM_TRU, GPLD, CONTRACT, PASSPORT)."""
+    __tablename__ = "doc_warning_configs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    doc_type = Column(Unicode(50), nullable=False, unique=True, index=True)
+    warning_value = Column(Integer, nullable=False, default=30)
+    warning_unit = Column(Unicode(20), nullable=False, default="DAY")  # DAY, MONTH
+
 
