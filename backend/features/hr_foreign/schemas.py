@@ -22,6 +22,7 @@ class ForeignEmployeeBase(BaseModel):
     phone: str | None = None
     department: str | None = None
     role: str | None = None
+    work_type: str = "CO_DINH"  # "CO_DINH" | "CONG_TAC"
     notes: str | None = None
 
 

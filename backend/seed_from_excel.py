@@ -137,6 +137,7 @@ def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
             passport_expiry=None,
             department=department,
             role=role,
+            work_type="CO_DINH",
         )
         db.add(emp)
         db.flush()

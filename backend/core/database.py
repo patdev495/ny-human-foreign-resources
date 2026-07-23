@@ -58,6 +58,12 @@ def init_db() -> None:
                     "ALTER TABLE travel_records ADD expected_entry_date DATE NULL;"
                 )
             )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'foreign_employees') AND name = N'work_type') "
+                    "ALTER TABLE foreign_employees ADD work_type NVARCHAR(50) NOT NULL DEFAULT N'CO_DINH';"
+                )
+            )
     except Exception:
         # Ignore if non-SQL Server dialect or table doesn't exist yet
         pass
@@ -70,6 +76,8 @@ def init_db() -> None:
                 emp_cols = [c["name"] for c in inspector.get_columns("foreign_employees")]
                 if "expected_entry_date" not in emp_cols:
                     conn.execute(text("ALTER TABLE foreign_employees ADD COLUMN expected_entry_date DATE;"))
+                if "work_type" not in emp_cols:
+                    conn.execute(text("ALTER TABLE foreign_employees ADD COLUMN work_type VARCHAR(50) DEFAULT 'CO_DINH';"))
                 tr_cols = [c["name"] for c in inspector.get_columns("travel_records")]
                 if "expected_entry_date" not in tr_cols:
                     conn.execute(text("ALTER TABLE travel_records ADD COLUMN expected_entry_date DATE;"))

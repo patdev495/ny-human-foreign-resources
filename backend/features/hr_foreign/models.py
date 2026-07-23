@@ -37,6 +37,7 @@ class ForeignEmployee(Base):
     phone = Column(Unicode(100), nullable=True)
     department = Column(Unicode(100), nullable=True)  # Vị trí công việc (Lao động kỹ thuật, Giám đốc...)
     role = Column(Unicode(255), nullable=True)         # Chức danh công việc chi tiết
+    work_type = Column(Unicode(50), nullable=False, default="CO_DINH")  # CO_DINH, CONG_TAC
     notes = Column(UnicodeText, nullable=True)
 
     stays = relationship("Stay", back_populates="employee", cascade="all, delete-orphan")

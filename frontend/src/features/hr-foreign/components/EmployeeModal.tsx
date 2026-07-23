@@ -26,6 +26,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     phone: "",
     department: "",
     role: "",
+    work_type: "CO_DINH",
     notes: "",
   });
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         phone: initialData.phone || "",
         department: initialData.department || "",
         role: initialData.role || "",
+        work_type: initialData.work_type || "CO_DINH",
         notes: initialData.notes || "",
       });
     } else {
@@ -58,6 +60,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
         phone: "",
         department: "",
         role: "",
+        work_type: "CO_DINH",
         notes: "",
       });
     }
@@ -216,7 +219,17 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
               />
             </div>
 
-
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Loại hình làm việc</label>
+              <select
+                value={formData.work_type || "CO_DINH"}
+                onChange={(e) => setFormData({ ...formData, work_type: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 font-medium"
+              >
+                <option value="CO_DINH">Cố định</option>
+                <option value="CONG_TAC">Công tác</option>
+              </select>
+            </div>
           </div>
 
           <div>

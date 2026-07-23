@@ -52,6 +52,7 @@ def test_models_creation(db_session: Session) -> None:
 
     assert emp.id is not None
     assert emp.name_latin == "NGUYEN VAN A"
+    assert emp.work_type == "CO_DINH"
 
     # 2. Room
     room = Room(room_number="101", notes="Phong tang 1")

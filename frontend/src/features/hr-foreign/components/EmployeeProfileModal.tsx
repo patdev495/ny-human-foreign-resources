@@ -274,6 +274,18 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 <span className="font-medium text-slate-800">{data.employee.department || "-"} / {data.employee.role || "-"}</span>
               </div>
               <div>
+                <span className="text-slate-500 block mb-0.5">Loại hình làm việc:</span>
+                {data.employee.work_type === "CONG_TAC" ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800 border border-purple-300">
+                    Công tác
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-300">
+                    Cố định
+                  </span>
+                )}
+              </div>
+              <div>
                 <span className="text-slate-500 block mb-0.5">Ngày Sinh:</span>
                 <span className="font-mono text-slate-800">{data.employee.date_of_birth || "-"}</span>
               </div>

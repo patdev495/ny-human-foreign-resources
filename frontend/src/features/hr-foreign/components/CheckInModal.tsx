@@ -102,6 +102,12 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     selectedEmployee && selectedEmployee.current_room_number
   );
 
+  useEffect(() => {
+    if (selectedEmployee && selectedEmployee.work_type) {
+      setStayType(selectedEmployee.work_type as "CO_DINH" | "CONG_TAC");
+    }
+  }, [selectedEmployeeId, employees]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedEmployeeId) {

@@ -18,6 +18,7 @@ export interface ForeignEmployee {
   phone?: string | null;
   department?: string | null;
   role?: string | null;
+  work_type?: "CO_DINH" | "CONG_TAC" | string;
   notes?: string | null;
   is_in_vietnam?: boolean;
   is_overdue_exit?: boolean;
@@ -46,6 +47,7 @@ export interface ForeignEmployeeCreate {
   phone?: string | null;
   department?: string | null;
   role?: string | null;
+  work_type?: "CO_DINH" | "CONG_TAC" | string;
   notes?: string | null;
 }
 

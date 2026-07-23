@@ -90,6 +90,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "IN_VN" | "RETURNED">("ALL");
+  const [workTypeFilter, setWorkTypeFilter] = useState<"ALL" | "CO_DINH" | "CONG_TAC">("ALL");
   const [docStatusFilter, setDocStatusFilter] = useState<
     "ALL" | "HAS_EXPIRED" | "HAS_WARNING" | "HAS_MISSING" | "ALL_OK"
   >("ALL");
@@ -147,6 +148,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const filtered = employees.filter((emp) => {
     if (statusFilter === "IN_VN" && !emp.is_in_vietnam) return false;
     if (statusFilter === "RETURNED" && emp.is_in_vietnam) return false;
+    if (workTypeFilter !== "ALL" && (emp.work_type || "CO_DINH") !== workTypeFilter) return false;
 
     if (docStatusFilter !== "ALL") {
       const statuses = getEmployeeDocStatuses(emp, thresholdDays);
@@ -190,6 +192,17 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
+
+          {/* Dropdown Lọc Loại hình */}
+          <select
+            value={workTypeFilter}
+            onChange={(e) => setWorkTypeFilter(e.target.value as any)}
+            className="px-3 py-2 border border-slate-300 rounded-lg text-xs font-semibold bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer shadow-2xs w-full sm:w-auto"
+          >
+            <option value="ALL">🏢 Tất cả loại hình</option>
+            <option value="CO_DINH">🔹 Cố định</option>
+            <option value="CONG_TAC">🔸 Công tác</option>
+          </select>
 
           {/* Dropdown Lọc Giấy tờ */}
           <select
@@ -273,6 +286,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
           <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 text-xs">
             <tr>
               <th className="px-4 py-3 whitespace-nowrap">Tên nhân sự</th>
+              <th className="px-4 py-3 text-center whitespace-nowrap">Loại hình</th>
               <th className="px-4 py-3 whitespace-nowrap">Hiện diện</th>
               <th className="px-4 py-3 text-center whitespace-nowrap">Hộ chiếu</th>
               <th className="px-4 py-3 text-center whitespace-nowrap">GPLĐ</th>
@@ -285,11 +299,11 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
           <tbody className="divide-y divide-slate-100">
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-400">Đang tải danh sách...</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">Đang tải danh sách...</td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-slate-400">Không tìm thấy nhân sự phù hợp.</td>
+                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">Không tìm thấy nhân sự phù hợp.</td>
               </tr>
             ) : (
               filtered.map((emp) => (
@@ -305,6 +319,19 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
                     </button>
                     {emp.employee_code && (
                       <div className="text-[11px] text-slate-400 font-mono mt-0.5">{emp.employee_code}</div>
+                    )}
+                  </td>
+
+                  {/* Loại hình */}
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
+                    {emp.work_type === "CONG_TAC" ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                        Công tác
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        Cố định
+                      </span>
                     )}
                   </td>
 
