@@ -14,6 +14,7 @@ export type NavTab =
   | "EXPIRING_DOCS"
   | "MEAL_MANAGEMENT"
   | "SHUTTLE_DISPATCH"
+  | "HR_DOMESTIC_PLACEHOLDER"
   | "EXPORT_HUB";
 
 interface NavItem {
@@ -21,6 +22,25 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
 }
+
+const JanitorialHrPlaceholder: React.FC = () => (
+  <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-12 text-center space-y-4 my-6">
+    <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center text-3xl mx-auto border border-amber-100 shadow-inner">
+      🧹
+    </div>
+    <div className="space-y-2 max-w-md mx-auto">
+      <div className="flex items-center justify-center gap-2">
+        <h2 className="text-xl font-bold text-slate-800">Quản lý Nhân sự Tạp vụ</h2>
+        <span className="px-2.5 py-0.5 text-xs font-extrabold rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+          Chưa triển khai
+        </span>
+      </div>
+      <p className="text-sm text-slate-500 leading-relaxed">
+        Phân hệ quản lý hồ sơ, chấm công, ca làm việc và chi phí dành cho Nhân sự Tạp vụ hiện chưa được triển khai. Tính năng sẽ sẵn sàng ở phiên bản cập nhật tiếp theo!
+      </p>
+    </div>
+  </div>
+);
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavTab>("EMPLOYEES");
@@ -106,7 +126,7 @@ export const App: React.FC = () => {
     },
   ];
 
-  // Standalone top-level item: Xuất Báo cáo Excel
+  // Standalone top-level item: Xuất Báo cáo Excel (At the bottom)
   const exportItem: NavItem = {
     key: "EXPORT_HUB",
     label: "Xuất Báo cáo Excel",
@@ -252,7 +272,39 @@ export const App: React.FC = () => {
               )}
             </div>
 
-            {/* TOP-LEVEL 2: Xuất Báo cáo Excel (Standalone) */}
+            {/* TOP-LEVEL 2: Nhân sự tạp vụ (Clickable Placeholder Above Export Hub) */}
+            <button
+              onClick={() => setActiveTab("HR_DOMESTIC_PLACEHOLDER")}
+              title={!isSidebarOpen ? "Nhân sự tạp vụ (Chưa triển khai)" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                activeTab === "HR_DOMESTIC_PLACEHOLDER"
+                  ? "bg-blue-600 text-white shadow-xs font-bold"
+                  : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+              } ${!isSidebarOpen ? "justify-center" : ""}`}
+            >
+              <span className={activeTab === "HR_DOMESTIC_PLACEHOLDER" ? "text-white" : "text-slate-600"}>
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <line x1="19" y1="8" x2="19" y2="14" />
+                  <line x1="22" y1="11" x2="16" y2="11" />
+                </svg>
+              </span>
+              {isSidebarOpen && (
+                <div className="truncate flex-1 flex items-center justify-between text-left">
+                  <span>Nhân sự tạp vụ</span>
+                  <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
+                    activeTab === "HR_DOMESTIC_PLACEHOLDER"
+                      ? "bg-blue-500 text-white"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}>
+                    Chưa triển khai
+                  </span>
+                </div>
+              )}
+            </button>
+
+            {/* TOP-LEVEL 3: Xuất Báo cáo Excel (At the very bottom) */}
             <button
               onClick={() => setActiveTab("EXPORT_HUB")}
               title={!isSidebarOpen ? exportItem.label : undefined}
@@ -267,30 +319,6 @@ export const App: React.FC = () => {
               </span>
               {isSidebarOpen && (
                 <span className="truncate flex-1 text-left">{exportItem.label}</span>
-              )}
-            </button>
-
-            {/* TOP-LEVEL 3: Nhân sự tạp vụ (Placeholder / Standalone) */}
-            <button
-              disabled
-              title={!isSidebarOpen ? "Nhân sự tạp vụ (Sắp có)" : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm text-slate-400 bg-slate-50 border border-slate-100 cursor-not-allowed opacity-75 ${
-                !isSidebarOpen ? "justify-center" : ""
-              }`}
-            >
-              <span className="text-slate-400">
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <line x1="19" y1="8" x2="19" y2="14" />
-                  <line x1="22" y1="11" x2="16" y2="11" />
-                </svg>
-              </span>
-              {isSidebarOpen && (
-                <div className="truncate flex-1 flex items-center justify-between text-left">
-                  <span>Nhân sự tạp vụ</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">Sắp có</span>
-                </div>
               )}
             </button>
           </div>
@@ -371,7 +399,39 @@ export const App: React.FC = () => {
                   )}
                 </div>
 
-                {/* Mobile Group 2: Xuất Báo cáo Excel */}
+                {/* Mobile Group 2: Nhân sự tạp vụ */}
+                <button
+                  onClick={() => {
+                    setActiveTab("HR_DOMESTIC_PLACEHOLDER");
+                    setIsMobileOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl font-bold text-sm transition-all ${
+                    activeTab === "HR_DOMESTIC_PLACEHOLDER"
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={activeTab === "HR_DOMESTIC_PLACEHOLDER" ? "text-white" : "text-slate-600"}>
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <line x1="19" y1="8" x2="19" y2="14" />
+                        <line x1="22" y1="11" x2="16" y2="11" />
+                      </svg>
+                    </span>
+                    <span>Nhân sự tạp vụ</span>
+                  </div>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                    activeTab === "HR_DOMESTIC_PLACEHOLDER"
+                      ? "bg-blue-500 text-white"
+                      : "bg-amber-100 text-amber-800"
+                  }`}>
+                    Chưa triển khai
+                  </span>
+                </button>
+
+                {/* Mobile Group 3: Xuất Báo cáo Excel */}
                 <button
                   onClick={() => {
                     setActiveTab("EXPORT_HUB");
@@ -388,25 +448,6 @@ export const App: React.FC = () => {
                   </span>
                   <span className="truncate flex-1 text-left">{exportItem.label}</span>
                 </button>
-
-                {/* Mobile Group 3: Nhân sự tạp vụ */}
-                <button
-                  disabled
-                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl font-bold text-sm text-slate-400 bg-slate-50 cursor-not-allowed opacity-75 justify-between"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-400">
-                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <line x1="19" y1="8" x2="19" y2="14" />
-                        <line x1="22" y1="11" x2="16" y2="11" />
-                      </svg>
-                    </span>
-                    <span>Nhân sự tạp vụ</span>
-                  </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">Sắp có</span>
-                </button>
               </div>
             </aside>
           </div>
@@ -422,11 +463,13 @@ export const App: React.FC = () => {
 
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
 
-          {activeTab === "EXPORT_HUB" && <ReportHub />}
-
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
 
           {activeTab === "SHUTTLE_DISPATCH" && <ShuttleDispatch />}
+
+          {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrPlaceholder />}
+
+          {activeTab === "EXPORT_HUB" && <ReportHub />}
         </main>
       </div>
 
