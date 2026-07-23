@@ -50,3 +50,6 @@ backend/.env
 .DS_Store
 Thumbs.db
 backend/uploads/
+release/
+backend/dist/
+backend/build/
