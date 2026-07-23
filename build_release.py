@@ -87,7 +87,6 @@ def package_release() -> None:
     if os.path.exists(src_env):
         shutil.copy(src_env, os.path.join(RELEASE_DIR, ".env.example"))
         shutil.copy(src_env, os.path.join(RELEASE_DIR, ".env"))
-        shutil.copy(src_env, os.path.join(dst_server, ".env"))
         print("Copied environment configuration files.")
 
     # 5. Create release/run.bat
@@ -102,7 +101,7 @@ echo.
 if not exist ".env" (
     echo [WARNING] Missing .env file! Copying .env.example to .env ...
     copy .env.example .env
-    echo [INFO] Please update .env with your SQL Server connection details.
+    echo [INFO] Please update .env with your PORT and SQL Server connection details.
     echo.
 )
 
@@ -114,7 +113,7 @@ if not exist "uploads" (
     mkdir uploads
 )
 
-echo Starting NY HR System on http://0.0.0.0:8000 ...
+echo Starting NY HR System Server ...
 cd /d "%~dp0server"
 ny_hr_server.exe
 pause
