@@ -629,5 +629,42 @@ export async function recordEmployeeExit(
   return res.json() as Promise<TravelRecord>;
 }
 
+// --- EXPORTS API ---
+
+export async function downloadLegalProfileReport(includeAttachments: boolean = true): Promise<void> {
+  const url = `${BASE}/exports/legal-profile?include_attachments=${includeAttachments ? "true" : "false"}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải Báo cáo Hồ sơ & Pháp lý");
+  }
+  const blob = await res.blob();
+  const filename = includeAttachments ? "Bao_Cao_Ho_So_Phap_Ly.zip" : "Bao_Cao_Ho_So_Phap_Ly.xlsx";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+export async function downloadPresenceAccommodationReport(): Promise<void> {
+  const url = `${BASE}/exports/presence-accommodation`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải Báo cáo Hiện diện & Chỗ ở");
+  }
+  const blob = await res.blob();
+  const filename = "Bao_Cao_Hien_Dien_Cho_O.xlsx";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+
 
 

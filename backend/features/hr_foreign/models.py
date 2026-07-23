@@ -175,10 +175,12 @@ class Contract(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
+    contract_number = Column(Unicode(150), nullable=True) # Số HĐLĐ (HDLD-...)
     contract_type = Column(Unicode(50), nullable=True)   # Cấp mới / Gia hạn / Cấp lại
     start_date = Column(Date, nullable=True)              # Ngày ký / bắt đầu
     end_date = Column(Date, nullable=True)                # Ngày hết hạn
     notes = Column(UnicodeText, nullable=True)            # Ghi chú (trạng thái, lý do...)
+
 
     employee = relationship("ForeignEmployee", back_populates="contracts")
 

@@ -67,12 +67,20 @@ Bản ghi theo dõi các đợt di chuyển giữa Việt Nam và nước ngoài
 - Khi nhân sự đang ở Việt Nam $\rightarrow$ Nhãn hiển thị là **Ngày dự kiến về**.
 - Khi nhân sự đang ở nước ngoài (đã về nước) $\rightarrow$ Nhãn hiển thị chuyển thành **Ngày dự kiến sang** đợt tiếp theo để theo dõi và chuẩn bị cảnh báo.
 
-**Thống kê Hiện diện & Chỗ ở** (Daily Presence Report):
-Báo cáo theo mốc ngày chọn chia làm 2 phân vùng lớn:
-- **Đang ở Việt Nam**: Thống kê chi tiết theo Ký túc xá (KTX), Khách sạn và Chưa xếp chỗ. Hỗ trợ xem dạng nhóm theo phòng hoặc danh sách nhân viên.
-- **Đã về nước**: Thống kê danh sách nhân sự không có mặt tại Việt Nam tính đến mốc ngày chọn (ngày thực tế đã về, ngày dự kiến sang đợt tới).
-**Modal Cảnh báo Xóa Hồ sơ** (Confirm Delete Modal):
-Hộp thoại cảnh báo bảo mật nguy hiểm trước khi xóa một Nhân viên nước ngoài. Hiển thị thông tin nhận dạng nhân sự (Tên Latin, Tên Trung Quốc, Mã NV, Hộ chiếu, Bộ phận), đưa ra cảnh báo về các dữ liệu liên quan sẽ bị xóa vĩnh viễn (Lưu trú, Visa, Tạm trú, GPLĐ, Nhập xuất cảnh) và yêu cầu người dùng bấm "Xóa vĩnh viễn" để xác nhận.
+**Trung tâm Xuất Báo cáo** (Report Hub / Center):
+Giao diện tập trung trên thanh Sidebar dành riêng cho việc chọn loại báo cáo, thiết lập tham số lọc và xuất các file Excel chuẩn hóa theo từng nghiệp vụ (Pháp lý, KTX, Chi phí Ăn uống, Nhật ký Điều xe). Hỗ trợ tùy chọn **"Xuất trọn gói ZIP"** nén file Excel kèm toàn bộ tệp đính kèm (Hình ảnh Hộ chiếu/Visa/GPLĐ/HĐLĐ & tệp PDF) được phân loại theo thư mục từng nhân viên.
+
+**Báo cáo Excel Hồ sơ & Pháp lý** (Master & Legal Profile Excel Report):
+Báo cáo Excel 2 Tab gồm:
+- **Sheet 1 (`[Danh sách Nhân sự]`)**: Mỗi nhân viên đúng 1 dòng, hiển thị đầy đủ thông tin Master cá nhân + các giấy tờ Visa/Tạm trú/GPLĐ/HĐLĐ mới nhất đang hiệu lực, tự động tô màu cảnh báo hạn (Đỏ: hết hạn, Vàng: sắp hết hạn <= 30 ngày).
+- **Sheet 2 (`[Lịch sử Giấy tờ]`)**: Nhật ký ghi nhận toàn bộ lịch sử các đợt cấp Visa, Tạm trú, GPLĐ, HĐLĐ của từng nhân viên.
+
+**Báo cáo Excel Hiện diện & Chỗ ở** (Presence & Accommodation Excel Report):
+Báo cáo Excel 3 Tab gồm:
+- **Sheet 1 (`[Sơ đồ KTX & Khách sạn]`)**: Danh sách nhân sự đang ở Việt Nam và đã xếp chỗ (KTX / Khách sạn).
+- **Sheet 2 (`[Chưa xếp chỗ ở]`)**: Danh sách nhân sự đang ở Việt Nam nhưng chưa được phân bổ phòng.
+- **Sheet 3 (`[Đã về nước]`)**: Danh sách nhân sự hiện không ở Việt Nam (kèm ngày thực tế đã về và ngày dự kiến sang đợt tới).
+
 
 
 

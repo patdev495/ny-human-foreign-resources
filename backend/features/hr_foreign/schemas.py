@@ -269,10 +269,12 @@ class WorkPermitRead(WorkPermitBase):
 # --- CONTRACT SCHEMAS ---
 
 class ContractBase(BaseModel):
+    contract_number: str | None = None
     contract_type: str | None = None
     start_date: datetime.date | None = None
     end_date: datetime.date | None = None
     notes: str | None = None
+
 
 
 class ContractCreate(ContractBase):

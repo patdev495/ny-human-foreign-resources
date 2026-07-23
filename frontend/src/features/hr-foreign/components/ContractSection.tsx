@@ -46,6 +46,7 @@ const typeConfig: Record<string, string> = {
 };
 
 type FormState = {
+  contract_number: string;
   contract_type: string;
   start_date: string;
   end_date: string;
@@ -53,6 +54,7 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
+  contract_number: "",
   contract_type: "CẤP MỚI",
   start_date: "",
   end_date: "",
@@ -73,6 +75,19 @@ const InlineForm: React.FC<{
     className="mt-2 p-4 bg-indigo-50 rounded-lg border border-indigo-200 text-xs space-y-3"
   >
     <div className="grid grid-cols-2 gap-3">
+      {/* Số HĐLĐ */}
+      <div>
+        <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">
+          Số Hợp đồng (Số HĐLĐ)
+        </label>
+        <input
+          type="text"
+          value={form.contract_number}
+          onChange={(e) => onChange({ ...form, contract_number: e.target.value })}
+          placeholder="VD: HDLD-2026-001"
+          className="w-full p-1.5 border border-slate-300 rounded bg-white"
+        />
+      </div>
       {/* Loại HĐ */}
       <div>
         <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">
@@ -88,8 +103,6 @@ const InlineForm: React.FC<{
           ))}
         </select>
       </div>
-      {/* Placeholder để giữ layout */}
-      <div />
       {/* Ngày bắt đầu */}
       <div>
         <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">
@@ -128,6 +141,7 @@ const InlineForm: React.FC<{
         className="w-full p-1.5 border border-slate-300 rounded bg-white"
       />
     </div>
+
     <div className="flex gap-2 justify-end">
       <button
         type="button"
@@ -167,6 +181,7 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
     setShowAddForm(false);
     setEditingId(c.id);
     setForm({
+      contract_number: c.contract_number ?? "",
       contract_type: c.contract_type ?? "CẤP MỚI",
       start_date: c.start_date ?? "",
       end_date: c.end_date ?? "",
@@ -179,6 +194,7 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
     setShowAddForm(false);
     setForm(EMPTY_FORM);
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,6 +300,12 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
                     <div className="space-y-1.5 min-w-0 flex-1">
                       {/* Badges row — same as what form has */}
                       <div className="flex items-center gap-2 flex-wrap">
+                        {/* Số HĐ */}
+                        {c.contract_number && (
+                          <span className="px-2 py-0.5 text-[10px] rounded font-mono font-bold bg-slate-200 text-slate-800 border border-slate-300">
+                            Số HĐ: {c.contract_number}
+                          </span>
+                        )}
                         {/* Loại HĐ */}
                         {c.contract_type && (
                           <span className={`px-2 py-0.5 text-[10px] rounded font-bold ${typeCls}`}>
@@ -299,6 +321,7 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
                           )}
                         </span>
                       </div>
+
                       {/* Dates */}
                       <div className="text-xs text-slate-700 font-mono">
                         <span className="text-slate-500">Từ </span>

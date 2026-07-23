@@ -78,6 +78,7 @@ export interface WorkPermitUpdate extends WorkPermitCreate {}
 export interface Contract {
   id: number;
   employee_id: number;
+  contract_number?: string | null;
   contract_type?: string | null;
   start_date?: string | null;
   end_date?: string | null;
@@ -85,11 +86,13 @@ export interface Contract {
 }
 
 export interface ContractCreate {
+  contract_number?: string | null;
   contract_type?: string | null;
   start_date?: string | null;
   end_date?: string | null;
   notes?: string | null;
 }
+
 
 export interface ContractUpdate extends ContractCreate {}
 
