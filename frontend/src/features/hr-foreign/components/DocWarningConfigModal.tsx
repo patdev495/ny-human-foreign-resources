@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import type { DocWarningConfigItem, DocWarningConfigUpdateItem } from "../types";
+import type { DocWarningConfigUpdateItem } from "../types";
 import { fetchDocWarningConfigs, updateDocWarningConfigs } from "../api";
 
 interface DocWarningConfigModalProps {
