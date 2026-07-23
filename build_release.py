@@ -139,8 +139,13 @@ Thư mục `release/` này đã chứa đầy đủ Backend (dạng `onedir` EXE
 
 2. **Cấu hình file `.env`**:
    - Mở file `C:\\NY_HR_System\\.env` bằng Notepad hoặc Text Editor.
-   - Chỉnh sửa các thông số kết nối CSDL SQL Server của bạn:
+   - Chỉnh sửa thông số cổng web (`PORT`) và CSDL SQL Server:
      ```ini
+     # Cổng khởi chạy ứng dụng (Mặc định: 8000)
+     HOST=0.0.0.0
+     PORT=8000
+
+     # CSDL SQL Server
      DB_SERVER=YOUR_SERVER_NAME_OR_IP\\SQLEXPRESS
      DB_NAME=NY_HR_DB
      DB_USER=sa
@@ -150,7 +155,7 @@ Thư mục `release/` này đã chứa đầy đủ Backend (dạng `onedir` EXE
 
 3. **Khởi chạy ứng dụng**:
    - Nhấp đôi chuột vào file `run.bat` (hoặc chạy qua Command Prompt / PowerShell với quyền Administrator).
-   - Màn hình đen Console sẽ hiển thị thông báo thành công:
+   - Màn hình Console sẽ hiển thị thông báo thành công:
      ```text
      ====================================================
       NY Human Resources System - Server Started
@@ -159,8 +164,8 @@ Thư mục `release/` này đã chứa đầy đủ Backend (dạng `onedir` EXE
      ```
 
 4. **Truy cập hệ thống**:
-   - **Tại máy chủ**: Mở trình duyệt web truy cập `http://localhost:8000`
-   - **Từ máy trạm trong mạng LAN**: Truy cập `http://<IP_MAY_CHU_SERVER>:8000` (Lưu ý: Mở cổng Firewall 8000 inbound trên Windows Server nếu muốn cho phép truy cập qua LAN).
+   - **Tại máy chủ**: Mở trình duyệt web truy cập `http://localhost:<PORT>` (ví dụ: `http://localhost:8000`)
+   - **Từ máy trạm trong mạng LAN**: Truy cập `http://<IP_MAY_CHU_SERVER>:<PORT>` (Lưu ý: Mở cổng Firewall inbound trên Windows Server cho cổng đã chọn, ví dụ: 8000 hoặc 8080).
 
 ---
 

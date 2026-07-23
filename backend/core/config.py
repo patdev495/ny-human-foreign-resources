@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     app_name: str = "NY Human Resources System"
     app_version: str = "0.1.0"
     cors_origins: list[str] = ["*"]
+    host: str = "0.0.0.0"
+    port: int = 8000
 
     # MSSQL via ODBC Driver 18
     db_server: str
