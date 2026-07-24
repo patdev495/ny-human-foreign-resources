@@ -28,6 +28,7 @@ from features.hr_foreign.models import (
     Hotel,
     MealAbsence,
     MealPriceConfig,
+    MealSessionLock,
     Room,
     Stay,
     TamTru,
@@ -49,6 +50,8 @@ from features.hr_foreign.schemas import (
     DailyPresenceReportResponse,
     DailyPresenceSummary,
     EventDayCreate,
+    EventDayCreateBatch,
+    EventDayUpdate,
     ExpiringDocumentItem,
     ExpiringDocumentsResponse,
     ForeignEmployeeCreate,
@@ -62,6 +65,7 @@ from features.hr_foreign.schemas import (
     MealExpenseReportItem,
     MealExpenseReportResponse,
     MealPriceConfigCreate,
+    MealPriceConfigUpdate,
     ResidentInfo,
     RoomCreate,
     RoomOccupancyRead,
@@ -77,6 +81,11 @@ from features.hr_foreign.schemas import (
     VisaCreate,
     VisaRead,
     VisaUpdate,
+    DailyMealForecastResponse,
+    DailyMealSessionSummary,
+    DailyMealEmployeeItem,
+    MealSessionLockCreate,
+    MealSessionLockRead,
     WorkPermitCreate,
     WorkPermitRead,
     WorkPermitUpdate,
@@ -84,32 +93,23 @@ from features.hr_foreign.schemas import (
 
 
 def seed_default_meal_prices(db: Session) -> None:
-    normal_exists = (
-        db.query(MealPriceConfig).filter(MealPriceConfig.day_type == "NORMAL").first()
-    )
-    if not normal_exists:
-        db.add(
+    if db.query(MealPriceConfig).count() == 0:
+        db.add_all([
             MealPriceConfig(
                 day_type="NORMAL",
-                price_per_meal=35000,
+                day_type_name="Ngày bình thường",
+                price_per_meal=30000,
                 effective_from=datetime.date(2020, 1, 1),
-            )
-        )
-
-    president_exists = (
-        db.query(MealPriceConfig)
-        .filter(MealPriceConfig.day_type == "PRESIDENT_VISIT")
-        .first()
-    )
-    if not president_exists:
-        db.add(
+            ),
             MealPriceConfig(
                 day_type="PRESIDENT_VISIT",
+                day_type_name="Chủ tịch sang",
                 price_per_meal=50000,
                 effective_from=datetime.date(2020, 1, 1),
-            )
-        )
-    db.commit()
+            ),
+        ])
+        db.flush()
+        db.commit()
 
 
 # --- FOREIGN EMPLOYEES ---
@@ -861,12 +861,64 @@ def get_event_day_by_date(db: Session, event_date: datetime.date) -> EventDay | 
 
 
 def create_event_day(db: Session, payload: EventDayCreate) -> EventDay:
+    if payload.event_type == "NORMAL":
+        raise ValueError("Ngày bình thường là ngày mặc định của hệ thống, không cần cài đặt sự kiện.")
     event = EventDay(**payload.model_dump())
     db.add(event)
     db.flush()
     db.commit()
     db.refresh(event)
     return event
+
+
+def create_event_days_batch(
+    db: Session, payload: EventDayCreateBatch
+) -> list[EventDay]:
+    if payload.event_type == "NORMAL":
+        raise ValueError("Ngày bình thường là ngày mặc định của hệ thống, không cần cài đặt sự kiện.")
+    s_date = payload.start_date or payload.end_date
+    e_date = payload.end_date or payload.start_date
+    if not s_date:
+        raise ValueError("Vui lòng chọn Từ ngày hoặc Đến ngày")
+    if s_date > e_date:
+        s_date, e_date = e_date, s_date
+
+    results: list[EventDay] = []
+    curr = s_date
+    while curr <= e_date:
+        existing = db.query(EventDay).filter(EventDay.event_date == curr).first()
+        if existing:
+            existing.event_type = payload.event_type
+            existing.notes = payload.notes
+            results.append(existing)
+        else:
+            ev = EventDay(
+                event_date=curr,
+                event_type=payload.event_type,
+                notes=payload.notes,
+            )
+            db.add(ev)
+            results.append(ev)
+        curr += datetime.timedelta(days=1)
+
+    db.flush()
+    db.commit()
+    for item in results:
+        db.refresh(item)
+    return results
+
+
+def update_event_day(
+    db: Session, event_day: EventDay, payload: EventDayUpdate
+) -> EventDay:
+    if payload.event_type == "NORMAL":
+        raise ValueError("Ngày bình thường là ngày mặc định của hệ thống, không cần cài đặt sự kiện.")
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(event_day, key, value)
+    db.commit()
+    db.refresh(event_day)
+    return event_day
 
 
 def delete_event_day(db: Session, event_day: EventDay) -> None:
@@ -885,6 +937,10 @@ def get_meal_price_configs(db: Session) -> list[MealPriceConfig]:
     )
 
 
+def get_meal_price_config_by_id(db: Session, config_id: int) -> MealPriceConfig | None:
+    return db.query(MealPriceConfig).filter(MealPriceConfig.id == config_id).first()
+
+
 def create_meal_price_config(
     db: Session, payload: MealPriceConfigCreate
 ) -> MealPriceConfig:
@@ -894,6 +950,29 @@ def create_meal_price_config(
     db.commit()
     db.refresh(config)
     return config
+
+
+def update_meal_price_config(
+    db: Session, config: MealPriceConfig, payload: MealPriceConfigUpdate
+) -> MealPriceConfig:
+    old_day_type = config.day_type
+    update_data = payload.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(config, key, value)
+
+    if payload.day_type and payload.day_type != old_day_type:
+        db.query(EventDay).filter(EventDay.event_type == old_day_type).update(
+            {EventDay.event_type: payload.day_type}, synchronize_session=False
+        )
+
+    db.commit()
+    db.refresh(config)
+    return config
+
+
+def delete_meal_price_config(db: Session, config: MealPriceConfig) -> None:
+    db.delete(config)
+    db.commit()
 
 
 # --- MEAL CALCULATION SERVICE ---
@@ -919,13 +998,23 @@ def calculate_meal_expenses(
         )
         if cfg:
             return float(cfg.price_per_meal)
-        return 50000.0 if day_type == "PRESIDENT_VISIT" else 35000.0
+        return 50000.0 if day_type == "PRESIDENT_VISIT" else 30000.0
+
+    locks = (
+        db.query(MealSessionLock)
+        .filter(
+            MealSessionLock.lock_date >= start_date,
+            MealSessionLock.lock_date <= end_date,
+        )
+        .all()
+    )
+    locks_map = {(l.lock_date, l.meal_session): l for l in locks}
 
     eligible_stays = (
         db.query(Stay)
         .filter(
             Stay.accommodation_type == "KTX",
-            Stay.has_meals.is_(True),
+            Stay.has_meals == True,
             Stay.start_date <= end_date,
             or_(Stay.end_date.is_(None), Stay.end_date >= start_date),
         )
@@ -933,6 +1022,9 @@ def calculate_meal_expenses(
     )
 
     items: list[MealExpenseReportItem] = []
+    # Map for overall total company count per (date, session)
+    overall_session_meals: dict[tuple[datetime.date, str], int] = {}
+    overall_session_cost: dict[tuple[datetime.date, str], float] = {}
 
     for stay in eligible_stays:
         emp = stay.employee
@@ -940,20 +1032,23 @@ def calculate_meal_expenses(
         if not emp:
             continue
 
-        absences_set = {
-            ma.absence_date
-            for ma in db.query(MealAbsence)
+        absences = (
+            db.query(MealAbsence)
             .filter(
                 MealAbsence.stay_id == stay.id,
                 MealAbsence.absence_date >= start_date,
                 MealAbsence.absence_date <= end_date,
             )
             .all()
-        }
+        )
+        absences_by_date: dict[datetime.date, set[str]] = {}
+        for ma in absences:
+            absences_by_date.setdefault(ma.absence_date, set()).add(ma.meal_type)
 
         stay_days_count = 0
         absent_days_count = 0
         meal_days_count = 0
+        emp_total_meals = 0
         normal_days_count = 0
         event_days_count = 0
         total_cost = 0.0
@@ -962,18 +1057,45 @@ def calculate_meal_expenses(
         while curr_d <= end_date:
             if stay.start_date <= curr_d and (stay.end_date is None or stay.end_date >= curr_d):
                 stay_days_count += 1
-                if curr_d in absences_set:
+                day_type = event_days_map.get(curr_d, "NORMAL")
+                day_absences = absences_by_date.get(curr_d, set())
+                is_bf_absent = ("ALL_DAY" in day_absences) or ("BREAKFAST" in day_absences)
+                is_dn_absent = ("ALL_DAY" in day_absences) or ("DINNER" in day_absences)
+
+                if is_bf_absent and is_dn_absent:
                     absent_days_count += 1
                 else:
                     meal_days_count += 1
-                    day_type = event_days_map.get(curr_d, "NORMAL")
                     if day_type == "NORMAL":
                         normal_days_count += 1
                     else:
                         event_days_count += 1
 
-                    price = get_price(curr_d, day_type)
-                    total_cost += price * 2
+                # Breakfast
+                bf_lock = locks_map.get((curr_d, "BREAKFAST"))
+                bf_price = bf_lock.locked_price_per_meal if bf_lock else get_price(curr_d, day_type)
+                if not is_bf_absent:
+                    emp_total_meals += 1
+                    total_cost += bf_price
+                    overall_session_meals[(curr_d, "BREAKFAST")] = (
+                        overall_session_meals.get((curr_d, "BREAKFAST"), 0) + 1
+                    )
+                    overall_session_cost[(curr_d, "BREAKFAST")] = (
+                        overall_session_cost.get((curr_d, "BREAKFAST"), 0.0) + bf_price
+                    )
+
+                # Dinner
+                dn_lock = locks_map.get((curr_d, "DINNER"))
+                dn_price = dn_lock.locked_price_per_meal if dn_lock else get_price(curr_d, day_type)
+                if not is_dn_absent:
+                    emp_total_meals += 1
+                    total_cost += dn_price
+                    overall_session_meals[(curr_d, "DINNER")] = (
+                        overall_session_meals.get((curr_d, "DINNER"), 0) + 1
+                    )
+                    overall_session_cost[(curr_d, "DINNER")] = (
+                        overall_session_cost.get((curr_d, "DINNER"), 0.0) + dn_price
+                    )
 
             curr_d += datetime.timedelta(days=1)
 
@@ -990,16 +1112,31 @@ def calculate_meal_expenses(
                     meal_days=meal_days_count,
                     normal_days=normal_days_count,
                     event_days=event_days_count,
-                    meal_count=meal_days_count * 2,
+                    meal_count=emp_total_meals,
                     total_cost=total_cost,
                 )
             )
 
+    # Compute total meals and total expense for company, overriding with locked snapshots where locked
     total_employees = len(items)
     total_stay_days = sum(i.stay_days for i in items)
     total_meal_days = sum(i.meal_days for i in items)
-    total_meals = sum(i.meal_count for i in items)
-    total_expense = sum(i.total_cost for i in items)
+
+    company_total_meals = 0
+    company_total_expense = 0.0
+
+    curr_d = start_date
+    while curr_d <= end_date:
+        for session in ("BREAKFAST", "DINNER"):
+            lock = locks_map.get((curr_d, session))
+            if lock:
+                company_total_meals += lock.final_meal_count
+                company_total_expense += lock.final_meal_count * lock.locked_price_per_meal
+            else:
+                company_total_meals += overall_session_meals.get((curr_d, session), 0)
+                company_total_expense += overall_session_cost.get((curr_d, session), 0.0)
+
+        curr_d += datetime.timedelta(days=1)
 
     return MealExpenseReportResponse(
         start_date=start_date,
@@ -1007,10 +1144,171 @@ def calculate_meal_expenses(
         total_employees=total_employees,
         total_stay_days=total_stay_days,
         total_meal_days=total_meal_days,
-        total_meals=total_meals,
-        total_expense=total_expense,
+        total_meals=company_total_meals,
+        total_expense=company_total_expense,
         items=items,
     )
+
+
+# --- DAILY MEAL FORECAST & LOCKING ---
+
+def get_daily_meal_forecast(
+    db: Session, target_date: datetime.date
+) -> DailyMealForecastResponse:
+    seed_default_meal_prices(db)
+
+    # 1. Determine effective price per meal on target_date
+    event_day = db.query(EventDay).filter(EventDay.event_date == target_date).first()
+    day_type = event_day.event_type if event_day else "NORMAL"
+    event_notes = event_day.notes if event_day else None
+
+    price_cfg = (
+        db.query(MealPriceConfig)
+        .filter(MealPriceConfig.day_type == day_type, MealPriceConfig.effective_from <= target_date)
+        .order_by(MealPriceConfig.effective_from.desc(), MealPriceConfig.id.desc())
+        .first()
+    )
+    suggested_price = (
+        float(price_cfg.price_per_meal)
+        if price_cfg
+        else (50000.0 if day_type == "PRESIDENT_VISIT" else 30000.0)
+    )
+    day_type_name = (
+        price_cfg.day_type_name
+        if (price_cfg and price_cfg.day_type_name)
+        else ("Ngày bình thường" if day_type == "NORMAL" else day_type)
+    )
+
+    # 2. Check existing locks for BREAKFAST & DINNER on target_date
+    locks = db.query(MealSessionLock).filter(MealSessionLock.lock_date == target_date).all()
+    locks_map = {l.meal_session: l for l in locks}
+
+    # 3. Query active stays on target_date
+    stays = (
+        db.query(Stay)
+        .filter(
+            or_(Stay.start_date.is_(None), Stay.start_date <= target_date),
+            or_(Stay.end_date.is_(None), Stay.end_date >= target_date),
+        )
+        .all()
+    )
+
+    stay_ids = [s.id for s in stays]
+    meal_absences = (
+        db.query(MealAbsence)
+        .filter(MealAbsence.stay_id.in_(stay_ids), MealAbsence.absence_date == target_date)
+        .all()
+    ) if stay_ids else []
+
+    absences_by_stay: dict[int, set[str]] = {}
+    for ma in meal_absences:
+        absences_by_stay.setdefault(ma.stay_id, set()).add(ma.meal_type)
+
+    employees_list: list[DailyMealEmployeeItem] = []
+    active_ktx_residents_count = 0
+    breakfast_absent_count = 0
+    dinner_absent_count = 0
+
+    for stay in stays:
+        emp = stay.employee
+        if not emp:
+            continue
+
+        loc_name = "Chưa xếp phòng"
+        if stay.accommodation_type == "KTX" and stay.room:
+            loc_name = f"Phòng {stay.room.room_number}"
+        elif stay.accommodation_type == "HOTEL" and stay.hotel:
+            loc_name = f"{stay.hotel.name}" + (f" - P.{stay.hotel_room_number}" if stay.hotel_room_number else "")
+
+        stay_absences = absences_by_stay.get(stay.id, set())
+        is_bf_absent = ("ALL_DAY" in stay_absences) or ("BREAKFAST" in stay_absences)
+        is_dn_absent = ("ALL_DAY" in stay_absences) or ("DINNER" in stay_absences)
+
+        if stay.accommodation_type == "KTX" and stay.has_meals:
+            active_ktx_residents_count += 1
+            if is_bf_absent:
+                breakfast_absent_count += 1
+            if is_dn_absent:
+                dinner_absent_count += 1
+
+        employees_list.append(
+            DailyMealEmployeeItem(
+                employee_id=emp.id,
+                employee_code=emp.employee_code,
+                name_latin=emp.name_latin,
+                name_chinese=emp.name_chinese,
+                accommodation_type=stay.accommodation_type,
+                location_name=loc_name,
+                stay_id=stay.id,
+                has_meals=stay.has_meals,
+                is_breakfast_absent=is_bf_absent,
+                is_dinner_absent=is_dn_absent,
+            )
+        )
+
+    bf_calculated = max(0, active_ktx_residents_count - breakfast_absent_count)
+    dn_calculated = max(0, active_ktx_residents_count - dinner_absent_count)
+
+    bf_lock = locks_map.get("BREAKFAST")
+    dn_lock = locks_map.get("DINNER")
+
+    breakfast_summary = DailyMealSessionSummary(
+        meal_session="BREAKFAST",
+        calculated_meal_count=bf_calculated,
+        is_locked=bf_lock is not None,
+        final_meal_count=bf_lock.final_meal_count if bf_lock else None,
+        locked_price_per_meal=bf_lock.locked_price_per_meal if bf_lock else suggested_price,
+        locked_at=bf_lock.locked_at if bf_lock else None,
+        notes=bf_lock.notes if bf_lock else None,
+    )
+
+    dinner_summary = DailyMealSessionSummary(
+        meal_session="DINNER",
+        calculated_meal_count=dn_calculated,
+        is_locked=dn_lock is not None,
+        final_meal_count=dn_lock.final_meal_count if dn_lock else None,
+        locked_price_per_meal=dn_lock.locked_price_per_meal if dn_lock else suggested_price,
+        locked_at=dn_lock.locked_at if dn_lock else None,
+        notes=dn_lock.notes if dn_lock else None,
+    )
+
+    return DailyMealForecastResponse(
+        date=target_date,
+        day_type=day_type,
+        day_type_name=day_type_name,
+        suggested_price_per_meal=suggested_price,
+        event_notes=event_notes,
+        breakfast=breakfast_summary,
+        dinner=dinner_summary,
+        active_ktx_residents_count=active_ktx_residents_count,
+        employees=employees_list,
+    )
+
+
+def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessionLock:
+    existing = (
+        db.query(MealSessionLock)
+        .filter(
+            MealSessionLock.lock_date == payload.lock_date,
+            MealSessionLock.meal_session == payload.meal_session,
+        )
+        .first()
+    )
+    if existing:
+        existing.calculated_meal_count = payload.calculated_meal_count
+        existing.final_meal_count = payload.final_meal_count
+        existing.locked_price_per_meal = payload.locked_price_per_meal
+        existing.notes = payload.notes
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    lock_item = MealSessionLock(**payload.model_dump())
+    db.add(lock_item)
+    db.flush()
+    db.commit()
+    db.refresh(lock_item)
+    return lock_item
 
 
 def get_daily_presence_report(

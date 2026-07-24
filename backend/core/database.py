@@ -64,6 +64,24 @@ def init_db() -> None:
                     "ALTER TABLE foreign_employees ADD work_type NVARCHAR(50) NOT NULL DEFAULT N'CO_DINH';"
                 )
             )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_absences') AND name = N'meal_type') "
+                    "ALTER TABLE meal_absences ADD meal_type NVARCHAR(50) NOT NULL DEFAULT N'ALL_DAY';"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'day_type_name') "
+                    "ALTER TABLE meal_price_configs ADD day_type_name NVARCHAR(255) NULL;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'notes') "
+                    "ALTER TABLE meal_price_configs ADD notes NVARCHAR(MAX) NULL;"
+                )
+            )
     except Exception:
         # Ignore if non-SQL Server dialect or table doesn't exist yet
         pass
@@ -81,6 +99,14 @@ def init_db() -> None:
                 tr_cols = [c["name"] for c in inspector.get_columns("travel_records")]
                 if "expected_entry_date" not in tr_cols:
                     conn.execute(text("ALTER TABLE travel_records ADD COLUMN expected_entry_date DATE;"))
+                ma_cols = [c["name"] for c in inspector.get_columns("meal_absences")]
+                if "meal_type" not in ma_cols:
+                    conn.execute(text("ALTER TABLE meal_absences ADD COLUMN meal_type VARCHAR(50) DEFAULT 'ALL_DAY';"))
+                mpc_cols = [c["name"] for c in inspector.get_columns("meal_price_configs")]
+                if "day_type_name" not in mpc_cols:
+                    conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN day_type_name VARCHAR(255);"))
+                if "notes" not in mpc_cols:
+                    conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN notes TEXT;"))
         except Exception:
             pass
 

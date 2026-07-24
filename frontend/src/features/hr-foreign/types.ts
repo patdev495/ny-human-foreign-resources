@@ -272,12 +272,71 @@ export interface MealAbsence {
   id: number;
   stay_id: number;
   absence_date: string;
+  meal_type?: "BREAKFAST" | "DINNER" | "ALL_DAY";
   reason?: string | null;
 }
 
 export interface MealAbsenceCreate {
   absence_date: string;
+  meal_type?: "BREAKFAST" | "DINNER" | "ALL_DAY";
   reason?: string | null;
+}
+
+export interface MealSessionLock {
+  id: number;
+  lock_date: string;
+  meal_session: "BREAKFAST" | "DINNER";
+  calculated_meal_count: number;
+  final_meal_count: number;
+  locked_price_per_meal: number;
+  locked_at: string;
+  locked_by?: string | null;
+  notes?: string | null;
+}
+
+export interface MealSessionLockCreate {
+  lock_date: string;
+  meal_session: "BREAKFAST" | "DINNER";
+  calculated_meal_count: number;
+  final_meal_count: number;
+  locked_price_per_meal: number;
+  locked_by?: string | null;
+  notes?: string | null;
+}
+
+export interface DailyMealSessionSummary {
+  meal_session: "BREAKFAST" | "DINNER";
+  calculated_meal_count: number;
+  is_locked: boolean;
+  final_meal_count?: number | null;
+  locked_price_per_meal?: number | null;
+  locked_at?: string | null;
+  notes?: string | null;
+}
+
+export interface DailyMealEmployeeItem {
+  employee_id: number;
+  employee_code?: string | null;
+  name_latin: string;
+  name_chinese?: string | null;
+  accommodation_type: "KTX" | "HOTEL" | string;
+  location_name: string;
+  stay_id: number;
+  has_meals: boolean;
+  is_breakfast_absent: boolean;
+  is_dinner_absent: boolean;
+}
+
+export interface DailyMealForecastResponse {
+  date: string;
+  day_type?: string;
+  day_type_name?: string;
+  suggested_price_per_meal?: number;
+  event_notes?: string | null;
+  breakfast: DailyMealSessionSummary;
+  dinner: DailyMealSessionSummary;
+  active_ktx_residents_count: number;
+  employees: DailyMealEmployeeItem[];
 }
 
 export interface EventDay {
@@ -293,17 +352,28 @@ export interface EventDayCreate {
   notes?: string | null;
 }
 
+export interface EventDayCreateBatch {
+  start_date?: string | null;
+  end_date?: string | null;
+  event_type: string;
+  notes?: string | null;
+}
+
 export interface MealPriceConfig {
   id: number;
-  day_type: "NORMAL" | "PRESIDENT_VISIT" | string;
+  day_type: string;
+  day_type_name?: string | null;
   price_per_meal: number;
   effective_from: string;
+  notes?: string | null;
 }
 
 export interface MealPriceConfigCreate {
-  day_type: "NORMAL" | "PRESIDENT_VISIT" | string;
+  day_type: string;
+  day_type_name?: string | null;
   price_per_meal: number;
-  effective_from: string;
+  effective_from?: string;
+  notes?: string | null;
 }
 
 export interface MealExpenseReportItem {

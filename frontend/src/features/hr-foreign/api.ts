@@ -2,6 +2,9 @@ import type {
   Contract,
   ContractCreate,
   ContractUpdate,
+  DailyMealForecastResponse,
+  MealSessionLock,
+  MealSessionLockCreate,
   DailyPresenceReportResponse,
   DocWarningConfigResponse,
   DocWarningConfigUpdateItem,
@@ -11,6 +14,7 @@ import type {
   EmployeeHistoryResponse,
   EventDay,
   EventDayCreate,
+  EventDayCreateBatch,
   ExpiringDocumentsResponse,
   ForeignEmployee,
   ForeignEmployeeCreate,
@@ -485,9 +489,40 @@ export async function createEventDay(payload: EventDayCreate): Promise<EventDay>
   return res.json() as Promise<EventDay>;
 }
 
+export async function createEventDaysBatch(
+  payload: EventDayCreateBatch
+): Promise<EventDay[]> {
+  const res = await fetch(`${BASE}/event-days/batch`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to create event days batch"));
+  }
+  return res.json() as Promise<EventDay[]>;
+}
+
 export async function deleteEventDay(id: number): Promise<void> {
   const res = await fetch(`${BASE}/event-days/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete event day");
+}
+
+export async function updateEventDay(
+  id: number,
+  payload: Partial<EventDay>
+): Promise<EventDay> {
+  const res = await fetch(`${BASE}/event-days/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to update event day"));
+  }
+  return res.json() as Promise<EventDay>;
 }
 
 // --- MEAL PRICE CONFIGS API ---
@@ -508,6 +543,55 @@ export async function createMealPriceConfig(
   });
   if (!res.ok) throw new Error("Failed to create meal price config");
   return res.json() as Promise<MealPriceConfig>;
+}
+
+export async function updateMealPriceConfig(
+  id: number,
+  payload: Partial<MealPriceConfig>
+): Promise<MealPriceConfig> {
+  const res = await fetch(`${BASE}/meal-price-configs/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to update meal price config"));
+  }
+  return res.json() as Promise<MealPriceConfig>;
+}
+
+export async function deleteMealPriceConfig(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/meal-price-configs/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete meal price config");
+}
+
+// --- DAILY MEAL FORECAST & LOCK API ---
+
+export async function fetchDailyMealForecast(
+  date: string
+): Promise<DailyMealForecastResponse> {
+  const res = await fetch(`${BASE}/meals/forecast?date=${encodeURIComponent(date)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to fetch daily meal forecast"));
+  }
+  return res.json() as Promise<DailyMealForecastResponse>;
+}
+
+export async function lockMealSession(
+  payload: MealSessionLockCreate
+): Promise<MealSessionLock> {
+  const res = await fetch(`${BASE}/meals/lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Failed to lock meal session"));
+  }
+  return res.json() as Promise<MealSessionLock>;
 }
 
 // --- MEAL EXPENSE REPORT API ---

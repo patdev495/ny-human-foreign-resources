@@ -11,6 +11,7 @@ from sqlalchemy import (
     Integer,
     Unicode,
     UnicodeText,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -139,6 +140,7 @@ class MealAbsence(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
     absence_date = Column(Date, nullable=False)
+    meal_type = Column(Unicode(50), nullable=False, default="ALL_DAY")  # BREAKFAST, DINNER, ALL_DAY
     reason = Column(UnicodeText, nullable=True)
 
     stay = relationship("Stay", back_populates="meal_absences")
@@ -189,9 +191,11 @@ class MealPriceConfig(Base):
     __tablename__ = "meal_price_configs"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    day_type = Column(Unicode(100), nullable=False)  # NORMAL, PRESIDENT_VISIT
+    day_type = Column(Unicode(100), nullable=False)  # NORMAL, PRESIDENT_VISIT, TET...
+    day_type_name = Column(Unicode(255), nullable=True)  # Ngày bình thường, Chủ tịch sang...
     price_per_meal = Column(Float, nullable=False)
     effective_from = Column(Date, nullable=False, default=datetime.date(2020, 1, 1))
+    notes = Column(UnicodeText, nullable=True)
 
 
 
@@ -217,5 +221,24 @@ class DocWarningConfig(Base):
     doc_type = Column(Unicode(50), nullable=False, unique=True, index=True)
     warning_value = Column(Integer, nullable=False, default=30)
     warning_unit = Column(Unicode(20), nullable=False, default="DAY")  # DAY, MONTH
+
+
+class MealSessionLock(Base):
+    """Bản ghi đóng băng (Snapshot) số lượng và đơn giá cho từng bữa ăn (BREAKFAST, DINNER)."""
+    __tablename__ = "meal_session_locks"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    lock_date = Column(Date, nullable=False, index=True)
+    meal_session = Column(Unicode(50), nullable=False)  # BREAKFAST, DINNER
+    calculated_meal_count = Column(Integer, nullable=False, default=0)
+    final_meal_count = Column(Integer, nullable=False, default=0)
+    locked_price_per_meal = Column(Float, nullable=False, default=30000.0)
+    locked_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    locked_by = Column(Unicode(255), nullable=True)
+    notes = Column(UnicodeText, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("lock_date", "meal_session", name="uq_meal_session_locks_date_session"),
+    )
 
 

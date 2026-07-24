@@ -13,7 +13,7 @@ export const DailyPresenceReport: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mainTab, setMainTab] = useState<"IN_VN" | "EXITED">("IN_VN");
   const [activeSubTab, setActiveSubTab] = useState<"ALL" | "KTX" | "HOTEL" | "UNASSIGNED">("ALL");
-  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
+  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("LIST");
 
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -76,13 +76,19 @@ export const DailyPresenceReport: React.FC = () => {
   const filteredUnassignedItems = (data?.unassigned_items || []).filter(matchesSearch);
   const filteredExitedItems = (data?.exited_items || []).filter(matchesSearch);
 
-  const filteredItems = (data?.items || []).filter((item) => {
-    if (!matchesSearch(item)) return false;
-    if (activeSubTab === "KTX") return item.accommodation_type === "KTX" && item.room_number;
-    if (activeSubTab === "HOTEL") return item.accommodation_type === "HOTEL" && item.hotel_name;
-    if (activeSubTab === "UNASSIGNED") return !item.room_number && !item.hotel_name;
-    return true;
-  });
+  const filteredItems = (data?.items || [])
+    .filter((item) => {
+      if (!matchesSearch(item)) return false;
+      if (activeSubTab === "KTX") return item.accommodation_type === "KTX" && item.room_number;
+      if (activeSubTab === "HOTEL") return item.accommodation_type === "HOTEL" && item.hotel_name;
+      if (activeSubTab === "UNASSIGNED") return !item.room_number && !item.hotel_name;
+      return true;
+    })
+    .sort((a, b) => {
+      const aUnassigned = !a.room_number && !a.hotel_name ? 0 : 1;
+      const bUnassigned = !b.room_number && !b.hotel_name ? 0 : 1;
+      return aUnassigned - bUnassigned;
+    });
 
   return (
     <div className="space-y-6">
@@ -572,9 +578,57 @@ export const DailyPresenceReport: React.FC = () => {
               ) : (
                 /* --- 🏢 GROUPED VIEW MODE (Theo Phòng / Cơ sở) --- */
                 <div className="space-y-6">
+                  {/* Unassigned Section (HIỂN THỊ LÊN ĐẦU TIÊN) */}
+                  {(activeSubTab === "ALL" || activeSubTab === "UNASSIGNED") && filteredUnassignedItems.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-2">
+                        <span>⚠️ Nhân sự chưa xếp chỗ ở ({filteredUnassignedItems.length} người)</span>
+                      </h3>
+
+                      <div className="bg-white rounded-2xl border border-rose-200 overflow-hidden shadow-xs">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs text-slate-700">
+                            <thead className="bg-rose-50 text-rose-900 font-semibold border-b border-rose-200">
+                              <tr>
+                                <th className="px-4 py-3">Tên nhân sự</th>
+                                <th className="px-4 py-3">Bộ phận</th>
+                                <th className="px-4 py-3">Số điện thoại</th>
+                                <th className="px-4 py-3 text-right">Thao tác</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-rose-100">
+                              {filteredUnassignedItems.map((emp) => (
+                                <tr
+                                  key={emp.employee_id}
+                                  onClick={() => handleOpenProfile(emp.employee_id)}
+                                  className="hover:bg-rose-50/40 transition-colors cursor-pointer"
+                                >
+                                  <td className="px-4 py-3 font-bold text-slate-900">{emp.name_latin}</td>
+                                  <td className="px-4 py-3 text-slate-600">{emp.department || "N/A"}</td>
+                                  <td className="px-4 py-3 font-mono">{emp.phone || "-"}</td>
+                                  <td className="px-4 py-3 text-right">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenProfile(emp.employee_id);
+                                      }}
+                                      className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs cursor-pointer"
+                                    >
+                                      Profile 360°
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* KTX Groups */}
                   {(activeSubTab === "ALL" || activeSubTab === "KTX") && (
-                    <div className="space-y-3">
+                    <div className="space-y-3 pt-2">
                       <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                         <span>🏢 Các phòng Ký túc xá ({filteredKtxGroups.length} phòng)</span>
                       </h3>
@@ -723,54 +777,6 @@ export const DailyPresenceReport: React.FC = () => {
                           ))}
                         </div>
                       )}
-                    </div>
-                  )}
-
-                  {/* Unassigned Section */}
-                  {(activeSubTab === "ALL" || activeSubTab === "UNASSIGNED") && filteredUnassignedItems.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <h3 className="text-xs font-bold text-rose-800 uppercase tracking-wider flex items-center gap-2">
-                        <span>⚠️ Nhân sự chưa xếp chỗ ở ({filteredUnassignedItems.length} người)</span>
-                      </h3>
-
-                      <div className="bg-white rounded-2xl border border-rose-200 overflow-hidden shadow-xs">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs text-slate-700">
-                            <thead className="bg-rose-50 text-rose-900 font-semibold border-b border-rose-200">
-                              <tr>
-                                <th className="px-4 py-3">Tên nhân sự</th>
-                                <th className="px-4 py-3">Bộ phận</th>
-                                <th className="px-4 py-3">Số điện thoại</th>
-                                <th className="px-4 py-3 text-right">Thao tác</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-rose-100">
-                              {filteredUnassignedItems.map((emp) => (
-                                <tr
-                                  key={emp.employee_id}
-                                  onClick={() => handleOpenProfile(emp.employee_id)}
-                                  className="hover:bg-rose-50/40 transition-colors cursor-pointer"
-                                >
-                                  <td className="px-4 py-3 font-bold text-slate-900">{emp.name_latin}</td>
-                                  <td className="px-4 py-3 text-slate-600">{emp.department || "N/A"}</td>
-                                  <td className="px-4 py-3 font-mono">{emp.phone || "-"}</td>
-                                  <td className="px-4 py-3 text-right">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenProfile(emp.employee_id);
-                                      }}
-                                      className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg text-xs cursor-pointer"
-                                    >
-                                      Profile 360°
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
                     </div>
                   )}
                 </div>

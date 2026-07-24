@@ -9,7 +9,7 @@ export const RoomOccupancyBoard: React.FC = () => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
-  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
+  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("LIST");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Modals

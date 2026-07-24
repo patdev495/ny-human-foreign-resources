@@ -343,6 +343,7 @@ class DocWarningConfigResponse(BaseModel):
 
 class MealAbsenceBase(BaseModel):
     absence_date: datetime.date
+    meal_type: str = "ALL_DAY"  # "BREAKFAST" | "DINNER" | "ALL_DAY"
     reason: str | None = None
 
 
@@ -369,22 +370,45 @@ class EventDayCreate(EventDayBase):
     pass
 
 
+class EventDayCreateBatch(BaseModel):
+    start_date: datetime.date | None = None
+    end_date: datetime.date | None = None
+    event_type: str = "PRESIDENT_VISIT"
+    notes: str | None = None
+
+
 class EventDayRead(EventDayBase):
     id: int
 
     model_config = ConfigDict(from_attributes=True)
 
 
+class EventDayUpdate(BaseModel):
+    event_date: datetime.date | None = None
+    event_type: str | None = None
+    notes: str | None = None
+
+
 # --- MEAL PRICE CONFIG SCHEMAS ---
 
 class MealPriceConfigBase(BaseModel):
-    day_type: str  # "NORMAL" | "PRESIDENT_VISIT"
+    day_type: str  # "NORMAL", "PRESIDENT_VISIT", "TET"...
+    day_type_name: str | None = None  # "Ngày bình thường", "Chủ tịch sang"...
     price_per_meal: float
-    effective_from: datetime.date
+    effective_from: datetime.date = datetime.date(2020, 1, 1)
+    notes: str | None = None
 
 
 class MealPriceConfigCreate(MealPriceConfigBase):
     pass
+
+
+class MealPriceConfigUpdate(BaseModel):
+    day_type: str | None = None
+    day_type_name: str | None = None
+    price_per_meal: float | None = None
+    effective_from: datetime.date | None = None
+    notes: str | None = None
 
 
 class MealPriceConfigRead(MealPriceConfigBase):
@@ -496,4 +520,65 @@ class DocumentAttachmentResponse(BaseModel):
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- MEAL SESSION LOCK & FORECAST SCHEMAS ---
+
+class MealSessionLockCreate(BaseModel):
+    lock_date: datetime.date
+    meal_session: str  # "BREAKFAST" | "DINNER"
+    calculated_meal_count: int
+    final_meal_count: int
+    locked_price_per_meal: float = 30000.0
+    locked_by: str | None = None
+    notes: str | None = None
+
+
+class MealSessionLockRead(BaseModel):
+    id: int
+    lock_date: datetime.date
+    meal_session: str
+    calculated_meal_count: int
+    final_meal_count: int
+    locked_price_per_meal: float
+    locked_at: datetime.datetime
+    locked_by: str | None = None
+    notes: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DailyMealSessionSummary(BaseModel):
+    meal_session: str  # "BREAKFAST" | "DINNER"
+    calculated_meal_count: int = 0
+    is_locked: bool = False
+    final_meal_count: int | None = None
+    locked_price_per_meal: float | None = None
+    locked_at: datetime.datetime | None = None
+    notes: str | None = None
+
+
+class DailyMealEmployeeItem(BaseModel):
+    employee_id: int
+    employee_code: str | None = None
+    name_latin: str
+    name_chinese: str | None = None
+    accommodation_type: str  # "KTX" | "HOTEL"
+    location_name: str
+    stay_id: int
+    has_meals: bool
+    is_breakfast_absent: bool = False
+    is_dinner_absent: bool = False
+
+
+class DailyMealForecastResponse(BaseModel):
+    date: datetime.date
+    day_type: str = "NORMAL"
+    day_type_name: str = "Ngày bình thường"
+    suggested_price_per_meal: float = 30000.0
+    event_notes: str | None = None
+    breakfast: DailyMealSessionSummary
+    dinner: DailyMealSessionSummary
+    active_ktx_residents_count: int = 0
+    employees: list[DailyMealEmployeeItem] = []
 

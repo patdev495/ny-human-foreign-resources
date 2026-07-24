@@ -43,15 +43,35 @@ Tính chất của một **Lưu trú** cụ thể: **Cố định** (đóng quâ
 _Avoid_: "thường trú", "tạm thời"
 
 **Vắng ăn** (Meal Absence):
-Ngày một Nhân viên nước ngoài không ăn (ví dụ: về nước tạm thời, nghỉ phép). Ngày vắng ăn được ghi lại rổ — mặc định mọi ngày trong Lưu trú là có ăn. Chi phí ăn chỉ tính những ngày không vắng.
+Bản ghi đăng ký vắng ăn của Nhân viên nước ngoài cho một ngày cụ thể trong đợt Lưu trú (ví dụ: về nước tạm thời, nghỉ phép, đi công tác ngoài). Hỗ trợ phân loại theo **Loại bữa vắng** (`meal_type`): **Sáng** (BREAKFAST), **Tối** (DINNER), hoặc **Cả ngày** (ALL_DAY - mặc định). Mặc định mọi ngày trong Lưu trú KTX là có ăn cả 2 bữa.
 _Avoid_: "điểm danh", "check-in"
 
-**Ngày sự kiện** (Event Day):
-Ngày được đánh dấu đặc biệt, hiện tại chỉ có loại **Chủ tịch sang** — khả năng mở rộng sau. Đơn giá bữa ăn của ngày đó sẽ cao hơn đơn giá bình thường.
+**Đăng ký ăn thêm** (Extra Meal Request):
+Bản ghi đăng ký ăn bổ sung cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn, người vắng ăn đổi lịch, hoặc khách công tác), phục vụ việc chốt dự báo số lượng suất ăn với nhà bếp.
 
-**Đơn giá bữa ăn** (Meal Price Config):
-Giá mỗi bữa ăn, có lịch sử thay đổi theo thời gian. Mỗi bản ghi gồm: loại ngày (THƯỜNG / CHỦ_TỊCH_SANG), đơn giá, hiệu lực từ ngày nào.
-Giá hiện tại: 35.000 VNĐ (ngày thường) và 50.000 VNĐ (ngày Chủ tịch sang). Có 2 bữa / ngày.
+**Báo cáo Dự báo Suất ăn** (Daily Meal Forecast Report):
+Báo cáo thống kê tổng hợp số lượng suất ăn cần chuẩn bị cho từng bữa (Sáng/Tối) vào một ngày cụ thể (hoặc một khoảng ngày). HR có thể tra cứu danh sách chi tiết (ai ăn, ai vắng) và bật/tắt trạng thái ăn/vắng của từng người bất kể lúc nào. Công thức: Số người ở KTX - (Vắng theo bữa + Vắng cả ngày) + (Đăng ký ăn thêm theo bữa).
+
+**Chốt suất ăn theo Bữa** (Meal Session Lock):
+Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính thức báo nhà bếp cho một bữa cụ thể (`BREAKFAST`, `LUNCH`, hoặc `DINNER`) trong ngày. Mỗi bữa chỉ được phép Chốt duy nhất **1 lần** cho toàn bộ hệ thống.
+- **Giao diện Modal Chốt suất ăn**: Liệt kê chi tiết danh sách breakdown theo từng **Khối Nhân sự** (VD: Nhân viên nước ngoài bao nhiêu suất / đơn giá bao nhiêu; Tạp vụ bao nhiêu suất / đơn giá bao nhiêu).
+- **Hệ thống đề xuất**: Số suất tính toán tự động và đơn giá theo từng Khối Nhân sự (tra từ Danh mục Loại ngày & Đơn giá Suất ăn).
+- **Quyền điều chỉnh**: HR có quyền điều chỉnh số suất thực chốt (`final_meal_count`), đơn giá thực chốt (`locked_price_per_meal`) của từng Khối Nhân sự, và nhập ghi chú lý do điều chỉnh.
+- **Đóng băng (Snapshot)**: Khi bấm Chốt, hệ thống lưu trữ bản ghi Chốt chung kèm danh sách chi tiết (details) từng khối: $\text{Tổng tiền bữa chốt} = \sum (\text{final\_meal\_count}_{\text{khối}} \times \text{locked\_price\_per\_meal}_{\text{khối}})$.
+
+**Khối Nhân sự** (Participant / Employee Group):
+Phân loại các đối tượng nhân sự tham gia hệ thống và có chế độ ăn uống hoặc quản lý chuyên biệt: **Nhân viên nước ngoài** (`FOREIGN_EMPLOYEE`), **Tạp vụ** (`JANITOR`), v.v.
+
+**Danh mục Loại ngày & Đơn giá Suất ăn** (Day Type & Meal Price Config):
+Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá bữa ăn tương ứng cho từng **Khối Nhân sự** (`participant_type`):
+- Cho **Nhân viên nước ngoài**: Đơn giá mặc định Ngày bình thường (`NORMAL`) là **30.000 VNĐ / bữa**.
+- Cho **Tạp vụ**: Đơn giá mặc định theo quy định riêng (vd: **25.000 VNĐ / bữa**).
+- **Loại ngày đặc biệt do HR định nghĩa**: HR me có thể tạo thêm các loại ngày mới (`PRESIDENT_VISIT`, `TET`...) đi kèm đơn giá riêng cho từng Khối Nhân sự.
+
+**Cài đặt Sự kiện / Gán loại ngày** (Event Settings & Date Assignment):
+Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một khoảng ngày:
+- **Khoảng ngày**: Nhập từ `start_date` đến `end_date` + Chọn Loại ngày $\rightarrow$ Hệ thống tự động gán toàn bộ các ngày trong khoảng sang loại ngày đã chọn.
+- **Ngày đơn lẻ**: Nhập 1 trong 2 ô ngày tháng (hoặc `start_date` == `end_date`) + Chọn Loại ngày $\rightarrow$ Gán loại ngày cho ngày đơn lẻ đó.
 
 **Điều xe** (Vehicle Dispatch):
 Dịch vụ đăng ký đưa đón Nhân viên nước ngoài di chuyển giữa KTX, Công ty, Sân bay, Cửa khẩu hoặc đi gặp khách hàng. Phân loại theo Loại xe (4 chỗ, 7 chỗ, 16 chỗ...) và Nhà cung cấp/Tài xế.
