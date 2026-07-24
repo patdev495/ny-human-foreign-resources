@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { fetchEmployees, fetchRooms, fetchHotels, createStay } from "../api";
 import type { ForeignEmployee, Room, Hotel } from "../types";
+import { CheckInFormFields } from "./check-in/CheckInFormFields";
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -165,292 +166,70 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]">
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
           <h3 className="text-lg font-bold text-slate-900 flex items-center">
-            <svg
-              className="w-5 h-5 mr-2 text-indigo-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              />
-            </svg>
-            Xếp người vào chỗ ở mới
+            🏢 Xếp người vào chỗ ở mới
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+            className="text-slate-400 hover:text-slate-600 rounded-lg p-1 cursor-pointer"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-start">
-            <svg
-              className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div>{error}</div>
+          <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+            {error}
           </div>
         )}
 
         {loading ? (
-          <div className="py-8 text-center text-slate-500">Đang tải dữ liệu...</div>
+          <div className="py-8 text-center text-slate-500 font-medium">Đang tải dữ liệu...</div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Chọn loại chỗ ở */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-                Loại chỗ ở <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleTypeChange("KTX")}
-                  className={`py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
-                    accommodationType === "KTX"
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  🏫 Ký túc xá (KTX)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTypeChange("HOTEL")}
-                  className={`py-2.5 px-4 rounded-lg border text-sm font-medium transition-all ${
-                    accommodationType === "HOTEL"
-                      ? "border-indigo-600 bg-indigo-50 text-indigo-700 shadow-sm"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  🏨 Khách sạn
-                </button>
-              </div>
-            </div>
+            <CheckInFormFields
+              employees={employees}
+              rooms={rooms}
+              hotels={hotels}
+              selectedEmployeeId={selectedEmployeeId}
+              setSelectedEmployeeId={setSelectedEmployeeId}
+              accommodationType={accommodationType}
+              handleTypeChange={handleTypeChange}
+              roomId={roomId}
+              setRoomId={setRoomId}
+              hotelId={hotelId}
+              setHotelId={setHotelId}
+              hotelRoomNumber={hotelRoomNumber}
+              setHotelRoomNumber={setHotelRoomNumber}
+              bedLocation={bedLocation}
+              setBedLocation={setBedLocation}
+              stayType={stayType}
+              setStayType={setStayType}
+              hasMeals={hasMeals}
+              setHasMeals={setHasMeals}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              expectedEndDate={expectedEndDate}
+              setExpectedEndDate={setExpectedEndDate}
+              notes={notes}
+              setNotes={setNotes}
+              hasActiveAccommodation={hasActiveAccommodation}
+              selectedEmployee={selectedEmployee}
+            />
 
-            {/* Chọn Nhân viên */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Nhân viên nước ngoài <span className="text-red-500">*</span>
-              </label>
-              <select
-                required
-                value={selectedEmployeeId}
-                onChange={(e) => {
-                  setSelectedEmployeeId(e.target.value ? Number(e.target.value) : "");
-                  setError(null);
-                }}
-                className={`w-full px-3.5 py-2 border rounded-lg text-sm outline-none bg-white ${
-                  hasActiveAccommodation
-                    ? "border-amber-400 bg-amber-50/20 focus:ring-2 focus:ring-amber-500"
-                    : "border-slate-300 focus:ring-2 focus:ring-indigo-500"
-                }`}
-              >
-                <option value="">-- Chọn nhân viên trong hệ thống --</option>
-                {employees.map((emp) => {
-                  const isOccupied = Boolean(emp.current_room_number);
-                  return (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name_latin} {emp.name_chinese ? `(${emp.name_chinese})` : ""} - HC:{" "}
-                      {emp.passport_number || "Không có"}
-                      {isOccupied ? ` ⚠️ [Đang ở: ${emp.current_room_number}]` : ""}
-                    </option>
-                  );
-                })}
-              </select>
-
-              {selectedEmployee && hasActiveAccommodation && (
-                <div className="mt-2.5 p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl text-amber-900 text-xs font-medium space-y-1.5 shadow-2xs">
-                  <div className="font-bold flex items-center gap-1.5 text-amber-800 text-sm">
-                    <svg className="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>Cảnh báo: Nhân viên này đang có chỗ ở!</span>
-                  </div>
-                  <p className="leading-relaxed">
-                    Nhân sự <strong>{selectedEmployee.name_latin}</strong> {selectedEmployee.name_chinese ? `(${selectedEmployee.name_chinese})` : ""} hiện <strong>đang ở tại</strong>:{" "}
-                    <span className="font-bold text-amber-950 bg-amber-200/80 px-2 py-0.5 rounded border border-amber-300">
-                      {selectedEmployee.current_room_number}
-                    </span>.
-                  </p>
-                  <div className="text-red-700 font-bold bg-white p-2.5 rounded-lg border border-red-200 flex items-center gap-2">
-                    <span>⛔ Hệ thống yêu cầu làm thủ tục <strong><u>Trả phòng cũ</u></strong> cho nhân viên trước khi xếp vào chỗ ở mới!</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Đơn vị chỗ ở cụ thể */}
-            {accommodationType === "KTX" ? (
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Số phòng KTX <span className="text-red-500">*</span>
-                </label>
-                <select
-                  required
-                  value={roomId}
-                  onChange={(e) => setRoomId(e.target.value ? Number(e.target.value) : "")}
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
-                >
-                  <option value="">-- Chọn phòng KTX --</option>
-                  {rooms.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      Phòng {r.room_number} {r.notes ? `(${r.notes})` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    Khách sạn đối tác <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    required
-                    value={hotelId}
-                    onChange={(e) => setHotelId(e.target.value ? Number(e.target.value) : "")}
-                    className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
-                  >
-                    <option value="">-- Chọn khách sạn --</option>
-                    {hotels.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                    Số phòng khách sạn
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Vd: P302"
-                    value={hotelRoomNumber}
-                    onChange={(e) => setHotelRoomNumber(e.target.value)}
-                    className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Ngày bắt đầu ở & Ngày dự kiến về & Vị trí giường */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Ngày bắt đầu ở <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Ngày dự kiến về (nếu có)
-                </label>
-                <input
-                  type="date"
-                  value={expectedEndDate}
-                  onChange={(e) => setExpectedEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Vị trí giường (nếu có)
-              </label>
-              <input
-                type="text"
-                placeholder="Vd: Giường A, Giường 1..."
-                value={bedLocation}
-                onChange={(e) => setBedLocation(e.target.value)}
-                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              />
-            </div>
-
-            {/* Loại hình & Ăn uống */}
-            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Loại hình
-                </label>
-                <select
-                  value={stayType}
-                  onChange={(e) => setStayType(e.target.value as any)}
-                  className="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none"
-                >
-                  <option value="CO_DINH">Cố định (Ở dài hạn)</option>
-                  <option value="CONG_TAC">Công tác (Đợt ngắn hạn)</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Tính tiền ăn
-                </label>
-                <label className="inline-flex items-center mt-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasMeals}
-                    onChange={(e) => setHasMeals(e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500"
-                  />
-                  <span className="ml-2 text-xs font-medium text-slate-700">
-                    {hasMeals ? "Có ăn cơm công ty" : "Không ăn cơm"}
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                Ghi chú
-              </label>
-              <input
-                type="text"
-                placeholder="Ghi chú đợt ở..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer"
               >
                 Hủy
               </button>
               <button
                 type="submit"
-                disabled={submitting || hasActiveAccommodation}
-                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting}
+                className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm cursor-pointer disabled:opacity-60"
               >
-                {submitting ? "Đang xử lý..." : "Xác nhận xếp ở"}
+                {submitting ? "Đang xử lý..." : "Xác nhận xếp chỗ"}
               </button>
             </div>
           </form>

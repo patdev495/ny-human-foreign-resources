@@ -105,6 +105,8 @@ frontend/
 - **Always** add a new feature as a new directory under `features/` on both sides.
 - Cross-feature dependencies must go through `shared/` or `core/` — never import directly between feature directories.
 - Backend router for each feature must be registered in `main.py` under its own prefix (e.g. `/api/hr-foreign`).
+- **File Length Limit**: **No source code file (`.py`, `.ts`, `.tsx`) should exceed ~400 lines of code**. Large files must be modularised into sub-domain packages (`services/`, `routers/`, `schemas/`, `api/`, `types/`, or component sub-directories with hooks) using facade re-exports as per ADR 0006.
+
 
 ## Git & Commit Conventions
 
