@@ -67,6 +67,7 @@ from .meal_schemas import (
     MealPriceConfigUpdate,
     MealPriceConfigRead,
     MealExpenseReportItem,
+    JanitorDailyItem,
     MealExpenseReportResponse,
     DailyPresenceItem,
     DailyPresenceSummary,
@@ -96,8 +97,9 @@ __all__ = [
     "MealAbsenceBase", "MealAbsenceCreate", "MealAbsenceRead",
     "EventDayBase", "EventDayCreate", "EventDayCreateBatch", "EventDayRead", "EventDayUpdate",
     "MealPriceConfigBase", "MealPriceConfigCreate", "MealPriceConfigUpdate", "MealPriceConfigRead",
-    "MealExpenseReportItem", "MealExpenseReportResponse",
+    "MealExpenseReportItem", "JanitorDailyItem", "MealExpenseReportResponse",
     "DailyPresenceItem", "DailyPresenceSummary", "DailyPresenceGroup", "DailyPresenceReportResponse",
     "MealSessionLockCreate", "MealSessionLockRead", "DailyMealSessionSummary",
     "DailyMealEmployeeItem", "DailyMealForecastResponse",
 ]
+

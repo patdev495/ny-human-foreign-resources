@@ -9,7 +9,7 @@ interface LockMealSessionModalProps {
   onClose: () => void;
   onConfirm: (payload: {
     lock_date: string;
-    meal_session: "BREAKFAST" | "DINNER";
+    meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
     calculated_meal_count: number;
     final_meal_count: number;
     locked_price_per_meal: number;
@@ -25,8 +25,12 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   onClose,
   onConfirm,
 }) => {
-  const isBreakfast = sessionSummary.meal_session === "BREAKFAST";
-  const sessionLabel = isBreakfast ? "Bữa Sáng 🍳" : "Bữa Tối 🌙";
+  const sessionLabel =
+    sessionSummary.meal_session === "BREAKFAST"
+      ? "Bữa Sáng (Nước ngoài) 🍳"
+      : sessionSummary.meal_session === "LUNCH"
+      ? "Bữa Trưa (Lao công) ☀️"
+      : "Bữa Tối (Nước ngoài) 🌙";
 
   const isAlreadyLocked = sessionSummary.is_locked;
 

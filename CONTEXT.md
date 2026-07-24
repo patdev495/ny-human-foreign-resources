@@ -53,20 +53,20 @@ Bản ghi đăng ký ăn bổ sung cho nhân sự không thuộc diện mặc đ
 Báo cáo thống kê tổng hợp số lượng suất ăn cần chuẩn bị cho từng bữa (Sáng/Tối) vào một ngày cụ thể (hoặc một khoảng ngày). HR có thể tra cứu danh sách chi tiết (ai ăn, ai vắng) và bật/tắt trạng thái ăn/vắng của từng người bất kể lúc nào. Công thức: Số người ở KTX - (Vắng theo bữa + Vắng cả ngày) + (Đăng ký ăn thêm theo bữa).
 
 **Chốt suất ăn theo Bữa** (Meal Session Lock):
-Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính thức báo nhà bếp cho một bữa cụ thể (`BREAKFAST`, `LUNCH`, hoặc `DINNER`) trong ngày. Mỗi bữa chỉ được phép Chốt duy nhất **1 lần** cho toàn bộ hệ thống.
-- **Giao diện Modal Chốt suất ăn**: Liệt kê chi tiết danh sách breakdown theo từng **Khối Nhân sự** (VD: Nhân viên nước ngoài bao nhiêu suất / đơn giá bao nhiêu; Tạp vụ bao nhiêu suất / đơn giá bao nhiêu).
+Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính thức báo nhà bếp cho từng bữa cụ thể: **Sáng** (`BREAKFAST` - NNN), **Trưa** (`LUNCH` - Lao công), hoặc **Tối** (`DINNER` - NNN) trong ngày. Mỗi bữa chỉ được phép Chốt duy nhất **1 lần** cho toàn bộ hệ thống.
+- **Giao diện Modal Chốt suất ăn**: Liệt kê chi tiết danh sách breakdown theo từng **Khối Nhân sự** (VD: Nhân viên nước ngoài bao nhiêu suất / đơn giá bao nhiêu; Lao công bao nhiêu suất / đơn giá bao nhiêu).
 - **Hệ thống đề xuất**: Số suất tính toán tự động và đơn giá theo từng Khối Nhân sự (tra từ Danh mục Loại ngày & Đơn giá Suất ăn).
 - **Quyền điều chỉnh**: HR có quyền điều chỉnh số suất thực chốt (`final_meal_count`), đơn giá thực chốt (`locked_price_per_meal`) của từng Khối Nhân sự, và nhập ghi chú lý do điều chỉnh.
 - **Đóng băng (Snapshot)**: Khi bấm Chốt, hệ thống lưu trữ bản ghi Chốt chung kèm danh sách chi tiết (details) từng khối: $\text{Tổng tiền bữa chốt} = \sum (\text{final\_meal\_count}_{\text{khối}} \times \text{locked\_price\_per\_meal}_{\text{khối}})$.
 
 **Khối Nhân sự** (Participant / Employee Group):
-Phân loại các đối tượng nhân sự tham gia hệ thống và có chế độ ăn uống hoặc quản lý chuyên biệt: **Nhân viên nước ngoài** (`FOREIGN_EMPLOYEE`), **Tạp vụ** (`JANITOR`), v.v.
+Phân loại các đối tượng nhân sự tham gia hệ thống và có chế độ ăn uống hoặc quản lý chuyên biệt: **Nhân viên nước ngoài** (`FOREIGN_EMPLOYEE` - ăn bữa Sáng & Tối), **Lao công** (`JANITOR` - ăn 1 bữa Trưa), v.v.
 
 **Danh mục Loại ngày & Đơn giá Suất ăn** (Day Type & Meal Price Config):
-Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá bữa ăn tương ứng cho từng **Khối Nhân sự** (`participant_type`):
-- Cho **Nhân viên nước ngoài**: Đơn giá mặc định Ngày bình thường (`NORMAL`) là **30.000 VNĐ / bữa**.
-- Cho **Tạp vụ**: Đơn giá mặc định theo quy định riêng (vd: **25.000 VNĐ / bữa**).
-- **Loại ngày đặc biệt do HR định nghĩa**: HR me có thể tạo thêm các loại ngày mới (`PRESIDENT_VISIT`, `TET`...) đi kèm đơn giá riêng cho từng Khối Nhân sự.
+Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá bữa ăn tương ứng cho từng bữa / Khối Nhân sự (`MealPriceConfig`):
+- **Nhân viên nước ngoài**: Đơn giá bữa **Sáng** (`foreign_breakfast_price`) và bữa **Tối** (`foreign_dinner_price`) được cài đặt riêng biệt.
+- **Lao công**: Đơn giá 1 bữa **Trưa** (`janitor_meal_price`) được cài đặt riêng.
+- **Loại ngày đặc biệt / Sự kiện do HR định nghĩa**: Khi tạo mới/chỉnh sửa sự kiện (`PRESIDENT_VISIT`, `TET`...), HR phải thiết lập đầy đủ cả 3 mức giá (không được bỏ trống). Hệ thống tự động gợi ý điền sẵn theo giá Ngày bình thường (`NORMAL`).
 
 **Cài đặt Sự kiện / Gán loại ngày** (Event Settings & Date Assignment):
 Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một khoảng ngày:

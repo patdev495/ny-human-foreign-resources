@@ -324,3 +324,20 @@ def test_export_api_endpoints(client):
     res_presence = client.get("/api/hr-foreign/exports/presence-accommodation")
     assert res_presence.status_code == 200
     assert res_presence.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+
+def test_generate_meal_expense_excel(db_session):
+    from features.hr_foreign.excel_exporter import generate_meal_expense_excel
+    excel_bytes = generate_meal_expense_excel(db_session, start_date=datetime.date(2026, 8, 1), end_date=datetime.date(2026, 8, 5))
+    assert isinstance(excel_bytes, io.BytesIO)
+
+    wb = load_workbook(excel_bytes)
+    assert "NNN - Chi phí Bữa ăn" in wb.sheetnames
+    assert "Lao công - Theo ngày" in wb.sheetnames
+
+
+def test_export_meal_expense_endpoint(client):
+    res = client.get("/api/hr-foreign/exports/meal-expense?start_date=2026-08-01&end_date=2026-08-05")
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+

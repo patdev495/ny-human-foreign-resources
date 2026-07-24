@@ -15,7 +15,7 @@ export interface MealAbsenceCreate {
 export interface MealSessionLock {
   id: number;
   lock_date: string;
-  meal_session: "BREAKFAST" | "DINNER";
+  meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
   calculated_meal_count: number;
   final_meal_count: number;
   locked_price_per_meal: number;
@@ -26,7 +26,7 @@ export interface MealSessionLock {
 
 export interface MealSessionLockCreate {
   lock_date: string;
-  meal_session: "BREAKFAST" | "DINNER";
+  meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
   calculated_meal_count: number;
   final_meal_count: number;
   locked_price_per_meal: number;
@@ -35,7 +35,7 @@ export interface MealSessionLockCreate {
 }
 
 export interface DailyMealSessionSummary {
-  meal_session: "BREAKFAST" | "DINNER";
+  meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
   calculated_meal_count: number;
   is_locked: boolean;
   final_meal_count?: number | null;
@@ -62,8 +62,12 @@ export interface DailyMealForecastResponse {
   day_type?: string;
   day_type_name?: string;
   suggested_price_per_meal?: number;
+  suggested_breakfast_price?: number;
+  suggested_dinner_price?: number;
+  suggested_janitor_price?: number;
   event_notes?: string | null;
   breakfast: DailyMealSessionSummary;
+  lunch: DailyMealSessionSummary;
   dinner: DailyMealSessionSummary;
   active_ktx_residents_count: number;
   employees: DailyMealEmployeeItem[];
@@ -93,7 +97,9 @@ export interface MealPriceConfig {
   id: number;
   day_type: string;
   day_type_name?: string | null;
-  price_per_meal: number;
+  foreign_breakfast_price: number;
+  foreign_dinner_price: number;
+  janitor_meal_price: number;
   effective_from: string;
   notes?: string | null;
 }
@@ -101,7 +107,9 @@ export interface MealPriceConfig {
 export interface MealPriceConfigCreate {
   day_type: string;
   day_type_name?: string | null;
-  price_per_meal: number;
+  foreign_breakfast_price: number;
+  foreign_dinner_price: number;
+  janitor_meal_price: number;
   effective_from?: string;
   notes?: string | null;
 }
@@ -121,6 +129,14 @@ export interface MealExpenseReportItem {
   total_cost: number;
 }
 
+export interface JanitorDailyItem {
+  date: string;
+  meal_count: number;
+  price_per_meal: number;
+  total_cost: number;
+  notes?: string | null;
+}
+
 export interface MealExpenseReportResponse {
   start_date: string;
   end_date: string;
@@ -130,7 +146,11 @@ export interface MealExpenseReportResponse {
   total_meals: number;
   total_expense: number;
   items: MealExpenseReportItem[];
+  janitor_items?: JanitorDailyItem[];
+  total_janitor_meals?: number;
+  total_janitor_expense?: number;
 }
+
 
 export interface DailyPresenceItem {
   employee_id: number;

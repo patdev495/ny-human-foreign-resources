@@ -82,6 +82,43 @@ def init_db() -> None:
                     "ALTER TABLE meal_price_configs ADD notes NVARCHAR(MAX) NULL;"
                 )
             )
+            # Migrate old price_per_meal -> 3 separate price columns
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'foreign_breakfast_price') "
+                    "ALTER TABLE meal_price_configs ADD foreign_breakfast_price FLOAT NOT NULL DEFAULT 30000;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'foreign_dinner_price') "
+                    "ALTER TABLE meal_price_configs ADD foreign_dinner_price FLOAT NOT NULL DEFAULT 40000;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'janitor_meal_price') "
+                    "ALTER TABLE meal_price_configs ADD janitor_meal_price FLOAT NOT NULL DEFAULT 25000;"
+                )
+            )
+            # Seed new price columns from old price_per_meal if they are still at default
+            conn.execute(
+                text(
+                    "UPDATE meal_price_configs "
+                    "SET foreign_breakfast_price = price_per_meal * 0.75, "
+                    "    foreign_dinner_price = price_per_meal, "
+                    "    janitor_meal_price = price_per_meal * 0.65 "
+                    "WHERE foreign_breakfast_price = 30000 AND foreign_dinner_price = 40000 AND janitor_meal_price = 25000 "
+                    "AND EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'price_per_meal');"
+                )
+            )
+            # Add meal_session_locks.session column if missing
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_session_locks') AND name = N'meal_session') "
+                    "ALTER TABLE meal_session_locks ADD meal_session NVARCHAR(20) NOT NULL DEFAULT N'BREAKFAST';"
+                )
+            )
     except Exception:
         # Ignore if non-SQL Server dialect or table doesn't exist yet
         pass
@@ -107,6 +144,12 @@ def init_db() -> None:
                     conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN day_type_name VARCHAR(255);"))
                 if "notes" not in mpc_cols:
                     conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN notes TEXT;"))
+                if "foreign_breakfast_price" not in mpc_cols:
+                    conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN foreign_breakfast_price FLOAT NOT NULL DEFAULT 30000;"))
+                if "foreign_dinner_price" not in mpc_cols:
+                    conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN foreign_dinner_price FLOAT NOT NULL DEFAULT 40000;"))
+                if "janitor_meal_price" not in mpc_cols:
+                    conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN janitor_meal_price FLOAT NOT NULL DEFAULT 25000;"))
         except Exception:
             pass
 

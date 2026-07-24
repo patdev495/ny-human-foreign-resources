@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from core.database import get_db
 from features.hr_foreign import service
+from features.hr_foreign.excel_exporter import generate_meal_expense_excel
 from features.hr_foreign.schemas import (
     DailyMealForecastResponse,
     DailyPresenceReportResponse,
@@ -24,6 +25,7 @@ from features.hr_foreign.schemas import (
 )
 
 router = APIRouter()
+
 
 
 # --- MEAL ABSENCES ENDPOINTS ---
@@ -196,3 +198,22 @@ def get_daily_presence_report(
     db: Session = Depends(get_db),
 ) -> DailyPresenceReportResponse:
     return service.get_daily_presence_report(db, target_date=target_date)
+
+
+@router.get("/exports/meal-expense")
+def export_meal_expense_report(
+    start_date: datetime.date = Query(...),
+    end_date: datetime.date = Query(...),
+    db: Session = Depends(get_db),
+) -> Response:
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="start_date cannot be after end_date"
+        )
+    excel_stream = generate_meal_expense_excel(db, start_date=start_date, end_date=end_date)
+    return Response(
+        content=excel_stream.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=Bao_Cao_Chi_Phi_Bua_An.xlsx"},
+    )
+

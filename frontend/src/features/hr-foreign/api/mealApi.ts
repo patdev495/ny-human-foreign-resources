@@ -186,3 +186,26 @@ export async function fetchDailyPresenceReport(
   }
   return res.json() as Promise<DailyPresenceReportResponse>;
 }
+
+export async function downloadMealExpenseReport(
+  startDate: string,
+  endDate: string
+): Promise<void> {
+  const url = `${BASE}/exports/meal-expense?start_date=${encodeURIComponent(
+    startDate
+  )}&end_date=${encodeURIComponent(endDate)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải Báo cáo Chi phí Bữa ăn");
+  }
+  const blob = await res.blob();
+  const filename = "Bao_Cao_Chi_Phi_Bua_An.xlsx";
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+

@@ -58,7 +58,9 @@ class EventDayUpdate(BaseModel):
 class MealPriceConfigBase(BaseModel):
     day_type: str  # "NORMAL", "PRESIDENT_VISIT", "TET"...
     day_type_name: str | None = None  # "Ngày bình thường", "Chủ tịch sang"...
-    price_per_meal: float
+    foreign_breakfast_price: float = 30000.0
+    foreign_dinner_price: float = 40000.0
+    janitor_meal_price: float = 25000.0
     effective_from: datetime.date = datetime.date(2020, 1, 1)
     notes: str | None = None
 
@@ -70,7 +72,9 @@ class MealPriceConfigCreate(MealPriceConfigBase):
 class MealPriceConfigUpdate(BaseModel):
     day_type: str | None = None
     day_type_name: str | None = None
-    price_per_meal: float | None = None
+    foreign_breakfast_price: float | None = None
+    foreign_dinner_price: float | None = None
+    janitor_meal_price: float | None = None
     effective_from: datetime.date | None = None
     notes: str | None = None
 
@@ -98,6 +102,14 @@ class MealExpenseReportItem(BaseModel):
     total_cost: float
 
 
+class JanitorDailyItem(BaseModel):
+    date: datetime.date
+    meal_count: int
+    price_per_meal: float
+    total_cost: float
+    notes: str | None = None
+
+
 class MealExpenseReportResponse(BaseModel):
     start_date: datetime.date
     end_date: datetime.date
@@ -107,6 +119,10 @@ class MealExpenseReportResponse(BaseModel):
     total_meals: int
     total_expense: float
     items: list[MealExpenseReportItem]
+    janitor_items: list[JanitorDailyItem] = []
+    total_janitor_meals: int = 0
+    total_janitor_expense: float = 0.0
+
 
 
 # --- DAILY PRESENCE REPORT SCHEMAS ---
@@ -162,7 +178,7 @@ class DailyPresenceReportResponse(BaseModel):
 
 class MealSessionLockCreate(BaseModel):
     lock_date: datetime.date
-    meal_session: str  # "BREAKFAST" | "DINNER"
+    meal_session: str  # "BREAKFAST" | "LUNCH" | "DINNER"
     calculated_meal_count: int
     final_meal_count: int
     locked_price_per_meal: float = 30000.0
@@ -185,7 +201,7 @@ class MealSessionLockRead(BaseModel):
 
 
 class DailyMealSessionSummary(BaseModel):
-    meal_session: str  # "BREAKFAST" | "DINNER"
+    meal_session: str  # "BREAKFAST" | "LUNCH" | "DINNER"
     calculated_meal_count: int = 0
     is_locked: bool = False
     final_meal_count: int | None = None
@@ -212,8 +228,12 @@ class DailyMealForecastResponse(BaseModel):
     day_type: str = "NORMAL"
     day_type_name: str = "Ngày bình thường"
     suggested_price_per_meal: float = 30000.0
+    suggested_breakfast_price: float = 30000.0
+    suggested_dinner_price: float = 40000.0
+    suggested_janitor_price: float = 25000.0
     event_notes: str | None = None
     breakfast: DailyMealSessionSummary
+    lunch: DailyMealSessionSummary
     dinner: DailyMealSessionSummary
     active_ktx_residents_count: int = 0
     employees: list[DailyMealEmployeeItem] = []

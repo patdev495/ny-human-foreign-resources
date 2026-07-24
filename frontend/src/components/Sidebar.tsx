@@ -79,16 +79,6 @@ export const hrForeignItems: NavItem[] = [
     ),
   },
   {
-    key: "MEAL_MANAGEMENT",
-    label: "Chi phí ăn uống",
-    icon: (
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-      </svg>
-    ),
-  },
-  {
     key: "SHUTTLE_DISPATCH",
     label: "Điều xe đưa đón",
     icon: (
@@ -101,6 +91,7 @@ export const hrForeignItems: NavItem[] = [
     ),
   },
 ];
+
 
 export const exportItem: NavItem = {
   key: "EXPORT_HUB",
@@ -205,7 +196,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-1">
+            <button
+              onClick={() => setActiveTab("MEAL_MANAGEMENT")}
+              title={!isSidebarOpen ? "Chi phí bữa ăn" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                activeTab === "MEAL_MANAGEMENT"
+                  ? "bg-amber-600 text-white font-bold shadow-xs"
+                  : "text-slate-700 hover:bg-slate-100"
+              } ${!isSidebarOpen ? "justify-center" : ""}`}
+            >
+              <span className="text-amber-600 text-lg">🍱</span>
+              {isSidebarOpen && <span className="truncate">Chi phí bữa ăn</span>}
+            </button>
             <button
               onClick={() => setActiveTab("HR_DOMESTIC_PLACEHOLDER")}
               title={!isSidebarOpen ? "Nhân sự Tạp vụ" : undefined}
@@ -272,6 +275,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ))}
               <button
                 onClick={() => {
+                  setActiveTab("MEAL_MANAGEMENT");
+                  setIsMobileOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
+                  activeTab === "MEAL_MANAGEMENT" ? "bg-amber-600 text-white" : "text-slate-700 hover:bg-slate-100"
+                }`}
+              >
+                🍱 <span>Chi phí bữa ăn</span>
+              </button>
+              <button
+                onClick={() => {
                   setActiveTab("HR_DOMESTIC_PLACEHOLDER");
                   setIsMobileOpen(false);
                 }}
@@ -297,6 +311,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       )}
+
     </>
   );
 };

@@ -220,7 +220,9 @@ def test_event_day_and_meal_price_config_update_delete(client: TestClient) -> No
         json={
             "day_type": "HOLIDAY",
             "day_type_name": "Ngày lễ",
-            "price_per_meal": 50000,
+            "foreign_breakfast_price": 50000,
+            "foreign_dinner_price": 60000,
+            "janitor_meal_price": 35000,
             "effective_from": "2026-01-01",
         },
     ).json()
@@ -228,10 +230,10 @@ def test_event_day_and_meal_price_config_update_delete(client: TestClient) -> No
 
     cfg_update = client.put(
         f"/api/hr-foreign/meal-price-configs/{cfg_id}",
-        json={"price_per_meal": 55000, "day_type_name": "Ngày lễ tết"},
+        json={"foreign_breakfast_price": 55000, "day_type_name": "Ngày lễ tết"},
     )
     assert cfg_update.status_code == 200
-    assert cfg_update.json()["price_per_meal"] == 55000
+    assert cfg_update.json()["foreign_breakfast_price"] == 55000
     assert cfg_update.json()["day_type_name"] == "Ngày lễ tết"
 
     cfg_del = client.delete(f"/api/hr-foreign/meal-price-configs/{cfg_id}")

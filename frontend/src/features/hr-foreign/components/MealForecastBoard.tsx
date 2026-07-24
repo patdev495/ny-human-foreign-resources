@@ -80,7 +80,7 @@ export const MealForecastBoard: React.FC = () => {
 
   const handleLockSessionConfirm = async (payload: {
     lock_date: string;
-    meal_session: "BREAKFAST" | "DINNER";
+    meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
     calculated_meal_count: number;
     final_meal_count: number;
     locked_price_per_meal: number;
@@ -104,6 +104,16 @@ export const MealForecastBoard: React.FC = () => {
         emp.location_name.toLowerCase().includes(term)
       );
     }) || [];
+
+  const getSuggestedPriceForTarget = (target: DailyMealSessionSummary) => {
+    if (target.meal_session === "BREAKFAST") {
+      return forecast?.suggested_breakfast_price ?? 30000;
+    }
+    if (target.meal_session === "LUNCH") {
+      return forecast?.suggested_janitor_price ?? 25000;
+    }
+    return forecast?.suggested_dinner_price ?? 40000;
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -134,8 +144,8 @@ export const MealForecastBoard: React.FC = () => {
                 <span>{forecast.day_type === "NORMAL" ? "🏷️" : "⭐"}</span>
                 <span>Loại ngày: <strong>{forecast.day_type_name || forecast.day_type}</strong></span>
                 <span className="opacity-40">|</span>
-                <span className="font-mono">
-                  {(forecast.suggested_price_per_meal ?? 30000).toLocaleString("vi-VN")} VNĐ/bữa
+                <span className="font-mono text-[11px]">
+                  Sáng NNN: {(forecast.suggested_breakfast_price ?? 30000).toLocaleString("vi-VN")}k | Tối NNN: {(forecast.suggested_dinner_price ?? 40000).toLocaleString("vi-VN")}k | Lao công: {(forecast.suggested_janitor_price ?? 25000).toLocaleString("vi-VN")}k
                 </span>
               </span>
 
@@ -182,11 +192,11 @@ export const MealForecastBoard: React.FC = () => {
 
       {lockSessionTarget && (
         <LockMealSessionModal
-          isOpen={!!lockSessionTarget}
-          onClose={() => setLockSessionTarget(null)}
+          date={selectedDate}
           sessionSummary={lockSessionTarget}
-          targetDate={selectedDate}
-          suggestedPrice={forecast?.suggested_price_per_meal ?? 30000}
+          dayTypeName={forecast?.day_type_name}
+          suggestedPrice={getSuggestedPriceForTarget(lockSessionTarget)}
+          onClose={() => setLockSessionTarget(null)}
           onConfirm={handleLockSessionConfirm}
         />
       )}

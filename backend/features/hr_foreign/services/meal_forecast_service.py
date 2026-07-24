@@ -29,11 +29,10 @@ def get_daily_meal_forecast(
         .order_by(MealPriceConfig.effective_from.desc(), MealPriceConfig.id.desc())
         .first()
     )
-    suggested_price = (
-        float(price_cfg.price_per_meal)
-        if price_cfg
-        else (50000.0 if day_type == "PRESIDENT_VISIT" else 30000.0)
-    )
+    suggested_bf_price = float(price_cfg.foreign_breakfast_price) if price_cfg else 30000.0
+    suggested_dn_price = float(price_cfg.foreign_dinner_price) if price_cfg else 40000.0
+    suggested_lc_price = float(price_cfg.janitor_meal_price) if price_cfg else 25000.0
+
     day_type_name = (
         price_cfg.day_type_name
         if (price_cfg and price_cfg.day_type_name)
@@ -109,6 +108,7 @@ def get_daily_meal_forecast(
     dn_calculated = max(0, active_ktx_residents_count - dinner_absent_count)
 
     bf_lock = locks_map.get("BREAKFAST")
+    lc_lock = locks_map.get("LUNCH")
     dn_lock = locks_map.get("DINNER")
 
     breakfast_summary = DailyMealSessionSummary(
@@ -116,9 +116,19 @@ def get_daily_meal_forecast(
         calculated_meal_count=bf_calculated,
         is_locked=bf_lock is not None,
         final_meal_count=bf_lock.final_meal_count if bf_lock else None,
-        locked_price_per_meal=bf_lock.locked_price_per_meal if bf_lock else suggested_price,
+        locked_price_per_meal=bf_lock.locked_price_per_meal if bf_lock else suggested_bf_price,
         locked_at=bf_lock.locked_at if bf_lock else None,
         notes=bf_lock.notes if bf_lock else None,
+    )
+
+    lunch_summary = DailyMealSessionSummary(
+        meal_session="LUNCH",
+        calculated_meal_count=0,
+        is_locked=lc_lock is not None,
+        final_meal_count=lc_lock.final_meal_count if lc_lock else None,
+        locked_price_per_meal=lc_lock.locked_price_per_meal if lc_lock else suggested_lc_price,
+        locked_at=lc_lock.locked_at if lc_lock else None,
+        notes=lc_lock.notes if lc_lock else None,
     )
 
     dinner_summary = DailyMealSessionSummary(
@@ -126,7 +136,7 @@ def get_daily_meal_forecast(
         calculated_meal_count=dn_calculated,
         is_locked=dn_lock is not None,
         final_meal_count=dn_lock.final_meal_count if dn_lock else None,
-        locked_price_per_meal=dn_lock.locked_price_per_meal if dn_lock else suggested_price,
+        locked_price_per_meal=dn_lock.locked_price_per_meal if dn_lock else suggested_dn_price,
         locked_at=dn_lock.locked_at if dn_lock else None,
         notes=dn_lock.notes if dn_lock else None,
     )
@@ -135,9 +145,13 @@ def get_daily_meal_forecast(
         date=target_date,
         day_type=day_type,
         day_type_name=day_type_name,
-        suggested_price_per_meal=suggested_price,
+        suggested_price_per_meal=suggested_bf_price,
+        suggested_breakfast_price=suggested_bf_price,
+        suggested_dinner_price=suggested_dn_price,
+        suggested_janitor_price=suggested_lc_price,
         event_notes=event_notes,
         breakfast=breakfast_summary,
+        lunch=lunch_summary,
         dinner=dinner_summary,
         active_ktx_residents_count=active_ktx_residents_count,
         employees=employees_list,

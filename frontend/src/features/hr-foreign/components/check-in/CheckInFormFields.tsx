@@ -132,7 +132,7 @@ export const CheckInFormFields: React.FC<Props> = ({
             <option value="">-- Chọn phòng KTX --</option>
             {rooms.map((r) => (
               <option key={r.id} value={r.id}>
-                Phòng {r.room_number} {r.floor ? `(Tầng ${r.floor})` : ""} - Sức chứa: {r.capacity} giường
+                Phòng {r.room_number}
               </option>
             ))}
           </select>

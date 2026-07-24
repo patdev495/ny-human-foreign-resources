@@ -231,7 +231,7 @@ export const RoomOccupancyBoard: React.FC = () => {
           setSelectedEmpIdForCheckIn(undefined);
         }}
         onSuccess={loadData}
-        initialEmployeeId={selectedEmpIdForCheckIn}
+        defaultEmployeeId={selectedEmpIdForCheckIn}
       />
 
       <CheckOutModal
@@ -241,7 +241,7 @@ export const RoomOccupancyBoard: React.FC = () => {
           setTargetResident(null);
         }}
         onSuccess={loadData}
-        resident={targetResident}
+        targetResident={targetResident}
         unitName={targetUnitName}
       />
     </div>

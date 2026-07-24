@@ -141,11 +141,11 @@ def test_meal_calculation_engine(client: TestClient) -> None:
     assert item["meal_count"] == 8  # 4 meal days * 2 meals/day
 
     # Calculation:
-    # 3 normal days * 2 meals/day * 30,000 = 180,000
-    # 1 event day * 2 meals/day * 50,000 = 100,000
-    # Total cost = 280,000
-    assert item["total_cost"] == 280000.0
-    assert report["total_expense"] == 280000.0
+    # 3 normal days (30k breakfast + 40k dinner = 70k): 3 * 70,000 = 210,000
+    # 1 event day (50k breakfast + 70k dinner = 120k): 120,000
+    # Total cost = 330,000
+    assert item["total_cost"] == 330000.0
+    assert report["total_expense"] == 330000.0
 
 
 def test_daily_meal_forecast_and_lock(client: TestClient) -> None:
@@ -284,7 +284,37 @@ def test_monthly_meal_report_with_locked_snapshots(client: TestClient) -> None:
     ).json()
 
     # 1 locked breakfast session (5 meals * 30k = 150k)
-    # 9 unlocked sessions (9 meals * 30k = 270k)
-    # Total meals = 14, Total expense = 420,000
+    # 4 unlocked breakfasts (4 meals * 30k = 120k)
+    # 5 unlocked dinners (5 meals * 40k = 200k)
+    # Total meals = 14, Total expense = 470,000
     assert rep["total_meals"] == 14
-    assert rep["total_expense"] == 420000.0
+    assert rep["total_expense"] == 470000.0
+
+
+def test_meal_expense_report_with_janitor_locks(client: TestClient) -> None:
+    # Lock LUNCH on 2026-08-02 with 10 janitor meals @ 25000
+    client.post(
+        "/api/hr-foreign/meals/lock",
+        json={
+            "lock_date": "2026-08-02",
+            "meal_session": "LUNCH",
+            "calculated_meal_count": 10,
+            "final_meal_count": 10,
+            "locked_price_per_meal": 25000.0,
+            "notes": "Chốt cơm trưa lao công 10 suất",
+        },
+    )
+
+    rep = client.get(
+        "/api/hr-foreign/reports/meal-expenses?start_date=2026-08-01&end_date=2026-08-05"
+    ).json()
+
+    assert "janitor_items" in rep
+    assert len(rep["janitor_items"]) == 1
+    assert rep["janitor_items"][0]["date"] == "2026-08-02"
+    assert rep["janitor_items"][0]["meal_count"] == 10
+    assert rep["janitor_items"][0]["price_per_meal"] == 25000.0
+    assert rep["janitor_items"][0]["total_cost"] == 250000.0
+    assert rep["total_janitor_meals"] == 10
+    assert rep["total_janitor_expense"] == 250000.0
+

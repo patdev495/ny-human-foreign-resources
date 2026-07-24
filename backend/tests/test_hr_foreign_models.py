@@ -129,6 +129,6 @@ def test_seed_default_meal_prices(db_session: Session) -> None:
     seed_default_meal_prices(db_session)
     configs = db_session.query(MealPriceConfig).all()
     assert len(configs) == 2
-    types = {c.day_type: c.price_per_meal for c in configs}
-    assert types["NORMAL"] == 30000
-    assert types["PRESIDENT_VISIT"] == 50000
+    types = {c.day_type: (c.foreign_breakfast_price, c.foreign_dinner_price, c.janitor_meal_price) for c in configs}
+    assert types["NORMAL"] == (30000.0, 40000.0, 25000.0)
+    assert types["PRESIDENT_VISIT"] == (50000.0, 70000.0, 40000.0)

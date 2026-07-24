@@ -212,8 +212,96 @@ export const MealExpenseReport: React.FC = () => {
               )}
             </table>
           </div>
+
+          {/* Janitor Section */}
+          <div className="pt-4 border-t border-slate-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <span>🧹</span> Chi phí Bữa ăn Lao công (Bữa Trưa)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Ghi nhận theo các bữa Trưa đã chốt suất ăn thực tế (Meal Session Lock)
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="p-4 bg-amber-50/60 border border-amber-200 rounded-xl">
+                <div className="text-xs font-medium text-amber-700">Tổng Suất Ăn Lao Công</div>
+                <div className="text-2xl font-bold text-amber-900 mt-1">
+                  {(report.total_janitor_meals || 0).toLocaleString("vi-VN")} suất
+                </div>
+              </div>
+              <div className="p-4 bg-orange-50/60 border border-orange-200 rounded-xl">
+                <div className="text-xs font-medium text-orange-700">Tổng Chi Phí Lao Công</div>
+                <div className="text-xl font-bold text-orange-900 mt-1">
+                  {(report.total_janitor_expense || 0).toLocaleString("vi-VN")} VNĐ
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-left text-sm text-slate-700">
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3">STT</th>
+                    <th className="px-4 py-3">Ngày</th>
+                    <th className="px-4 py-3 text-center">Số Suất Ăn</th>
+                    <th className="px-4 py-3 text-right">Đơn Giá (VNĐ)</th>
+                    <th className="px-4 py-3 text-right">Thành Tiền (VNĐ)</th>
+                    <th className="px-4 py-3">Ghi Chú</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {!report.janitor_items || report.janitor_items.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-6 text-center text-slate-400">
+                        Không có dữ liệu chốt bữa trưa Lao công trong khoảng thời gian này.
+                      </td>
+                    </tr>
+                  ) : (
+                    report.janitor_items.map((j, idx) => (
+                      <tr key={j.date} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-slate-800">
+                          {new Date(j.date).toLocaleDateString("vi-VN")}
+                        </td>
+                        <td className="px-4 py-3 text-center font-mono font-bold text-amber-700">
+                          {j.meal_count}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-slate-600">
+                          {j.price_per_meal.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                          {j.total_cost.toLocaleString("vi-VN")}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-slate-500">{j.notes || "-"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {report.janitor_items && report.janitor_items.length > 0 && (
+                  <tfoot className="bg-slate-100/80 font-bold border-t border-slate-200 text-slate-900">
+                    <tr>
+                      <td colSpan={2} className="px-4 py-3">TỔNG CỘNG LAO CÔNG</td>
+                      <td className="px-4 py-3 text-center font-mono text-amber-900">
+                        {report.total_janitor_meals}
+                      </td>
+                      <td className="px-4 py-3"></td>
+                      <td className="px-4 py-3 text-right font-mono text-orange-900 text-base">
+                        {(report.total_janitor_expense || 0).toLocaleString("vi-VN")} VNĐ
+                      </td>
+                      <td className="px-4 py-3"></td>
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>
+
   );
 };

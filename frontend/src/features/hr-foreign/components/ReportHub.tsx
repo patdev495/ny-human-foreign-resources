@@ -1,10 +1,23 @@
 import React, { useState } from "react";
-import { downloadLegalProfileReport, downloadPresenceAccommodationReport } from "../api";
+import {
+  downloadLegalProfileReport,
+  downloadMealExpenseReport,
+  downloadPresenceAccommodationReport,
+} from "../api";
 
 export const ReportHub: React.FC = () => {
+  const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+    .toISOString()
+    .split("T")[0];
+  const todayStr = today.toISOString().split("T")[0];
+
   const [includeAttachments, setIncludeAttachments] = useState(true);
   const [loadingLegal, setLoadingLegal] = useState(false);
   const [loadingPresence, setLoadingPresence] = useState(false);
+  const [loadingMeal, setLoadingMeal] = useState(false);
+  const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
+  const [mealEndDate, setMealEndDate] = useState(todayStr);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDownloadLegal = async () => {
@@ -30,6 +43,19 @@ export const ReportHub: React.FC = () => {
       setLoadingPresence(false);
     }
   };
+
+  const handleDownloadMeal = async () => {
+    try {
+      setLoadingMeal(true);
+      setErrorMessage(null);
+      await downloadMealExpenseReport(mealStartDate, mealEndDate);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Không thể tải báo cáo chi phí bữa ăn");
+    } finally {
+      setLoadingMeal(false);
+    }
+  };
+
 
   return (
     <div className="space-y-6">
@@ -146,28 +172,65 @@ export const ReportHub: React.FC = () => {
           </button>
         </div>
 
-        {/* CARD 3: Daily / Monthly Meal Expense Report (Placeholder) */}
-        <div className="bg-slate-50/70 rounded-xl border border-dashed border-slate-300 p-6 flex flex-col justify-between space-y-5 opacity-90">
+        {/* CARD 3: Meal Expense Report */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
                 Dành cho Kế toán / Nhà bếp
               </span>
-              <span className="text-xs font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                Đang chuẩn bị
-              </span>
+              <span className="text-xs text-slate-400 font-mono">Format: .XLSX</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-              🍱 Báo cáo Chi phí Ăn uống Hàng tháng
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              🍱 Báo cáo Chi phí Bữa ăn (NNN & Lao công)
             </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Báo cáo dạng Ma trận Lịch tháng (1 đến 31 ngày) tự động tính suất ăn, ngày Vắng ăn, đơn giá ngày thường (35k) và ngày Chủ tịch (50k).
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Báo cáo Excel 2 Sheet tổng hợp chi phí suất ăn theo khoảng thời gian:
             </p>
+            <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <li><strong>Sheet 1 [NNN - Chi phí Bữa ăn]:</strong> Tổng hợp số ngày ở, ngày vắng, suất ăn & thành tiền từng Nhân viên nước ngoài.</li>
+              <li><strong>Sheet 2 [Lao công - Theo ngày]:</strong> Chi tiết các bữa trưa chốt suất ăn thực tế cho khối Lao công.</li>
+            </ul>
+
+
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600">Từ ngày:</label>
+                <input
+                  type="date"
+                  value={mealStartDate}
+                  onChange={(e) => setMealStartDate(e.target.value)}
+                  className="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600">Đến ngày:</label>
+                <input
+                  type="date"
+                  value={mealEndDate}
+                  onChange={(e) => setMealEndDate(e.target.value)}
+                  className="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800"
+                />
+              </div>
+            </div>
           </div>
-          <button disabled className="w-full py-2.5 px-4 bg-slate-200 text-slate-500 font-semibold text-xs rounded-lg cursor-not-allowed">
-            🔒 Sắp ra mắt ở Phân hệ Ăn uống
+
+          <button
+            onClick={handleDownloadMeal}
+            disabled={loadingMeal}
+            className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            {loadingMeal ? (
+              <span>⏳ Đang xuất báo cáo...</span>
+            ) : (
+              <>
+                <span>📥</span>
+                <span>Tải File Excel Báo cáo Chi phí Bữa ăn</span>
+              </>
+            )}
           </button>
         </div>
+
 
         {/* CARD 4: Vehicle Dispatch Log Report (Placeholder) */}
         <div className="bg-slate-50/70 rounded-xl border border-dashed border-slate-300 p-6 flex flex-col justify-between space-y-5 opacity-90">

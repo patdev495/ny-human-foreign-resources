@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import type { EmployeeHistoryResponse, ForeignEmployee, ProfileTab } from "../types";
-import { fetchEmployeeHistory, updateEmployee, fetchDocWarningConfigs } from "../api";
+import type { EmployeeHistoryResponse, ProfileTab } from "../types";
+import { fetchEmployeeHistory } from "../api";
 
 import { WorkPermitSection } from "./WorkPermitSection";
 import { ContractSection } from "./ContractSection";
 import { VisaTamTruSection } from "./VisaTamTruSection";
-import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
 import { TravelRecordModal } from "./TravelRecordModal";
 import { PassportSection } from "./PassportSection";
 import { ProfileStaysTab } from "./profile-modal/ProfileStaysTab";

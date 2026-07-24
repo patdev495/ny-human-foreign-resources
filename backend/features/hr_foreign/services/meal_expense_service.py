@@ -12,6 +12,7 @@ from features.hr_foreign.models import (
     Stay,
 )
 from features.hr_foreign.schemas import (
+    JanitorDailyItem,
     MealExpenseReportItem,
     MealExpenseReportResponse,
 )
@@ -30,7 +31,7 @@ def calculate_meal_expenses(
         .all()
     }
 
-    def get_price(d: datetime.date, day_type: str) -> float:
+    def get_prices(d: datetime.date, day_type: str) -> tuple[float, float]:
         cfg = (
             db.query(MealPriceConfig)
             .filter(MealPriceConfig.day_type == day_type, MealPriceConfig.effective_from <= d)
@@ -38,8 +39,8 @@ def calculate_meal_expenses(
             .first()
         )
         if cfg:
-            return float(cfg.price_per_meal)
-        return 50000.0 if day_type == "PRESIDENT_VISIT" else 30000.0
+            return float(cfg.foreign_breakfast_price), float(cfg.foreign_dinner_price)
+        return (50000.0, 70000.0) if day_type == "PRESIDENT_VISIT" else (30000.0, 40000.0)
 
     locks = (
         db.query(MealSessionLock)
@@ -98,6 +99,8 @@ def calculate_meal_expenses(
             if stay.start_date <= curr_d and (stay.end_date is None or stay.end_date >= curr_d):
                 stay_days_count += 1
                 day_type = event_days_map.get(curr_d, "NORMAL")
+                default_bf_price, default_dn_price = get_prices(curr_d, day_type)
+
                 day_absences = absences_by_date.get(curr_d, set())
                 is_bf_absent = ("ALL_DAY" in day_absences) or ("BREAKFAST" in day_absences)
                 is_dn_absent = ("ALL_DAY" in day_absences) or ("DINNER" in day_absences)
@@ -112,7 +115,7 @@ def calculate_meal_expenses(
                         event_days_count += 1
 
                 bf_lock = locks_map.get((curr_d, "BREAKFAST"))
-                bf_price = bf_lock.locked_price_per_meal if bf_lock else get_price(curr_d, day_type)
+                bf_price = bf_lock.locked_price_per_meal if bf_lock else default_bf_price
                 if not is_bf_absent:
                     emp_total_meals += 1
                     total_cost += bf_price
@@ -124,7 +127,7 @@ def calculate_meal_expenses(
                     )
 
                 dn_lock = locks_map.get((curr_d, "DINNER"))
-                dn_price = dn_lock.locked_price_per_meal if dn_lock else get_price(curr_d, day_type)
+                dn_price = dn_lock.locked_price_per_meal if dn_lock else default_dn_price
                 if not is_dn_absent:
                     emp_total_meals += 1
                     total_cost += dn_price
@@ -159,12 +162,26 @@ def calculate_meal_expenses(
     total_stay_days = sum(i.stay_days for i in items)
     total_meal_days = sum(i.meal_days for i in items)
 
+    janitor_items: list[JanitorDailyItem] = []
     company_total_meals = 0
     company_total_expense = 0.0
 
     curr_d = start_date
     while curr_d <= end_date:
-        for session in ("BREAKFAST", "DINNER"):
+        lunch_lock = locks_map.get((curr_d, "LUNCH"))
+        if lunch_lock:
+            j_cost = lunch_lock.final_meal_count * lunch_lock.locked_price_per_meal
+            janitor_items.append(
+                JanitorDailyItem(
+                    date=curr_d,
+                    meal_count=lunch_lock.final_meal_count,
+                    price_per_meal=lunch_lock.locked_price_per_meal,
+                    total_cost=j_cost,
+                    notes=lunch_lock.notes,
+                )
+            )
+
+        for session in ("BREAKFAST", "LUNCH", "DINNER"):
             lock = locks_map.get((curr_d, session))
             if lock:
                 company_total_meals += lock.final_meal_count
@@ -175,6 +192,9 @@ def calculate_meal_expenses(
 
         curr_d += datetime.timedelta(days=1)
 
+    total_janitor_meals = sum(j.meal_count for j in janitor_items)
+    total_janitor_expense = sum(j.total_cost for j in janitor_items)
+
     return MealExpenseReportResponse(
         start_date=start_date,
         end_date=end_date,
@@ -184,4 +204,8 @@ def calculate_meal_expenses(
         total_meals=company_total_meals,
         total_expense=company_total_expense,
         items=items,
+        janitor_items=janitor_items,
+        total_janitor_meals=total_janitor_meals,
+        total_janitor_expense=total_janitor_expense,
     )
+

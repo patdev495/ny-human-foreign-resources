@@ -146,11 +146,16 @@ export const EventSettingsTab: React.FC<Props> = ({
               >
                 {priceConfigs
                   .filter((p) => p.day_type !== "NORMAL")
-                  .map((p) => (
-                    <option key={p.id} value={p.day_type}>
-                      {p.day_type_name || p.day_type} ({p.price_per_meal.toLocaleString()} VNĐ)
-                    </option>
-                  ))}
+                  .map((p) => {
+                    const bf = p.foreign_breakfast_price ?? 30000;
+                    const dn = p.foreign_dinner_price ?? 40000;
+                    const lc = p.janitor_meal_price ?? 25000;
+                    return (
+                      <option key={p.id} value={p.day_type}>
+                        {p.day_type_name || p.day_type} (Sáng NNN: {bf.toLocaleString()} VNĐ | Tối NNN: {dn.toLocaleString()} VNĐ | Lao công: {lc.toLocaleString()} VNĐ)
+                      </option>
+                    );
+                  })}
               </select>
             </div>
           </div>
@@ -208,6 +213,9 @@ export const EventSettingsTab: React.FC<Props> = ({
                 eventDays.map((ev, idx) => {
                   const cfg = priceConfigs.find((p) => p.day_type === ev.event_type);
                   const isEditing = editingEvId === ev.id;
+                  const cfgBf = cfg?.foreign_breakfast_price ?? 30000;
+                  const cfgDn = cfg?.foreign_dinner_price ?? 40000;
+                  const cfgLc = cfg?.janitor_meal_price ?? 25000;
                   return (
                     <tr key={ev.id} className="hover:bg-blue-50/50 transition">
                       <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
@@ -244,8 +252,16 @@ export const EventSettingsTab: React.FC<Props> = ({
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-gray-700 font-medium">
-                        {cfg ? `${cfg.price_per_meal.toLocaleString()} VNĐ` : "Mặc định"}
+                      <td className="px-4 py-3 text-gray-700 font-medium text-xs">
+                        {cfg ? (
+                          <div className="space-y-0.5 font-mono">
+                            <div>Sáng NNN: {cfgBf.toLocaleString()} VNĐ</div>
+                            <div>Tối NNN: {cfgDn.toLocaleString()} VNĐ</div>
+                            <div>Lao công: {cfgLc.toLocaleString()} VNĐ</div>
+                          </div>
+                        ) : (
+                          "Mặc định"
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-600">
                         {isEditing ? (

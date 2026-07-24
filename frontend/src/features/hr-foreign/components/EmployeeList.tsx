@@ -199,8 +199,8 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
       <EmployeeModal
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingEmp(null); }}
-        onSuccess={handleCreateOrUpdate}
-        employee={editingEmp}
+        onSubmit={handleCreateOrUpdate}
+        initialData={editingEmp}
       />
 
       <EmployeeProfileModal
@@ -214,7 +214,10 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
         onClose={() => { setIsDeleteModalOpen(false); setDeleteTarget(null); }}
         onConfirm={handleConfirmDelete}
         title="Xác nhận xóa Nhân sự"
-        message={`Bạn có chắc chắn muốn xóa nhân sự ${deleteTarget?.name_latin}?`}
+        employeeName={deleteTarget?.name_latin || ""}
+        employeeCode={deleteTarget?.employee_code}
+        passportNumber={deleteTarget?.passport_number}
+        department={deleteTarget?.department}
       />
     </div>
   );

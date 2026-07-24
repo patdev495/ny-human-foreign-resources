@@ -12,13 +12,17 @@ def seed_default_meal_prices(db: Session) -> None:
             MealPriceConfig(
                 day_type="NORMAL",
                 day_type_name="Ngày bình thường",
-                price_per_meal=30000,
+                foreign_breakfast_price=30000.0,
+                foreign_dinner_price=40000.0,
+                janitor_meal_price=25000.0,
                 effective_from=datetime.date(2020, 1, 1),
             ),
             MealPriceConfig(
                 day_type="PRESIDENT_VISIT",
                 day_type_name="Chủ tịch sang",
-                price_per_meal=50000,
+                foreign_breakfast_price=50000.0,
+                foreign_dinner_price=70000.0,
+                janitor_meal_price=40000.0,
                 effective_from=datetime.date(2020, 1, 1),
             ),
         ])
