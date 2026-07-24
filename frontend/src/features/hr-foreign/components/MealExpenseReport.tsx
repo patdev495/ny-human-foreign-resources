@@ -135,33 +135,58 @@ export const MealExpenseReport: React.FC = () => {
                     </td>
                   </tr>
                 ) : (
-                  report.items.map((item, idx) => (
-                    <tr key={item.employee_id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 font-mono text-slate-400">{idx + 1}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-900">
-                        {item.employee_name}
-                        {item.name_chinese && (
-                          <span className="ml-1 text-xs text-slate-500 font-normal">({item.name_chinese})</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-mono text-slate-600">{item.passport_number || "-"}</td>
-                      <td className="px-4 py-3 font-medium">Phòng {item.room_number}</td>
-                      <td className="px-4 py-3 text-center font-mono">{item.stay_days}</td>
-                      <td className="px-4 py-3 text-center font-mono text-rose-600">
-                        {item.absent_days > 0 ? `-${item.absent_days}` : "0"}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono">{item.normal_days}</td>
-                      <td className="px-4 py-3 text-center font-mono text-purple-700 font-semibold">
-                        {item.event_days > 0 ? `${item.event_days}` : "0"}
-                      </td>
-                      <td className="px-4 py-3 text-center font-mono font-bold text-blue-700">
-                        {item.meal_count}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
-                        {item.total_cost.toLocaleString("vi-VN")}
-                      </td>
-                    </tr>
-                  ))
+                  report.items.map((item, idx) => {
+                    const isUnassigned =
+                      !item.room_number ||
+                      item.room_number === "N/A" ||
+                      item.room_number === "Chưa xếp" ||
+                      item.room_number === "-";
+                    return (
+                      <tr
+                        key={item.employee_id}
+                        className={`transition-colors ${
+                          isUnassigned
+                            ? "bg-amber-50/60 hover:bg-amber-100/60"
+                            : "hover:bg-slate-50"
+                        }`}
+                      >
+                        <td className="px-4 py-3 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">
+                          {item.employee_name}
+                          {item.name_chinese && (
+                            <span className="ml-1 text-xs text-slate-500 font-normal">({item.name_chinese})</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 font-mono text-slate-600">{item.passport_number || "-"}</td>
+                        <td className="px-4 py-3">
+                          {isUnassigned ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                              ⚠️ Chưa xếp phòng
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-slate-800 bg-slate-100">
+                              Phòng {item.room_number}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-center font-mono">{item.stay_days}</td>
+                        <td className="px-4 py-3 text-center font-mono text-rose-600">
+                          {item.absent_days > 0 ? `-${item.absent_days}` : "0"}
+                        </td>
+                        <td className="px-4 py-3 text-center font-mono">{item.normal_days}</td>
+                        <td className="px-4 py-3 text-center font-mono text-purple-700 font-semibold">
+                          {item.event_days > 0 ? `${item.event_days}` : "0"}
+                        </td>
+                        <td className="px-4 py-3 text-center font-mono font-bold text-blue-700">
+                          {item.meal_count}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-slate-900">
+                          {item.total_cost.toLocaleString("vi-VN")}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
               {report.items.length > 0 && (

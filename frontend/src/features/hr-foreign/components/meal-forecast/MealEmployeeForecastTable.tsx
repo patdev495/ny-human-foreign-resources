@@ -105,7 +105,13 @@ export const MealEmployeeForecastTable: React.FC<Props> = ({
                     )}
                   </td>
                   <td className="py-3 px-4">
-                    <span className="font-semibold text-slate-800">{emp.location_name}</span>
+                    {!emp.location_name || emp.location_name.includes("Chưa xếp") ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs">
+                        ⚠️ {emp.location_name || "Chưa xếp chỗ ở"}
+                      </span>
+                    ) : (
+                      <span className="font-semibold text-slate-800">{emp.location_name}</span>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {emp.has_meals ? (
