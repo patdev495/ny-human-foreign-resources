@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export type NavTab =
   | "EMPLOYEES"
@@ -8,7 +8,10 @@ export type NavTab =
   | "VEHICLE_MANAGEMENT"
   | "MEAL_MANAGEMENT"
   | "HR_DOMESTIC_PLACEHOLDER"
-  | "EXPORT_HUB";
+  | "EXPORT_LEGAL"
+  | "EXPORT_PRESENCE"
+  | "EXPORT_MEAL"
+  | "EXPORT_JANITOR";
 
 export interface NavItem {
   key: NavTab;
@@ -80,9 +83,15 @@ export const hrForeignItems: NavItem[] = [
   },
 ];
 
+export const exportSubItems: NavItem[] = [
+  { key: "EXPORT_LEGAL", label: "Hồ sơ & Pháp lý", icon: <span className="text-xs">📄</span> },
+  { key: "EXPORT_PRESENCE", label: "Hiện diện KTX / Khách sạn", icon: <span className="text-xs">🏫</span> },
+  { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <span className="text-xs">🍱</span> },
+  { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <span className="text-xs">🧹</span> },
+];
 
 export const exportItem: NavItem = {
-  key: "EXPORT_HUB",
+  key: "EXPORT_LEGAL",
   label: "Xuất Báo cáo Excel",
   icon: (
     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -102,8 +111,54 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen,
   setIsMobileOpen,
 }) => {
-  const [isHrForeignOpen, setIsHrForeignOpen] = useState(true);
   const isHrForeignActive = hrForeignItems.some((item) => item.key === activeTab);
+  const isExportActive =
+    activeTab === "EXPORT_LEGAL" ||
+    activeTab === "EXPORT_PRESENCE" ||
+    activeTab === "EXPORT_MEAL" ||
+    activeTab === "EXPORT_JANITOR";
+
+  const [isHrForeignOpen, setIsHrForeignOpen] = useState(isHrForeignActive || !isExportActive);
+  const [isExportOpen, setIsExportOpen] = useState(isExportActive);
+
+  // Sync accordion states so opening one automatically closes the other
+  useEffect(() => {
+    if (isHrForeignActive) {
+      setIsHrForeignOpen(true);
+      setIsExportOpen(false);
+    } else if (isExportActive) {
+      setIsExportOpen(true);
+      setIsHrForeignOpen(false);
+    }
+  }, [activeTab]);
+
+  const handleToggleHrForeign = () => {
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
+      setIsHrForeignOpen(true);
+      setIsExportOpen(false);
+    } else {
+      const nextOpen = !isHrForeignOpen;
+      setIsHrForeignOpen(nextOpen);
+      if (nextOpen) {
+        setIsExportOpen(false);
+      }
+    }
+  };
+
+  const handleToggleExport = () => {
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
+      setIsExportOpen(true);
+      setIsHrForeignOpen(false);
+    } else {
+      const nextOpen = !isExportOpen;
+      setIsExportOpen(nextOpen);
+      if (nextOpen) {
+        setIsHrForeignOpen(false);
+      }
+    }
+  };
 
   return (
     <>
@@ -119,14 +174,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="space-y-1">
             <button
-              onClick={() => {
-                if (!isSidebarOpen) {
-                  setIsSidebarOpen(true);
-                  setIsHrForeignOpen(true);
-                } else {
-                  setIsHrForeignOpen(!isHrForeignOpen);
-                }
-              }}
+              onClick={handleToggleHrForeign}
               title={!isSidebarOpen ? "Nhân sự nước ngoài" : undefined}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
                 isHrForeignActive
@@ -223,19 +271,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
 
-          <div className="pt-2 border-t border-slate-200">
+          {/* EXPORT HUB ACCORDION SUB-MENU */}
+          <div className="pt-2 border-t border-slate-200 space-y-1">
             <button
-              onClick={() => setActiveTab(exportItem.key)}
-              title={!isSidebarOpen ? exportItem.label : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                activeTab === exportItem.key
-                  ? "bg-emerald-600 text-white font-bold shadow-xs"
-                  : "text-emerald-700 hover:bg-emerald-50"
+              onClick={handleToggleExport}
+              title={!isSidebarOpen ? "Xuất Báo cáo Excel" : undefined}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                isExportActive
+                  ? "text-emerald-700 bg-emerald-50/80 border border-emerald-200"
+                  : "text-slate-700 hover:bg-slate-100"
               } ${!isSidebarOpen ? "justify-center" : ""}`}
             >
-              <span>{exportItem.icon}</span>
-              {isSidebarOpen && <span className="truncate">{exportItem.label}</span>}
+              <div className="flex items-center gap-3">
+                <span className={isExportActive ? "text-emerald-600" : "text-slate-600"}>
+                  {exportItem.icon}
+                </span>
+                {isSidebarOpen && <span className="truncate">{exportItem.label}</span>}
+              </div>
+              {isSidebarOpen && (
+                <svg
+                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                    isExportOpen ? "rotate-180" : ""
+                  }`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
             </button>
+
+            {(isExportOpen || !isSidebarOpen) && (
+              <div className={`space-y-1 ${isSidebarOpen ? "pl-3 border-l-2 border-emerald-100 ml-4 my-1" : ""}`}>
+                {exportSubItems.map((item) => {
+                  const isActive = activeTab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => setActiveTab(item.key)}
+                      title={!isSidebarOpen ? item.label : undefined}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-emerald-600 text-white font-bold shadow-xs"
+                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      } ${!isSidebarOpen ? "justify-center" : ""}`}
+                    >
+                      <span>{item.icon}</span>
+                      {isSidebarOpen && <span className="truncate">{item.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -307,18 +396,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 🍱 <span>Chi phí bữa ăn</span>
               </button>
 
-              <button
-                onClick={() => {
-                  setActiveTab(exportItem.key);
-                  setIsMobileOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                  activeTab === exportItem.key ? "bg-emerald-600 text-white" : "text-emerald-700 hover:bg-emerald-50"
-                }`}
-              >
-                {exportItem.icon}
-                <span>{exportItem.label}</span>
-              </button>
+              <div className="pt-2 border-t border-slate-200 space-y-1">
+                <div className="px-3 py-1 text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  {exportItem.icon}
+                  <span>{exportItem.label}</span>
+                </div>
+                {exportSubItems.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => {
+                      setActiveTab(item.key);
+                      setIsMobileOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
+                      activeTab === item.key ? "bg-emerald-600 text-white" : "text-emerald-800 hover:bg-emerald-50"
+                    }`}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

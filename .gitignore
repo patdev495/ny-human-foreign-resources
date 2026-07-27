@@ -9,6 +9,8 @@ dist/
 release/
 *.egg-info/
 
+*scratch/
+
 # Virtual environments & dependencies
 .venv/
 venv/

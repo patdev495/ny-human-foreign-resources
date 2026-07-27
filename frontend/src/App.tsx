@@ -77,7 +77,12 @@ export const App: React.FC = () => {
           {activeTab === "VEHICLE_MANAGEMENT" && <VehicleManagement />}
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
           {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrManagement />}
-          {activeTab === "EXPORT_HUB" && <ReportHub />}
+          {(activeTab === "EXPORT_LEGAL" ||
+            activeTab === "EXPORT_PRESENCE" ||
+            activeTab === "EXPORT_MEAL" ||
+            activeTab === "EXPORT_JANITOR") && (
+            <ReportHub activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
         </main>
       </div>
     </div>
