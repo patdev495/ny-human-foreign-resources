@@ -224,9 +224,8 @@ def generate_meal_expense_excel(
             cell = ws.cell(row=r, column=c)
             cell.font = REGULAR_FONT
             cell.border = BORDER_THIN
-            if is_sunday and c in range(3, 14):
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-            elif c in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            if not is_sunday and c in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]:
                 cell.number_format = "#,##0"
 
         curr_d += datetime.timedelta(days=1)
@@ -236,13 +235,20 @@ def generate_meal_expense_excel(
     last_r = 8 + day_idx - 1
     tot_r = last_r + 1
 
-    ws.cell(row=tot_r, column=1, value="总 共").font = BOLD_FONT
-    for c in range(3, 14):
-        col_let = get_column_letter(c)
-        cell = ws.cell(row=tot_r, column=c, value=f"=SUM({col_let}8:{col_let}{last_r})")
+    cell_tot_label = ws.cell(row=tot_r, column=1, value="总 共")
+    cell_tot_label.font = BOLD_FONT
+    cell_tot_label.border = BORDER_THIN
+    cell_tot_label.alignment = Alignment(horizontal="center", vertical="center")
+
+    for c in range(2, 15):
+        cell = ws.cell(row=tot_r, column=c)
         cell.font = BOLD_FONT
         cell.border = BORDER_THIN
-        cell.number_format = "#,##0"
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        if c in range(3, 14):
+            col_let = get_column_letter(c)
+            cell.value = f"=SUM({col_let}8:{col_let}{last_r})"
+            cell.number_format = "#,##0"
 
     # Fit column widths
     for col in ws.columns:
