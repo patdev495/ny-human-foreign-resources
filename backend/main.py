@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse
 from core.config import settings
 from core.database import init_db
 from features.hr_foreign.router import router as hr_foreign_router
+from features.vehicle_management.router import router as vehicle_management_router
 
 
 import asyncio
@@ -48,6 +49,8 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(hr_foreign_router, prefix="/api/hr-foreign", tags=["HR Foreign"])
+    app.include_router(vehicle_management_router)
+
 
     # Locate static frontend dist directory
     base_dir = os.path.dirname(os.path.abspath(__file__))

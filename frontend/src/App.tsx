@@ -3,7 +3,7 @@ import { EmployeeList } from "./features/hr-foreign/components/EmployeeList";
 import { AccommodationManagement } from "./features/hr-foreign/components/AccommodationManagement";
 import { ExpiringDocsAlert } from "./features/hr-foreign/components/ExpiringDocsAlert";
 import { MealManagement } from "./features/hr-foreign/components/MealManagement";
-import { ShuttleDispatch } from "./features/hr-foreign/components/ShuttleDispatch";
+import { VehicleManagement } from "./features/vehicle-management/components/VehicleManagement";
 import { DailyPresenceReport } from "./features/hr-foreign/components/DailyPresenceReport";
 import { ReportHub } from "./features/hr-foreign/components/ReportHub";
 import { JanitorialHrManagement } from "./features/hr-foreign/components/JanitorialHrManagement";
@@ -74,8 +74,8 @@ export const App: React.FC = () => {
           {activeTab === "ACCOMMODATION" && <AccommodationManagement />}
           {activeTab === "DAILY_PRESENCE" && <DailyPresenceReport />}
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
+          {activeTab === "VEHICLE_MANAGEMENT" && <VehicleManagement />}
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
-          {activeTab === "SHUTTLE_DISPATCH" && <ShuttleDispatch />}
           {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrManagement />}
           {activeTab === "EXPORT_HUB" && <ReportHub />}
         </main>
@@ -85,3 +85,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+

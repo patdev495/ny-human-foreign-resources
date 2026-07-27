@@ -23,8 +23,10 @@ class Base(DeclarativeBase):
 def init_db() -> None:
     from sqlalchemy import text
     from features.hr_foreign import models  # noqa: F401
+    from features.vehicle_management import models as vehicle_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+
 
     try:
         with engine.begin() as conn:
@@ -76,6 +78,21 @@ def init_db() -> None:
                     "ALTER TABLE meal_price_configs ADD day_type_name NVARCHAR(255) NULL;"
                 )
             )
+
+            # Ensure vehicle_management tables use NVARCHAR in SQL Server
+            if engine.name == "mssql":
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN name NVARCHAR(200) NOT NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN driver_name NVARCHAR(200) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN license_plate NVARCHAR(50) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN driver_phone NVARCHAR(50) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN vehicle_name NVARCHAR(200) NOT NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN driver_name NVARCHAR(200) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN license_plate NVARCHAR(50) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN pickup_location NVARCHAR(255) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN dropoff_location NVARCHAR(255) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN passenger_name NVARCHAR(255) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN notes NVARCHAR(MAX) NULL;"))
+
             conn.execute(
                 text(
                     "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_price_configs') AND name = N'notes') "

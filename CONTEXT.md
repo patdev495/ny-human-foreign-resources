@@ -77,8 +77,26 @@ Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một kh
 - **Khoảng ngày**: Nhập từ `start_date` đến `end_date` + Chọn Loại ngày $\rightarrow$ Hệ thống tự động gán toàn bộ các ngày trong khoảng sang loại ngày đã chọn.
 - **Ngày đơn lẻ**: Nhập 1 trong 2 ô ngày tháng (hoặc `start_date` == `end_date`) + Chọn Loại ngày $\rightarrow$ Gán loại ngày cho ngày đơn lẻ đó.
 
+**Quản lý xe** (Vehicle Management):
+Sub-system / Module độc lập quản lý việc điều động phương tiện di chuyển, danh mục loại xe, xe công ty, xe thuê ngoài và bảng giá/chi phí điều xe. Ngang cấp với các phân hệ Nhân sự trên thanh điều hướng Sidebar.
+
+**Nhóm sở hữu xe** (Vehicle Ownership Group):
+Phân loại hình thức sở hữu của phương tiện trong Danh sách xe, gồm 2 nhóm:
+- **Xe công ty** (`COMPANY_OWNED`): Xe thuộc sở hữu hoặc do tài xế công ty quản lý (khởi tạo gồm: "A Ngọc", "A Đại").
+- **Xe thuê ngoài** (`OUTSOURCED`): Xe thuê từ nhà cung cấp dịch vụ ngoài (vd: xe 4 chỗ, 7 chỗ, 16 chỗ...).
+
 **Điều xe** (Vehicle Dispatch):
-Dịch vụ đăng ký đưa đón Nhân viên nước ngoài di chuyển giữa KTX, Công ty, Sân bay, Cửa khẩu hoặc đi gặp khách hàng. Phân loại theo Loại xe (4 chỗ, 7 chỗ, 16 chỗ...) và Nhà cung cấp/Tài xế.
+Bản ghi tạo và quản lý chuyến đi đưa đón nhân sự trực tiếp. HR có thể tạo mới chuyến đi bất kỳ lúc nào và chỉnh sửa lại thông tin/chi phí sau này nếu có thay đổi.
+Các thông tin lưu trữ gồm:
+- **Ngày điều xe** (`dispatch_date`): Ngày thực hiện chuyến đi.
+- **Tuyến đường**: **Điểm đi** (`pickup_location` - vd: KTX, Sân bay Nội Bài, Công ty...) và **Điểm đến** (`dropoff_location` - vd: Nhà máy, Khách sạn Mường Thanh, Cửa khẩu...).
+- **Thông tin xe & Tài xế**: Chọn từ Danh sách xe (gợi ý sẵn thông tin tài xế/biển số/đơn giá mặc định, cho phép sửa trực tiếp).
+- **Hành khách / Nhân sự**: Tên nhân sự hoặc số lượng người di chuyển.
+- **Chi phí chuyến đi** (`cost`): Số tiền chi phí cho chuyến đi (HR có thể cập nhật/sửa thoải mái bất cứ lúc nào).
+- **Ghi chú** (`notes`): Ghi chú bổ sung cho chuyến đi.
+
+
+
 
 **Tra cứu 360°** (360° History Profile):
 Giao diện tra cứu tập trung toàn bộ dữ liệu lịch sử của một Nhân viên nước ngoài bao gồm Hồ sơ cá nhân master, Dòng thời gian Lưu trú/Chỗ ở, Lịch sử Visa, Lịch sử Tạm trú và Nhật ký Vắng ăn.
@@ -135,6 +153,9 @@ Tính năng gửi email tự động dạng bản tin gộp hàng ngày (Daily D
 - Một **Lưu trú** có nhiều **Vắng ăn** (những ngày không tính tiền ăn).
 - **Đơn giá bữa ăn** áp dụng cho một ngày được tra theo bản ghi hiệu lực gần nhất ứng với loại ngày (Đầy đủ hay Ngày sự kiện).
 - Khi ghi nhận **Ngày thực tế đã về nước** (`actual_exit_date`), trạng thái nhân sự chuyển thành "Đã về nước". Nếu nhân sự đang ở KTX, HR chọn 1 trong 2 phương án: (1) **Trả phòng**: kết thúc Lưu trú (`end_date = actual_exit_date`), giải phóng giường; hoặc (2) **Giữ phòng**: duy trì Đợt lưu trú nhưng đánh dấu vắng ăn trong thời gian về nước để không tính tiền cơm.
+- Một **Bản ghi Điều xe** (`VehicleDispatch`) tham chiếu tới một **Loại xe** (`Vehicle`). Mỗi **Loại xe** thuộc 1 trong 2 **Nhóm sở hữu xe** (`COMPANY_OWNED` hoặc `OUTSOURCED`).
+- Khi lập bản ghi Điều xe, các trường thông tin (tài xế, biển số, đơn giá) được sao chép/gợi ý từ Danh mục xe sang Bản ghi Điều xe và cho phép HR sửa đổi tự do mà không ảnh hưởng tới dữ liệu master của Danh mục Xe.
+
 
 ## Flagged ambiguities
 

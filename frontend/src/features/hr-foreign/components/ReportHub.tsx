@@ -7,6 +7,7 @@ import {
   validateMealLocks,
 } from "../api";
 import type { UnclosedMealLockItem } from "../types";
+import { UnclosedMealLocksModal } from "./report-hub/UnclosedMealLocksModal";
 
 export const ReportHub: React.FC = () => {
   const today = new Date();
@@ -28,7 +29,6 @@ export const ReportHub: React.FC = () => {
   const [janitorEndDate, setJanitorEndDate] = useState(day30OfMonth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-
   // Missing meal locks state for warning modal
   const [missingLocks, setMissingLocks] = useState<UnclosedMealLockItem[] | null>(null);
   const [showLocksModal, setShowLocksModal] = useState(false);
@@ -44,7 +44,6 @@ export const ReportHub: React.FC = () => {
       setLoadingJanitor(false);
     }
   };
-
 
   const handleDownloadLegal = async () => {
     try {
@@ -92,7 +91,6 @@ export const ReportHub: React.FC = () => {
     }
   };
 
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -119,7 +117,6 @@ export const ReportHub: React.FC = () => {
 
       {/* Report Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
         {/* CARD 1: Legal & Master Profile Report */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5">
           <div className="space-y-3">
@@ -140,7 +137,6 @@ export const ReportHub: React.FC = () => {
               <li><strong>Sheet 2 [Lịch sử Giấy tờ]:</strong> Nhật ký chi tiết tất cả đợt gia hạn giấy tờ.</li>
             </ul>
 
-            {/* Checkbox for ZIP attachment download */}
             <div className="pt-2 border-t border-slate-100">
               <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer select-none">
                 <input
@@ -228,7 +224,6 @@ export const ReportHub: React.FC = () => {
               <li><strong>Sheet 2 [Lao công - Theo ngày]:</strong> Chi tiết các bữa trưa chốt suất ăn thực tế cho khối Lao công.</li>
             </ul>
 
-
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
               <div>
                 <label className="text-[11px] font-semibold text-slate-600">Từ ngày:</label>
@@ -257,22 +252,22 @@ export const ReportHub: React.FC = () => {
             className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loadingMeal ? (
-              <span>⏳ Đang xuất báo cáo...</span>
+              <span>⏳ Đang kiểm tra & tạo báo cáo...</span>
             ) : (
               <>
                 <span>📥</span>
-                <span>Tải File Excel Báo cáo Chi phí Bữa ăn</span>
+                <span>Tải Báo cáo Chi phí Bữa ăn</span>
               </>
             )}
           </button>
         </div>
 
-        {/* CARD 4: Janitor Attendance & Payroll Report */}
+        {/* CARD 4: Janitor Payroll Report */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-teal-100 text-teal-800">
-                Dành cho HR / Kế toán Lương
+              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-purple-100 text-purple-800">
+                Dành cho Kế toán / Lương
               </span>
               <span className="text-xs text-slate-400 font-mono">Format: .XLSX</span>
             </div>
@@ -280,11 +275,11 @@ export const ReportHub: React.FC = () => {
               🧹 Báo cáo Chấm công & Lương Tạp vụ
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Báo cáo Excel chấm công & tính lương tự động cho toàn bộ nhân sự Lao công:
+              Báo cáo Excel chấm công và bảng lương chi tiết cho khối Nhân viên Tạp vụ:
             </p>
             <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside bg-slate-50 p-3 rounded-lg border border-slate-100">
-              <li><strong>Chấm công mặc định:</strong> Điền sẵn 'N' (ngày làm) Thứ 2-7, bỏ trống Chủ nhật.</li>
-              <li><strong>Công thức Excel tự động:</strong> Tự động tính lại công & tiền lương khi HR sửa 'X' trên Excel.</li>
+              <li>Bảng chấm công theo chuỗi các ngày trong tháng (công N, vắng X, nghỉ lễ).</li>
+              <li>Tổng hợp số ngày công thực tế (`COUNTIFS`) và tính lương tháng/ngày tự động.</li>
             </ul>
 
             <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
@@ -312,104 +307,25 @@ export const ReportHub: React.FC = () => {
           <button
             onClick={handleDownloadJanitor}
             disabled={loadingJanitor}
-            className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            className="w-full py-2.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
           >
             {loadingJanitor ? (
-              <span>⏳ Đang xuất báo cáo...</span>
+              <span>⏳ Đang xuất báo cáo lương...</span>
             ) : (
               <>
                 <span>📥</span>
-                <span>Tải File Excel Chấm công & Lương Tạp vụ</span>
+                <span>Tải Báo cáo Chấm công & Lương Tạp vụ</span>
               </>
             )}
           </button>
         </div>
-
-        {/* CARD 5: Vehicle Dispatch Log Report (Placeholder) */}
-
-        <div className="bg-slate-50/70 rounded-xl border border-dashed border-slate-300 p-6 flex flex-col justify-between space-y-5 opacity-90">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-800">
-                Dành cho Đội xe / Hành chính
-              </span>
-              <span className="text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                Đang chuẩn bị
-              </span>
-            </div>
-            <h3 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-              🚗 Báo cáo Nhật ký Điều xe Mỗi ngày
-            </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Báo cáo chi tiết lượt xe đưa đón nhân sự di chuyển giữa KTX, Nhà máy, Cửa khẩu/Sân bay theo ngày và nhà cung cấp.
-            </p>
-          </div>
-          <button disabled className="w-full py-2.5 px-4 bg-slate-200 text-slate-500 font-semibold text-xs rounded-lg cursor-not-allowed">
-            🔒 Sắp ra mắt ở Phân hệ Điều xe
-          </button>
-        </div>
-
       </div>
 
-      {/* UNCLOSED MEAL LOCKS WARNING MODAL */}
-      {showLocksModal && missingLocks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full border border-amber-200 overflow-hidden animate-in fade-in zoom-in duration-150">
-            <div className="p-5 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="text-2xl">⚠️</span>
-                <div>
-                  <h3 className="font-bold text-base">Chưa chốt đủ dữ liệu suất ăn</h3>
-                  <p className="text-xs text-amber-100">Cần chốt đầy đủ trước khi xuất báo cáo Excel (đã tự động bỏ qua các ngày Chủ nhật)</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowLocksModal(false)}
-                className="text-white/80 hover:text-white text-lg font-bold cursor-pointer p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
-              <p className="text-xs text-slate-600">
-                Phát hiện <strong className="text-amber-700 font-bold">{missingLocks.length} ngày làm việc</strong> chưa được chốt suất ăn chính thức:
-              </p>
-              <div className="space-y-2">
-                {missingLocks.map((item) => (
-                  <div
-                    key={item.date}
-                    className="p-3 bg-amber-50/60 rounded-xl border border-amber-200 flex items-center justify-between text-xs"
-                  >
-                    <span className="font-bold font-mono text-slate-800">
-                      📅 {new Date(item.date).toLocaleDateString("vi-VN")}
-                    </span>
-                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
-                      {item.missing_sessions.map((sess) => (
-                        <span
-                          key={sess}
-                          className="px-2 py-0.5 rounded-full font-semibold text-[10px] bg-amber-200 text-amber-900 border border-amber-300"
-                        >
-                          {sess === "BREAKFAST" ? "Sáng NNN" : sess === "DINNER" ? "Tối NNN" : "Trưa Tạp vụ"}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
-              <button
-                onClick={() => setShowLocksModal(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <UnclosedMealLocksModal
+        isOpen={showLocksModal}
+        missingLocks={missingLocks}
+        onClose={() => setShowLocksModal(false)}
+      />
     </div>
   );
 };
