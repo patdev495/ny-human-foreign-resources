@@ -120,17 +120,21 @@ def generate_meal_expense_excel(
         .all()
     )
 
-    # DORMITORY janitors count
+    # DORMITORY janitors count (excluding DAY salary unit)
     dorm_janitors_count = (
         db.query(ForeignEmployee)
         .filter(
             ForeignEmployee.role.ilike("%tạp vụ%") | ForeignEmployee.role.ilike("%lao công%"),
             ForeignEmployee.workplace_location == "DORMITORY",
+            or_(
+                ForeignEmployee.salary_unit != "DAY",
+                ForeignEmployee.salary_unit.is_(None),
+            ),
         )
         .count()
     )
     if dorm_janitors_count == 0:
-        dorm_janitors_count = 3  # default 3 janitors at KTX
+        dorm_janitors_count = 2  # default 2 janitors at KTX
 
     curr_d = start_date
     day_idx = 0

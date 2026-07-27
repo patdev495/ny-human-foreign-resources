@@ -124,10 +124,14 @@ def get_daily_meal_forecast(
     janitor_ktx_count = (
         db.query(ForeignEmployee)
         .filter(
-            ForeignEmployee.role.ilike("%tạp vụ%"),
+            ForeignEmployee.role.ilike("%tạp vụ%") | ForeignEmployee.role.ilike("%lao công%"),
             or_(
                 ForeignEmployee.workplace_location == "DORMITORY",
                 ForeignEmployee.workplace_location.is_(None),
+            ),
+            or_(
+                ForeignEmployee.salary_unit != "DAY",
+                ForeignEmployee.salary_unit.is_(None),
             ),
         )
         .count()
