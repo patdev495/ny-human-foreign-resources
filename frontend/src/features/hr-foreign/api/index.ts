@@ -3,3 +3,5 @@ export * from "./accommodationApi";
 export * from "./stayApi";
 export * from "./legalApi";
 export * from "./mealApi";
+export * from "./emailApi";
+

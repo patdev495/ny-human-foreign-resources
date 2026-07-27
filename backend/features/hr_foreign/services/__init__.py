@@ -13,3 +13,5 @@ from .meal_calculation_service import *
 from .presence_report_service import *
 from .meal_forecast_service import *
 from .meal_expense_service import *
+from .email_config_service import *
+

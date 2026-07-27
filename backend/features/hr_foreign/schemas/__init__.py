@@ -80,6 +80,15 @@ from .meal_schemas import (
     DailyMealForecastResponse,
 )
 
+from .email_schemas import (
+    EmailConfigRead,
+    EmailConfigUpdate,
+    TestEmailRequest,
+    TestEmailResponse,
+    TriggerWarningEmailResponse,
+    EmailDeliveryLogRead,
+)
+
 __all__ = [
     "ForeignEmployeeBase", "ForeignEmployeeCreate", "ForeignEmployeeUpdate", "ForeignEmployeeRead",
     "TravelRecordBase", "TravelRecordCreate", "TravelRecordUpdate", "TravelRecordRead",
@@ -101,5 +110,8 @@ __all__ = [
     "DailyPresenceItem", "DailyPresenceSummary", "DailyPresenceGroup", "DailyPresenceReportResponse",
     "MealSessionLockCreate", "MealSessionLockRead", "DailyMealSessionSummary",
     "DailyMealEmployeeItem", "DailyMealForecastResponse",
+    "EmailConfigRead", "EmailConfigUpdate", "TestEmailRequest", "TestEmailResponse",
+    "TriggerWarningEmailResponse", "EmailDeliveryLogRead",
 ]
+
 

@@ -23,6 +23,14 @@ class Settings(BaseSettings):
     db_password: str
     db_driver: str = "ODBC Driver 18 for SQL Server"
 
+    # SMTP Configuration for Email Notifications
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_use_tls: bool = True
+
     @property
     def database_url(self) -> str:
         driver = self.db_driver.replace(" ", "+")

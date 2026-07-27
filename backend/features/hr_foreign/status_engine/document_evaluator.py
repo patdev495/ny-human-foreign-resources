@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from features.hr_foreign.models import (
     Contract,
@@ -43,6 +43,10 @@ def get_expiring_documents(
     contract_cutoff = get_cutoff("CONTRACT")
     passport_cutoff = get_cutoff("PASSPORT")
 
+    def _is_janitorial(emp: ForeignEmployee) -> bool:
+        """Nhân viên tạp vụ: chỉ quản lý tiền công/ăn, không cần theo dõi giấy tờ pháp lý."""
+        return emp.employee_type == "JANITORIAL"
+
     # 1. Visas
     visas = (
         db.query(Visa)
@@ -53,7 +57,7 @@ def get_expiring_documents(
     for v in visas:
         stay = v.stay
         emp = stay.employee if stay else None
-        if emp:
+        if emp and not _is_janitorial(emp):
             days_rem = (v.expiry_date - today).days
             expiring_visas.append(
                 ExpiringDocumentItem(
@@ -79,7 +83,7 @@ def get_expiring_documents(
     for tt in tam_trus:
         stay = tt.stay
         emp = stay.employee if stay else None
-        if emp:
+        if emp and not _is_janitorial(emp):
             days_rem = (tt.expiry_date - today).days
             expiring_tam_trus.append(
                 ExpiringDocumentItem(
@@ -104,7 +108,7 @@ def get_expiring_documents(
     expiring_gpl_ds: list[ExpiringDocumentItem] = []
     for wp in wps:
         emp = wp.employee
-        if emp:
+        if emp and not _is_janitorial(emp):
             days_rem = (wp.valid_to - today).days
             expiring_gpl_ds.append(
                 ExpiringDocumentItem(
@@ -129,7 +133,7 @@ def get_expiring_documents(
     expiring_contracts: list[ExpiringDocumentItem] = []
     for c in contracts:
         emp = c.employee
-        if emp:
+        if emp and not _is_janitorial(emp):
             days_rem = (c.end_date - today).days
             expiring_contracts.append(
                 ExpiringDocumentItem(
@@ -145,10 +149,14 @@ def get_expiring_documents(
                 )
             )
 
-    # 5. Passports
+    # 5. Passports — exclude janitorial staff
     passports = (
         db.query(ForeignEmployee)
-        .filter(ForeignEmployee.passport_expiry >= today, ForeignEmployee.passport_expiry <= passport_cutoff)
+        .filter(
+            ForeignEmployee.passport_expiry >= today,
+            ForeignEmployee.passport_expiry <= passport_cutoff,
+            ForeignEmployee.employee_type != "JANITORIAL",
+        )
         .all()
     )
     expiring_passports: list[ExpiringDocumentItem] = []
@@ -170,7 +178,12 @@ def get_expiring_documents(
             )
 
     # 6. Check Missing Information for Employees & Active Stays
-    all_employees = db.query(ForeignEmployee).all()
+    # Exclude janitorial staff (employee_type == 'JANITORIAL') — they are managed separately
+    all_employees = (
+        db.query(ForeignEmployee)
+        .filter(ForeignEmployee.employee_type != "JANITORIAL")
+        .all()
+    )
 
     active_stays = (
         db.query(Stay)

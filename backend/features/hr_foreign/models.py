@@ -42,6 +42,7 @@ class ForeignEmployee(Base):
     workplace_location = Column(Unicode(50), nullable=False, default="DORMITORY")  # DORMITORY, CN09, CN15, COMPANY
     salary = Column(Float, nullable=True)               # Mức lương
     salary_unit = Column(Unicode(20), nullable=True, default="MONTH")  # MONTH, DAY
+    employee_type = Column(Unicode(50), nullable=False, default="FOREIGN")  # FOREIGN, JANITORIAL
     notes = Column(UnicodeText, nullable=True)
 
     stays = relationship("Stay", back_populates="employee", cascade="all, delete-orphan")
@@ -246,5 +247,32 @@ class MealSessionLock(Base):
     __table_args__ = (
         UniqueConstraint("lock_date", "meal_session", name="uq_meal_session_locks_date_session"),
     )
+
+
+class EmailNotificationConfig(Base):
+    """Cấu hình email nhận cảnh báo và lịch gửi email tự động cho HR."""
+    __tablename__ = "email_notification_configs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    config_key = Column(Unicode(100), nullable=False, unique=True, index=True, default="DOC_WARNING")
+    recipient_emails = Column(UnicodeText, nullable=True)  # Email nhận, phân cách bằng dấu phẩy
+    is_enabled = Column(Boolean, nullable=False, default=True)
+    scheduled_time = Column(Unicode(20), nullable=False, default="08:00")  # "08:00"
+    last_sent_at = Column(DateTime, nullable=True)
+
+
+class EmailDeliveryLog(Base):
+    """Nhật ký lịch sử các đợt phát hành email cảnh báo tự động / thủ công."""
+    __tablename__ = "email_delivery_logs"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    sent_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    trigger_type = Column(Unicode(50), nullable=False, default="AUTO")  # AUTO, MANUAL, TEST
+    recipients = Column(UnicodeText, nullable=True)
+    total_expired_docs = Column(Integer, nullable=False, default=0)
+    total_expiring_docs = Column(Integer, nullable=False, default=0)
+    status = Column(Unicode(50), nullable=False, default="SUCCESS")  # SUCCESS, FAILED
+    error_message = Column(UnicodeText, nullable=True)
+
 
 

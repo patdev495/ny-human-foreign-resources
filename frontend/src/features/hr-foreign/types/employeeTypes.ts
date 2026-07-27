@@ -20,6 +20,7 @@ export interface ForeignEmployee {
   workplace_location?: "DORMITORY" | "CN09" | "CN15" | "COMPANY" | string;
   salary?: number | null;
   salary_unit?: "MONTH" | "DAY" | string;
+  employee_type?: "FOREIGN" | "JANITORIAL" | string;
   notes?: string | null;
   is_in_vietnam?: boolean;
   is_overdue_exit?: boolean;
@@ -51,6 +52,7 @@ export interface ForeignEmployeeCreate {
   workplace_location?: string;
   salary?: number | null;
   salary_unit?: string;
+  employee_type?: "FOREIGN" | "JANITORIAL" | string;
   notes?: string | null;
 }
 

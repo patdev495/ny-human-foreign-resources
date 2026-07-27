@@ -27,6 +27,7 @@ class ForeignEmployeeBase(BaseModel):
     workplace_location: str | None = "DORMITORY"  # "DORMITORY" | "CN09" | "CN15" | "COMPANY"
     salary: float | None = None
     salary_unit: str | None = "MONTH"  # "MONTH" | "DAY"
+    employee_type: str = "FOREIGN"  # "FOREIGN" | "JANITORIAL"
     notes: str | None = None
 
 

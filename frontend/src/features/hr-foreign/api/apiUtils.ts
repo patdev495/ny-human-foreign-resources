@@ -11,3 +11,15 @@ export function formatApiError(err: any, fallbackMessage: string): string {
   }
   return fallbackMessage;
 }
+
+export async function handleApiResponse<T>(
+  res: Response,
+  fallbackMessage: string
+): Promise<T> {
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, fallbackMessage));
+  }
+  return res.json() as Promise<T>;
+}
+

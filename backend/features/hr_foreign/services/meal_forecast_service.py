@@ -124,7 +124,7 @@ def get_daily_meal_forecast(
     janitor_ktx_count = (
         db.query(ForeignEmployee)
         .filter(
-            ForeignEmployee.role.ilike("%tạp vụ%") | ForeignEmployee.role.ilike("%lao công%"),
+            ForeignEmployee.employee_type == "JANITORIAL",
             or_(
                 ForeignEmployee.workplace_location == "DORMITORY",
                 ForeignEmployee.workplace_location.is_(None),

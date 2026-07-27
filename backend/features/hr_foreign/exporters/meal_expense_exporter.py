@@ -124,7 +124,7 @@ def generate_meal_expense_excel(
     dorm_janitors_count = (
         db.query(ForeignEmployee)
         .filter(
-            ForeignEmployee.role.ilike("%tạp vụ%") | ForeignEmployee.role.ilike("%lao công%"),
+            ForeignEmployee.employee_type == "JANITORIAL",
             ForeignEmployee.workplace_location == "DORMITORY",
             or_(
                 ForeignEmployee.salary_unit != "DAY",

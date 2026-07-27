@@ -112,6 +112,13 @@ Báo cáo Excel 1 Sheet duy nhất (`dd.MM - dd.MM`) tính toán chi phí ăn u�
 **Cấu hình Mốc Cảnh báo Giấy tờ** (Document Warning Threshold Config):
 Cấu hình mốc thời gian cảnh báo hết hạn cho 5 loại giấy tờ pháp lý của Nhân viên nước ngoài: Visa, Tạm trú, Giấy phép lao động (GPLĐ), Hợp đồng lao động và Hộ chiếu. Mỗi loại giấy tờ có thể thiết lập số lượng đi kèm đơn vị tính theo **Ngày** (DAYS) hoặc **Tháng** (MONTHS) (mặc định ban đầu tất cả 5 loại là 30 Ngày). Các mốc được lưu trữ tập trung ở Backend Database để phục vụ hiển thị phân loại trên UI cũng như làm căn cứ gửi Email thông báo cảnh báo tự động.
 
+**Thông báo Cảnh báo Giấy tờ qua Email** (Document Warning Email Notification):
+Tính năng gửi email tự động dạng bản tin gộp hàng ngày (Daily Digest Email) lúc 08:00 sáng đến danh sách hòm thư nhận cảnh báo của bộ phận HR (xem qua ứng dụng email client như Foxmail, Outlook...).
+- **Cấu hình kết nối SMTP Server**: Thiết lập tập trung tại file môi trường `.env` phía Backend (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`).
+- **Quản lý danh sách email nhận**: Lưu trữ ở Backend DB và cho phép HR quản lý, thêm/bớt các địa chỉ email nhận thư trực tiếp trên giao diện Cấu hình Mốc Cảnh báo Giấy tờ (UI). Hỗ trợ nút **"Gửi thư kiểm tra"** (Send Test Mail) và nút **"Gửi cảnh báo ngay"** (Trigger Now) để chủ động phát hành bản tin ngoài khung giờ tự động.
+- **Định dạng Email HTML**: Bảng tổng hợp hiển thị rõ nét trên Foxmail với 2 khối phân màu: 🔴 **Đỏ** (giấy tờ đã quá hạn) và 🟡 **Vàng** (giấy tờ sắp hết hạn trong ngưỡng mốc cấu hình) kèm đầy đủ thông tin nhân sự và link mở hệ thống xử lý.
+
+
 
 
 

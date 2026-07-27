@@ -44,7 +44,7 @@ def get_daily_presence_report(
             continue
 
         emp = stay.employee
-        if not emp:
+        if not emp or emp.employee_type == "JANITORIAL" or (emp.role and "tạp vụ" in emp.role.lower()):
             continue
 
         room_num = stay.room.room_number if stay.room else None
@@ -86,7 +86,7 @@ def get_daily_presence_report(
         else:
             unassigned_items.append(item)
 
-    all_employees = get_employees(db)
+    all_employees = [e for e in get_employees(db) if e.employee_type != "JANITORIAL" and not (e.role and "tạp vụ" in e.role.lower())]
     emp_statuses = evaluate_employee_statuses(db, all_employees, today=target_date)
     
     exited_items: list[DailyPresenceItem] = []

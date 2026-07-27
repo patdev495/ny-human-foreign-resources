@@ -13,10 +13,23 @@ from core.database import init_db
 from features.hr_foreign.router import router as hr_foreign_router
 
 
+import asyncio
+from features.hr_foreign.services.scheduler import run_email_scheduler_loop
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    yield
+    scheduler_task = asyncio.create_task(run_email_scheduler_loop())
+    try:
+        yield
+    finally:
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            pass
+
 
 
 def create_app() -> FastAPI:

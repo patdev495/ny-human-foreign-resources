@@ -33,9 +33,9 @@ export const JanitorialHrManagement: React.FC = () => {
       setLoading(true);
       setErrorMessage(null);
       const data = await fetchEmployees();
-      // Filter janitor staff: role contains 'tạp vụ' or 'tap vu'
+      // Filter janitor staff: employee_type === 'JANITORIAL' or role contains 'tạp vụ'
       const janitorsOnly = data.filter(
-        (e) => e.role && e.role.toLowerCase().includes("tạp vụ")
+        (e) => e.employee_type === "JANITORIAL" || (e.role && e.role.toLowerCase().includes("tạp vụ"))
       );
       setEmployees(janitorsOnly);
     } catch (err: any) {
@@ -97,6 +97,7 @@ export const JanitorialHrManagement: React.FC = () => {
         workplace_location: formData.workplace_location,
         salary: formData.salary ? Number(formData.salary) : null,
         salary_unit: formData.salary_unit,
+        employee_type: "JANITORIAL",
         notes: formData.notes.trim() || null,
       };
 

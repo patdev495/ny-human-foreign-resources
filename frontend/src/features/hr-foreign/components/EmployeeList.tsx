@@ -73,7 +73,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
   const filtered = employees.filter((emp) => {
     // Exclude janitor staff from Foreign Employees tab
-    if (emp.role && emp.role.toLowerCase().includes("tạp vụ")) return false;
+    if (emp.employee_type === "JANITORIAL" || (emp.role && emp.role.toLowerCase().includes("tạp vụ"))) return false;
 
     if (statusFilter === "IN_VN" && !emp.is_in_vietnam) return false;
     if (statusFilter === "RETURNED" && emp.is_in_vietnam) return false;
