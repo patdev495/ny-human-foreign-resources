@@ -225,3 +225,26 @@ export async function downloadMealExpenseReport(
   URL.revokeObjectURL(a.href);
 }
 
+export async function downloadJanitorPayrollReport(
+  startDate: string,
+  endDate: string
+): Promise<void> {
+  const url = `${BASE}/reports/janitor-payroll/export?start_date=${encodeURIComponent(
+    startDate
+  )}&end_date=${encodeURIComponent(endDate)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải Báo cáo Chấm công & Lương Tạp vụ");
+  }
+  const blob = await res.blob();
+  const filename = `BCC_LUONG_TAP_VU_${startDate.replace(/-/g, "")}_${endDate.replace(/-/g, "")}.xlsx`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+

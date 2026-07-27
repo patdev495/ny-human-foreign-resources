@@ -11,7 +11,7 @@ def seed_janitors() -> None:
     janitors_data = [
         {
             'employee_code': 'NYV2007077',
-            'name_latin': 'DO THI LAN',
+            'name_latin': 'Đỗ Thị Lan',
             'name_chinese': 'Đỗ Thị Lan',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -25,7 +25,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV2007078',
-            'name_latin': 'TRAN THI HONG',
+            'name_latin': 'Trần Thị Hồng',
             'name_chinese': 'Trần Thị Hồng',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -39,7 +39,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV2007079',
-            'name_latin': 'NGUYEN THI DUYEN',
+            'name_latin': 'Nguyễn Thị Duyên',
             'name_chinese': 'Nguyễn Thị Duyên',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -53,7 +53,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV2007080',
-            'name_latin': 'HOANG THI LAN',
+            'name_latin': 'Hoàng Thị Lan',
             'name_chinese': 'Hoàng Thị Lan',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -67,7 +67,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV2007081',
-            'name_latin': 'VU THI OANH',
+            'name_latin': 'Vũ Thị Oanh',
             'name_chinese': 'Vũ Thị Oanh',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -81,7 +81,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV232308005',
-            'name_latin': 'BUI THI LAN',
+            'name_latin': 'Bùi Thị Lan',
             'name_chinese': 'Bùi Thị Lan',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -95,7 +95,7 @@ def seed_janitors() -> None:
         },
         {
             'employee_code': 'NYV2007082',
-            'name_latin': 'NGUYEN THI THU',
+            'name_latin': 'Nguyễn Thị Thứ',
             'name_chinese': 'Nguyễn Thị Thứ',
             'gender': 'Nữ',
             'nationality': 'Việt Nam',
@@ -108,6 +108,7 @@ def seed_janitors() -> None:
             'notes': 'Lương tạp vụ tính theo ngày công (70,000đ/ngày) - KTX'
         }
     ]
+
 
     for j in janitors_data:
         emp = db.query(ForeignEmployee).filter(

@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from features.hr_foreign import service
 from features.hr_foreign.excel_exporter import generate_meal_expense_excel
+from features.hr_foreign.exporters.janitor_payroll_exporter import generate_janitor_payroll_excel
+
 from features.hr_foreign.schemas import (
     DailyMealForecastResponse,
     DailyPresenceReportResponse,
@@ -229,4 +231,24 @@ def export_meal_expense_report(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment; filename=Bao_Cao_Chi_Phi_Bua_An.xlsx"},
     )
+
+
+@router.get("/reports/janitor-payroll/export")
+def export_janitor_payroll_report(
+    start_date: datetime.date = Query(...),
+    end_date: datetime.date = Query(...),
+    db: Session = Depends(get_db),
+) -> Response:
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="start_date cannot be after end_date"
+        )
+    excel_stream = generate_janitor_payroll_excel(db, start_date=start_date, end_date=end_date)
+    filename = f"BCC_LUONG_TAP_VU_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.xlsx"
+    return Response(
+        content=excel_stream.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
 

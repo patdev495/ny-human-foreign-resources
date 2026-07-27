@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  downloadJanitorPayrollReport,
   downloadLegalProfileReport,
   downloadMealExpenseReport,
   downloadPresenceAccommodationReport,
@@ -9,22 +10,41 @@ import type { UnclosedMealLockItem } from "../types";
 
 export const ReportHub: React.FC = () => {
   const today = new Date();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
-    .toISOString()
-    .split("T")[0];
+  const year = today.getFullYear();
+  const monthStr = String(today.getMonth() + 1).padStart(2, "0");
+
+  const firstDayOfMonth = `${year}-${monthStr}-01`;
+  const day30OfMonth = `${year}-${monthStr}-30`;
   const todayStr = today.toISOString().split("T")[0];
 
   const [includeAttachments, setIncludeAttachments] = useState(true);
   const [loadingLegal, setLoadingLegal] = useState(false);
   const [loadingPresence, setLoadingPresence] = useState(false);
   const [loadingMeal, setLoadingMeal] = useState(false);
+  const [loadingJanitor, setLoadingJanitor] = useState(false);
   const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
   const [mealEndDate, setMealEndDate] = useState(todayStr);
+  const [janitorStartDate, setJanitorStartDate] = useState(firstDayOfMonth);
+  const [janitorEndDate, setJanitorEndDate] = useState(day30OfMonth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
 
   // Missing meal locks state for warning modal
   const [missingLocks, setMissingLocks] = useState<UnclosedMealLockItem[] | null>(null);
   const [showLocksModal, setShowLocksModal] = useState(false);
+
+  const handleDownloadJanitor = async () => {
+    try {
+      setLoadingJanitor(true);
+      setErrorMessage(null);
+      await downloadJanitorPayrollReport(janitorStartDate, janitorEndDate);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Không thể tải báo cáo chấm công & lương tạp vụ");
+    } finally {
+      setLoadingJanitor(false);
+    }
+  };
+
 
   const handleDownloadLegal = async () => {
     try {
@@ -247,8 +267,66 @@ export const ReportHub: React.FC = () => {
           </button>
         </div>
 
+        {/* CARD 4: Janitor Attendance & Payroll Report */}
+        <div className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-teal-100 text-teal-800">
+                Dành cho HR / Kế toán Lương
+              </span>
+              <span className="text-xs text-slate-400 font-mono">Format: .XLSX</span>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              🧹 Báo cáo Chấm công & Lương Tạp vụ
+            </h3>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Báo cáo Excel chấm công & tính lương tự động cho toàn bộ nhân sự Lao công:
+            </p>
+            <ul className="text-xs text-slate-500 space-y-1 list-disc list-inside bg-slate-50 p-3 rounded-lg border border-slate-100">
+              <li><strong>Chấm công mặc định:</strong> Điền sẵn 'N' (ngày làm) Thứ 2-7, bỏ trống Chủ nhật.</li>
+              <li><strong>Công thức Excel tự động:</strong> Tự động tính lại công & tiền lương khi HR sửa 'X' trên Excel.</li>
+            </ul>
 
-        {/* CARD 4: Vehicle Dispatch Log Report (Placeholder) */}
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600">Từ ngày:</label>
+                <input
+                  type="date"
+                  value={janitorStartDate}
+                  onChange={(e) => setJanitorStartDate(e.target.value)}
+                  className="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600">Đến ngày:</label>
+                <input
+                  type="date"
+                  value={janitorEndDate}
+                  onChange={(e) => setJanitorEndDate(e.target.value)}
+                  className="w-full mt-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white text-slate-800"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleDownloadJanitor}
+            disabled={loadingJanitor}
+            className="w-full py-2.5 px-4 bg-teal-600 hover:bg-teal-700 text-white font-semibold text-xs rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          >
+            {loadingJanitor ? (
+              <span>⏳ Đang xuất báo cáo...</span>
+            ) : (
+              <>
+                <span>📥</span>
+                <span>Tải File Excel Chấm công & Lương Tạp vụ</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* CARD 5: Vehicle Dispatch Log Report (Placeholder) */}
+
         <div className="bg-slate-50/70 rounded-xl border border-dashed border-slate-300 p-6 flex flex-col justify-between space-y-5 opacity-90">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
