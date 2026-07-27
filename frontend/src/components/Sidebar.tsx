@@ -198,18 +198,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           <div className="pt-2 space-y-1">
             <button
-              onClick={() => setActiveTab("MEAL_MANAGEMENT")}
-              title={!isSidebarOpen ? "Chi phí bữa ăn" : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                activeTab === "MEAL_MANAGEMENT"
-                  ? "bg-amber-600 text-white font-bold shadow-xs"
-                  : "text-slate-700 hover:bg-slate-100"
-              } ${!isSidebarOpen ? "justify-center" : ""}`}
-            >
-              <span className="text-amber-600 text-lg">🍱</span>
-              {isSidebarOpen && <span className="truncate">Chi phí bữa ăn</span>}
-            </button>
-            <button
               onClick={() => setActiveTab("HR_DOMESTIC_PLACEHOLDER")}
               title={!isSidebarOpen ? "Nhân sự Tạp vụ" : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
@@ -220,6 +208,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <span className="text-amber-500 text-lg">🧹</span>
               {isSidebarOpen && <span className="truncate">Nhân sự Tạp vụ</span>}
+            </button>
+            <button
+              onClick={() => setActiveTab("MEAL_MANAGEMENT")}
+              title={!isSidebarOpen ? "Chi phí bữa ăn" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                activeTab === "MEAL_MANAGEMENT"
+                  ? "bg-amber-600 text-white font-bold shadow-xs"
+                  : "text-slate-700 hover:bg-slate-100"
+              } ${!isSidebarOpen ? "justify-center" : ""}`}
+            >
+              <span className="text-amber-600 text-lg">🍱</span>
+              {isSidebarOpen && <span className="truncate">Chi phí bữa ăn</span>}
             </button>
           </div>
 

@@ -15,6 +15,7 @@ def seed_default_meal_prices(db: Session) -> None:
                 foreign_breakfast_price=30000.0,
                 foreign_dinner_price=40000.0,
                 janitor_meal_price=25000.0,
+                fruit_allowance_price=60000.0,
                 effective_from=datetime.date(2020, 1, 1),
             ),
             MealPriceConfig(
@@ -23,6 +24,7 @@ def seed_default_meal_prices(db: Session) -> None:
                 foreign_breakfast_price=50000.0,
                 foreign_dinner_price=70000.0,
                 janitor_meal_price=40000.0,
+                fruit_allowance_price=60000.0,
                 effective_from=datetime.date(2020, 1, 1),
             ),
         ])

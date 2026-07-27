@@ -61,6 +61,7 @@ class MealPriceConfigBase(BaseModel):
     foreign_breakfast_price: float = 30000.0
     foreign_dinner_price: float = 40000.0
     janitor_meal_price: float = 25000.0
+    fruit_allowance_price: float | None = 60000.0
     effective_from: datetime.date = datetime.date(2020, 1, 1)
     notes: str | None = None
 
@@ -75,6 +76,7 @@ class MealPriceConfigUpdate(BaseModel):
     foreign_breakfast_price: float | None = None
     foreign_dinner_price: float | None = None
     janitor_meal_price: float | None = None
+    fruit_allowance_price: float | None = None
     effective_from: datetime.date | None = None
     notes: str | None = None
 

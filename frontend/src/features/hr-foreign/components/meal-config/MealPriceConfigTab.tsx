@@ -32,6 +32,9 @@ export const MealPriceConfigTab: React.FC<Props> = ({
   const [lcPrice, setLcPrice] = useState<number>(
     normalConfig ? normalConfig.janitor_meal_price : 25000
   );
+  const [fruitPrice, setFruitPrice] = useState<number>(
+    normalConfig ? normalConfig.fruit_allowance_price : 60000
+  );
   const [dtNotes, setDtNotes] = useState<string>("");
 
   const [editingPriceConfigId, setEditingPriceConfigId] = useState<number | null>(null);
@@ -45,8 +48,8 @@ export const MealPriceConfigTab: React.FC<Props> = ({
       setError("Vui lòng nhập Mã loại ngày");
       return;
     }
-    if (bfPrice <= 0 || dnPrice <= 0 || lcPrice <= 0) {
-      setError("Tất cả đơn giá bữa ăn phải lớn hơn 0 (không được bỏ trống)");
+    if (bfPrice <= 0 || dnPrice <= 0 || lcPrice <= 0 || fruitPrice <= 0) {
+      setError("Tất cả đơn giá bữa ăn và tiền hoa quả phải lớn hơn 0 (không được bỏ trống)");
       return;
     }
 
@@ -58,6 +61,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
           foreign_breakfast_price: Number(bfPrice),
           foreign_dinner_price: Number(dnPrice),
           janitor_meal_price: Number(lcPrice),
+          fruit_allowance_price: Number(fruitPrice),
           notes: dtNotes.trim() || undefined,
         });
         setSuccessMsg(`✓ Đã cập nhật loại ngày '${dtName || dtCode}' thành công!`);
@@ -69,10 +73,11 @@ export const MealPriceConfigTab: React.FC<Props> = ({
           foreign_breakfast_price: Number(bfPrice),
           foreign_dinner_price: Number(dnPrice),
           janitor_meal_price: Number(lcPrice),
+          fruit_allowance_price: Number(fruitPrice),
           effective_from: new Date().toISOString().split("T")[0],
           notes: dtNotes.trim() || undefined,
         });
-        setSuccessMsg(`✓ Đã thêm loại ngày mới '${dtName || dtCode}' với đầy đủ 3 mức giá!`);
+        setSuccessMsg(`✓ Đã thêm loại ngày mới '${dtName || dtCode}' với đầy đủ 4 mức giá!`);
       }
 
       setDtCode("");
@@ -80,6 +85,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
       setBfPrice(normalConfig ? normalConfig.foreign_breakfast_price : 30000);
       setDnPrice(normalConfig ? normalConfig.foreign_dinner_price : 40000);
       setLcPrice(normalConfig ? normalConfig.janitor_meal_price : 25000);
+      setFruitPrice(normalConfig ? normalConfig.fruit_allowance_price : 60000);
       setDtNotes("");
       onDataChange();
     } catch (err: any) {
@@ -94,6 +100,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
     setBfPrice(cfg.foreign_breakfast_price ?? normalConfig?.foreign_breakfast_price ?? 30000);
     setDnPrice(cfg.foreign_dinner_price ?? normalConfig?.foreign_dinner_price ?? 40000);
     setLcPrice(cfg.janitor_meal_price ?? normalConfig?.janitor_meal_price ?? 25000);
+    setFruitPrice(cfg.fruit_allowance_price ?? normalConfig?.fruit_allowance_price ?? 60000);
     setDtNotes(cfg.notes || "");
   };
 
@@ -104,6 +111,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
     setBfPrice(normalConfig ? normalConfig.foreign_breakfast_price : 30000);
     setDnPrice(normalConfig ? normalConfig.foreign_dinner_price : 40000);
     setLcPrice(normalConfig ? normalConfig.janitor_meal_price : 25000);
+    setFruitPrice(normalConfig ? normalConfig.fruit_allowance_price : 60000);
     setDtNotes("");
   };
 
@@ -158,7 +166,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 bg-white/70 p-3 rounded-lg border border-emerald-100">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 bg-white/70 p-3 rounded-lg border border-emerald-100">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 🍳 Bữa Sáng (Nước ngoài) <span className="text-rose-500">*</span>
@@ -199,6 +207,21 @@ export const MealPriceConfigTab: React.FC<Props> = ({
                 min={1000}
                 value={lcPrice}
                 onChange={(e) => setLcPrice(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                🍇 Tiền Hoa quả (1 ngày) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="number"
+                step={1}
+                min={1000}
+                value={fruitPrice}
+                onChange={(e) => setFruitPrice(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
                 required
               />
@@ -254,6 +277,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Sáng NNN</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Tối NNN</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Trưa Lao công</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600">Hoa quả</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600">Ghi chú</th>
                 <th className="px-4 py-3 text-right font-semibold text-gray-600">Thao tác</th>
               </tr>
@@ -263,40 +287,44 @@ export const MealPriceConfigTab: React.FC<Props> = ({
                 const bf = cfg.foreign_breakfast_price ?? 30000;
                 const dn = cfg.foreign_dinner_price ?? 40000;
                 const lc = cfg.janitor_meal_price ?? 25000;
+                const fr = cfg.fruit_allowance_price ?? 60000;
                 return (
-                <tr key={cfg.id} className="hover:bg-emerald-50/50 transition">
-                  <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                  <td className="px-4 py-3 font-mono font-medium text-gray-900">{cfg.day_type}</td>
-                  <td className="px-4 py-3 font-semibold text-emerald-800">
-                    {cfg.day_type_name || cfg.day_type}
-                  </td>
-                  <td className="px-4 py-3 font-bold text-amber-800">
-                    {bf.toLocaleString()} VNĐ
-                  </td>
-                  <td className="px-4 py-3 font-bold text-indigo-800">
-                    {dn.toLocaleString()} VNĐ
-                  </td>
-                  <td className="px-4 py-3 font-bold text-emerald-800">
-                    {lc.toLocaleString()} VNĐ
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{cfg.notes || "—"}</td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    <button
-                      onClick={() => handleStartEditPriceConfig(cfg)}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Sửa
-                    </button>
-                    {cfg.day_type !== "NORMAL" && (
+                  <tr key={cfg.id} className="hover:bg-emerald-50/50 transition">
+                    <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                    <td className="px-4 py-3 font-mono font-medium text-gray-900">{cfg.day_type}</td>
+                    <td className="px-4 py-3 font-semibold text-emerald-800">
+                      {cfg.day_type_name || cfg.day_type}
+                    </td>
+                    <td className="px-4 py-3 font-bold text-amber-800">
+                      {bf.toLocaleString()} VNĐ
+                    </td>
+                    <td className="px-4 py-3 font-bold text-indigo-800">
+                      {dn.toLocaleString()} VNĐ
+                    </td>
+                    <td className="px-4 py-3 font-bold text-emerald-800">
+                      {lc.toLocaleString()} VNĐ
+                    </td>
+                    <td className="px-4 py-3 font-bold text-purple-800">
+                      {fr.toLocaleString()} VNĐ
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{cfg.notes || "—"}</td>
+                    <td className="px-4 py-3 text-right space-x-2">
                       <button
-                        onClick={() => handleDeletePriceConfig(cfg)}
-                        className="text-red-600 hover:text-red-800 font-medium"
+                        onClick={() => handleStartEditPriceConfig(cfg)}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
                       >
-                        Xóa
+                        Sửa
                       </button>
-                    )}
-                  </td>
-                </tr>
+                      {cfg.day_type !== "NORMAL" && (
+                        <button
+                          onClick={() => handleDeletePriceConfig(cfg)}
+                          className="text-red-600 hover:text-red-800 font-medium"
+                        >
+                          Xóa
+                        </button>
+                      )}
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>

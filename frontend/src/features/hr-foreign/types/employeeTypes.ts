@@ -17,6 +17,9 @@ export interface ForeignEmployee {
   department?: string | null;
   role?: string | null;
   work_type?: "CO_DINH" | "CONG_TAC" | string;
+  workplace_location?: "DORMITORY" | "CN09" | "CN15" | "COMPANY" | string;
+  salary?: number | null;
+  salary_unit?: "MONTH" | "DAY" | string;
   notes?: string | null;
   is_in_vietnam?: boolean;
   is_overdue_exit?: boolean;
@@ -45,10 +48,13 @@ export interface ForeignEmployeeCreate {
   department?: string | null;
   role?: string | null;
   work_type?: "CO_DINH" | "CONG_TAC" | string;
+  workplace_location?: string;
+  salary?: number | null;
+  salary_unit?: string;
   notes?: string | null;
 }
 
-export interface ForeignEmployeeUpdate extends ForeignEmployeeCreate {}
+export interface ForeignEmployeeUpdate extends ForeignEmployeeCreate { }
 
 export interface TravelRecord {
   id: number;
@@ -68,7 +74,7 @@ export interface TravelRecordCreate {
   notes?: string | null;
 }
 
-export interface TravelRecordUpdate extends TravelRecordCreate {}
+export interface TravelRecordUpdate extends TravelRecordCreate { }
 
 export interface ExitDateActionPayload {
   actual_exit_date?: string | null;

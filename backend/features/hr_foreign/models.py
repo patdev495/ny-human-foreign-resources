@@ -39,6 +39,9 @@ class ForeignEmployee(Base):
     department = Column(Unicode(100), nullable=True)  # Vị trí công việc (Lao động kỹ thuật, Giám đốc...)
     role = Column(Unicode(255), nullable=True)         # Chức danh công việc chi tiết
     work_type = Column(Unicode(50), nullable=False, default="CO_DINH")  # CO_DINH, CONG_TAC
+    workplace_location = Column(Unicode(50), nullable=False, default="DORMITORY")  # DORMITORY, CN09, CN15, COMPANY
+    salary = Column(Float, nullable=True)               # Mức lương
+    salary_unit = Column(Unicode(20), nullable=True, default="MONTH")  # MONTH, DAY
     notes = Column(UnicodeText, nullable=True)
 
     stays = relationship("Stay", back_populates="employee", cascade="all, delete-orphan")
@@ -196,6 +199,7 @@ class MealPriceConfig(Base):
     foreign_breakfast_price = Column(Float, nullable=False, default=30000.0)
     foreign_dinner_price = Column(Float, nullable=False, default=40000.0)
     janitor_meal_price = Column(Float, nullable=False, default=25000.0)
+    fruit_allowance_price = Column(Float, nullable=False, default=60000.0)
     effective_from = Column(Date, nullable=False, default=datetime.date(2020, 1, 1))
     notes = Column(UnicodeText, nullable=True)
 

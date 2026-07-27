@@ -4,7 +4,7 @@ import datetime
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import EventDay, MealAbsence, MealPriceConfig, MealSessionLock, Stay
+from features.hr_foreign.models import EventDay, ForeignEmployee, MealAbsence, MealPriceConfig, MealSessionLock, Stay
 from features.hr_foreign.schemas import (
     DailyMealEmployeeItem,
     DailyMealForecastResponse,
@@ -121,9 +121,21 @@ def get_daily_meal_forecast(
         notes=bf_lock.notes if bf_lock else None,
     )
 
+    janitor_ktx_count = (
+        db.query(ForeignEmployee)
+        .filter(
+            ForeignEmployee.role.ilike("%tạp vụ%"),
+            or_(
+                ForeignEmployee.workplace_location == "DORMITORY",
+                ForeignEmployee.workplace_location.is_(None),
+            ),
+        )
+        .count()
+    )
+
     lunch_summary = DailyMealSessionSummary(
         meal_session="LUNCH",
-        calculated_meal_count=0,
+        calculated_meal_count=janitor_ktx_count,
         is_locked=lc_lock is not None,
         final_meal_count=lc_lock.final_meal_count if lc_lock else None,
         locked_price_per_meal=lc_lock.locked_price_per_meal if lc_lock else suggested_lc_price,

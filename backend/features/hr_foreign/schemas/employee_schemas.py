@@ -24,6 +24,9 @@ class ForeignEmployeeBase(BaseModel):
     department: str | None = None
     role: str | None = None
     work_type: str = "CO_DINH"  # "CO_DINH" | "CONG_TAC"
+    workplace_location: str | None = "DORMITORY"  # "DORMITORY" | "CN09" | "CN15" | "COMPANY"
+    salary: float | None = None
+    salary_unit: str | None = "MONTH"  # "MONTH" | "DAY"
     notes: str | None = None
 
 

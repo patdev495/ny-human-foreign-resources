@@ -100,6 +100,7 @@ export interface MealPriceConfig {
   foreign_breakfast_price: number;
   foreign_dinner_price: number;
   janitor_meal_price: number;
+  fruit_allowance_price: number;
   effective_from: string;
   notes?: string | null;
 }
@@ -110,8 +111,18 @@ export interface MealPriceConfigCreate {
   foreign_breakfast_price: number;
   foreign_dinner_price: number;
   janitor_meal_price: number;
+  fruit_allowance_price?: number;
   effective_from?: string;
   notes?: string | null;
+}
+
+export interface UnclosedMealLockItem {
+  date: string;
+  missing_sessions: ("BREAKFAST" | "DINNER" | "LUNCH" | string)[];
+}
+
+export interface ValidateMealLocksResponse {
+  missing_dates: UnclosedMealLockItem[];
 }
 
 export interface MealExpenseReportItem {

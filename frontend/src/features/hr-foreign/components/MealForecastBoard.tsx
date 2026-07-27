@@ -132,6 +132,13 @@ export const MealForecastBoard: React.FC = () => {
             />
           </div>
 
+          {new Date(selectedDate + "T00:00:00").getDay() === 0 && (
+            <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl px-3.5 py-2 flex items-center gap-2 text-xs text-rose-800 font-bold animate-in fade-in duration-150">
+              <span className="text-base">🚨</span>
+              <span>LƯU Ý: Ngày <strong>{selectedDate}</strong> là <strong>Chủ Nhật</strong>. Theo quy định thực tế, ngày Chủ Nhật không phục vụ/tính suất ăn.</span>
+            </div>
+          )}
+
           {forecast && (
             <div className="flex flex-wrap items-center gap-2">
               <span

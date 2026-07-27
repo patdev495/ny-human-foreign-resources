@@ -190,6 +190,19 @@ def get_meal_expense_report(
     return service.calculate_meal_expenses(db, start_date=start_date, end_date=end_date)
 
 
+@router.get("/reports/meal-expenses/validate-locks")
+def validate_meal_expense_locks(
+    start_date: datetime.date = Query(...),
+    end_date: datetime.date = Query(...),
+    db: Session = Depends(get_db),
+):
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="start_date cannot be after end_date"
+        )
+    return service.validate_meal_session_locks_for_period(db, start_date=start_date, end_date=end_date)
+
+
 # --- DAILY PRESENCE REPORTS ENDPOINT ---
 
 @router.get("/reports/daily-presence", response_model=DailyPresenceReportResponse)

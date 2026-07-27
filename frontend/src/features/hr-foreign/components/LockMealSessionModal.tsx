@@ -36,8 +36,10 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
   const getTodayStr = () => new Date().toISOString().split("T")[0];
   const isPastDate = date < getTodayStr();
+  const isSunday = new Date(date + "T00:00:00").getDay() === 0;
   const [confirmedPast, setConfirmedPast] = useState<boolean>(false);
   const [confirmedRelock, setConfirmedRelock] = useState<boolean>(false);
+  const [confirmedSunday, setConfirmedSunday] = useState<boolean>(false);
 
   const [finalCount, setFinalCount] = useState<number>(
     sessionSummary.final_meal_count ?? sessionSummary.calculated_meal_count
@@ -87,6 +89,10 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSunday && !confirmedSunday) {
+      setErrorMsg("⚠️ Cảnh báo: Ngày được chọn chốt là Chủ Nhật (ngày Chủ Nhật thực tế không tính suất ăn). Vui lòng tích chọn ô xác nhận đồng ý bên dưới.");
+      return;
+    }
     if (isPastDate && !confirmedPast) {
       setErrorMsg("Vui lòng tích chọn ô xác nhận đồng ý điều chỉnh ngày trong quá khứ bên dưới.");
       return;
@@ -235,8 +241,29 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           </div>
 
           {/* Prioritized Warnings & Confirmations */}
+          {isSunday && (
+            <div className="bg-rose-50 border-2 border-rose-400 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-rose-800 font-bold text-xs">
+                <span className="text-sm">🚨</span>
+                <span>CẢNH BÁO THỰC TẾ: NGÀY ĐƯỢC CHỌN LÀ CHỦ NHẬT</span>
+              </div>
+              <p className="text-[11px] text-rose-700 leading-relaxed font-medium">
+                Ngày <strong>{date}</strong> là <strong>Chủ Nhật</strong>. Theo quy định báo cáo thực tế, ngày Chủ Nhật mặc định <strong>không phục vụ suất ăn</strong> (trừ khi có sự kiện đột xuất).
+              </p>
+              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-bold text-rose-900 bg-white p-2 rounded-lg border border-rose-300 hover:bg-rose-100/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={confirmedSunday}
+                  onChange={(e) => setConfirmedSunday(e.target.checked)}
+                  className="w-4 h-4 text-rose-600 rounded focus:ring-rose-500 cursor-pointer"
+                />
+                <span>Tôi xác nhận đồng ý chốt suất ăn cho ngày Chủ Nhật này</span>
+              </label>
+            </div>
+          )}
+
           {isPastDate ? (
-            /* 🔴 ƯU TIÊN 1 (Cao nhất): Cảnh báo Ngày trong Quá khứ */
+            /* 🔴 ƯU TIÊN 1: Cảnh báo Ngày trong Quá khứ */
             <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
               <div className="flex items-center gap-2 text-rose-800 font-bold text-xs">
                 <span>⚠️ CẢNH BÁO: ĐANG CHỐT NGÀY TRONG QUÁ KHỨ</span>
@@ -255,7 +282,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
               </label>
             </div>
           ) : isAlreadyLocked ? (
-            /* 🟡 ƯU TIÊN 2 (Thấp hơn): Cảnh báo Chốt lại bữa ăn đã chốt */
+            /* 🟡 ƯU TIÊN 2: Cảnh báo Chốt lại bữa ăn đã chốt */
             <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
               <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
                 <span>⚠️ XÁC NHẬN CẬP NHẬT: BỮA ĂN NÀY ĐÃ ĐƯỢC CHỐT TRƯỚC ĐÓ</span>

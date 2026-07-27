@@ -3,7 +3,9 @@ import {
   downloadLegalProfileReport,
   downloadMealExpenseReport,
   downloadPresenceAccommodationReport,
+  validateMealLocks,
 } from "../api";
+import type { UnclosedMealLockItem } from "../types";
 
 export const ReportHub: React.FC = () => {
   const today = new Date();
@@ -19,6 +21,10 @@ export const ReportHub: React.FC = () => {
   const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
   const [mealEndDate, setMealEndDate] = useState(todayStr);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Missing meal locks state for warning modal
+  const [missingLocks, setMissingLocks] = useState<UnclosedMealLockItem[] | null>(null);
+  const [showLocksModal, setShowLocksModal] = useState(false);
 
   const handleDownloadLegal = async () => {
     try {
@@ -48,6 +54,16 @@ export const ReportHub: React.FC = () => {
     try {
       setLoadingMeal(true);
       setErrorMessage(null);
+      setMissingLocks(null);
+
+      // Pre-export validation
+      const validationRes = await validateMealLocks(mealStartDate, mealEndDate);
+      if (validationRes.missing_dates && validationRes.missing_dates.length > 0) {
+        setMissingLocks(validationRes.missing_dates);
+        setShowLocksModal(true);
+        return;
+      }
+
       await downloadMealExpenseReport(mealStartDate, mealEndDate);
     } catch (err: any) {
       setErrorMessage(err.message || "Không thể tải báo cáo chi phí bữa ăn");
@@ -256,6 +272,66 @@ export const ReportHub: React.FC = () => {
         </div>
 
       </div>
+
+      {/* UNCLOSED MEAL LOCKS WARNING MODAL */}
+      {showLocksModal && missingLocks && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full border border-amber-200 overflow-hidden animate-in fade-in zoom-in duration-150">
+            <div className="p-5 bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <h3 className="font-bold text-base">Chưa chốt đủ dữ liệu suất ăn</h3>
+                  <p className="text-xs text-amber-100">Cần chốt đầy đủ trước khi xuất báo cáo Excel (đã tự động bỏ qua các ngày Chủ nhật)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowLocksModal(false)}
+                className="text-white/80 hover:text-white text-lg font-bold cursor-pointer p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+              <p className="text-xs text-slate-600">
+                Phát hiện <strong className="text-amber-700 font-bold">{missingLocks.length} ngày làm việc</strong> chưa được chốt suất ăn chính thức:
+              </p>
+              <div className="space-y-2">
+                {missingLocks.map((item) => (
+                  <div
+                    key={item.date}
+                    className="p-3 bg-amber-50/60 rounded-xl border border-amber-200 flex items-center justify-between text-xs"
+                  >
+                    <span className="font-bold font-mono text-slate-800">
+                      📅 {new Date(item.date).toLocaleDateString("vi-VN")}
+                    </span>
+                    <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                      {item.missing_sessions.map((sess) => (
+                        <span
+                          key={sess}
+                          className="px-2 py-0.5 rounded-full font-semibold text-[10px] bg-amber-200 text-amber-900 border border-amber-300"
+                        >
+                          {sess === "BREAKFAST" ? "Sáng NNN" : sess === "DINNER" ? "Tối NNN" : "Trưa Tạp vụ"}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setShowLocksModal(false)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

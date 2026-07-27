@@ -332,8 +332,8 @@ def test_generate_meal_expense_excel(db_session):
     assert isinstance(excel_bytes, io.BytesIO)
 
     wb = load_workbook(excel_bytes)
-    assert "NNN - Chi phí Bữa ăn" in wb.sheetnames
-    assert "Lao công - Theo ngày" in wb.sheetnames
+    assert len(wb.sheetnames) == 1
+    assert "01.08-05.08" in wb.sheetnames
 
 
 def test_export_meal_expense_endpoint(client):

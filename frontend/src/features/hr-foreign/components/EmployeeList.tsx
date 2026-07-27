@@ -72,6 +72,9 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   const returnedCount = employees.filter((e) => !e.is_in_vietnam).length;
 
   const filtered = employees.filter((emp) => {
+    // Exclude janitor staff from Foreign Employees tab
+    if (emp.role && emp.role.toLowerCase().includes("tạp vụ")) return false;
+
     if (statusFilter === "IN_VN" && !emp.is_in_vietnam) return false;
     if (statusFilter === "RETURNED" && emp.is_in_vietnam) return false;
     if (workTypeFilter !== "ALL" && (emp.work_type || "CO_DINH") !== workTypeFilter) return false;

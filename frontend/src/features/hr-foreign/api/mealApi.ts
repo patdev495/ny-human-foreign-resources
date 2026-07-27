@@ -187,6 +187,22 @@ export async function fetchDailyPresenceReport(
   return res.json() as Promise<DailyPresenceReportResponse>;
 }
 
+export async function validateMealLocks(
+  startDate: string,
+  endDate: string
+): Promise<{ missing_dates: { date: string; missing_sessions: string[] }[] }> {
+  const res = await fetch(
+    `${BASE}/reports/meal-expenses/validate-locks?start_date=${encodeURIComponent(
+      startDate
+    )}&end_date=${encodeURIComponent(endDate)}`
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Không thể kiểm tra trạng thái chốt suất ăn");
+  }
+  return res.json();
+}
+
 export async function downloadMealExpenseReport(
   startDate: string,
   endDate: string

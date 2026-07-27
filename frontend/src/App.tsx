@@ -6,7 +6,7 @@ import { MealManagement } from "./features/hr-foreign/components/MealManagement"
 import { ShuttleDispatch } from "./features/hr-foreign/components/ShuttleDispatch";
 import { DailyPresenceReport } from "./features/hr-foreign/components/DailyPresenceReport";
 import { ReportHub } from "./features/hr-foreign/components/ReportHub";
-import { JanitorialHrPlaceholder } from "./components/JanitorialHrPlaceholder";
+import { JanitorialHrManagement } from "./features/hr-foreign/components/JanitorialHrManagement";
 import { Sidebar } from "./components/Sidebar";
 import type { NavTab } from "./components/Sidebar";
 
@@ -76,7 +76,7 @@ export const App: React.FC = () => {
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
           {activeTab === "SHUTTLE_DISPATCH" && <ShuttleDispatch />}
-          {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrPlaceholder />}
+          {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrManagement />}
           {activeTab === "EXPORT_HUB" && <ReportHub />}
         </main>
       </div>

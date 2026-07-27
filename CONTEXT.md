@@ -63,10 +63,14 @@ Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính th
 Phân loại các đối tượng nhân sự tham gia hệ thống và có chế độ ăn uống hoặc quản lý chuyên biệt: **Nhân viên nước ngoài** (`FOREIGN_EMPLOYEE` - ăn bữa Sáng & Tối), **Lao công** (`JANITOR` - ăn 1 bữa Trưa), v.v.
 
 **Danh mục Loại ngày & Đơn giá Suất ăn** (Day Type & Meal Price Config):
-Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá bữa ăn tương ứng cho từng bữa / Khối Nhân sự (`MealPriceConfig`):
+Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá bữa ăn/chi phí tương ứng cho từng bữa / Khối Nhân sự (`MealPriceConfig`):
 - **Nhân viên nước ngoài**: Đơn giá bữa **Sáng** (`foreign_breakfast_price`) và bữa **Tối** (`foreign_dinner_price`) được cài đặt riêng biệt.
-- **Lao công**: Đơn giá 1 bữa **Trưa** (`janitor_meal_price`) được cài đặt riêng.
-- **Loại ngày đặc biệt / Sự kiện do HR định nghĩa**: Khi tạo mới/chỉnh sửa sự kiện (`PRESIDENT_VISIT`, `TET`...), HR phải thiết lập đầy đủ cả 3 mức giá (không được bỏ trống). Hệ thống tự động gợi ý điền sẵn theo giá Ngày bình thường (`NORMAL`).
+- **Lao công / Tạp vụ**: Đơn giá 1 bữa **Trưa** (`janitor_meal_price`) được cài đặt riêng.
+- **Tiền Hoa quả**: Số tiền hoa quả theo ngày (`fruit_allowance_price`), mặc định ban đầu là 60,000đ/ngày. Mỗi ngày xác nhận báo cáo suất ăn (Meal Session Lock / Daily Forecast), HR sẽ xác nhận cả số tiền hoa quả thực tế cho ngày đó.
+- **Loại ngày đặc biệt / Sự kiện do HR định nghĩa**: Khi tạo mới/chỉnh sửa sự kiện (`PRESIDENT_VISIT`, `TET`...), HR phải thiết lập đầy đủ các mức giá (không được bỏ trống). Hệ thống tự động gợi ý điền sẵn theo giá Ngày bình thường (`NORMAL`).
+
+**Nơi làm việc Tạp vụ** (Janitor Workplace Location):
+Phân loại vị trí làm việc của Nhân sự Lao công / Tạp vụ: **KTX** (`DORMITORY`) hoặc **Công ty** (`COMPANY`). Chỉ những tạp vụ có nơi làm việc tại **KTX** mới được tính chi phí suất ăn trưa vào Báo cáo Chi phí Suất ăn KTX (`Suất ăn tạp vụ`). Lao công làm tại Công ty không tính vào báo cáo KTX.
 
 **Cài đặt Sự kiện / Gán loại ngày** (Event Settings & Date Assignment):
 Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một khoảng ngày:
@@ -100,6 +104,11 @@ Báo cáo Excel 3 Tab gồm:
 - **Sheet 1 (`[Sơ đồ KTX & Khách sạn]`)**: Danh sách nhân sự đang ở Việt Nam và đã xếp chỗ (KTX / Khách sạn).
 - **Sheet 2 (`[Chưa xếp chỗ ở]`)**: Danh sách nhân sự đang ở Việt Nam nhưng chưa được phân bổ phòng.
 - **Sheet 3 (`[Đã về nước]`)**: Danh sách nhân sự hiện không ở Việt Nam (kèm ngày thực tế đã về và ngày dự kiến sang đợt tới).
+
+**Báo cáo Excel Chi phí Ăn uống theo Chu kỳ Ngày** (Daily Meal Expense Excel Report):
+Báo cáo Excel 1 Sheet duy nhất (`dd.MM - dd.MM`) tính toán chi phí ăn uống chi tiết từng ngày trong chu kỳ được chọn (ví dụ: `27.07-26.08`). Layout bảng tính theo ngày chuẩn hóa gồm các cột: STT, Ngày, Buổi sáng NNN (Thực chi = Suất * Đơn giá, Số suất, Đơn giá), Buổi tối NNN (Thực chi = Suất * Đơn giá, Số suất, Đơn giá), Tiền Hoa quả (xác nhận theo ngày, mặc định 60,000đ/ngày làm việc), Suất ăn Tạp vụ (chỉ tính tạp vụ làm tại KTX, số suất * đơn giá chốt theo ngày), Tổng tiền (= Sáng + Tối + Hoa quả + Tạp vụ KTX), và Ghi chú.
+- **Ràng buộc Chốt suất ăn trước khi xuất**: Khi HR thực hiện xuất báo cáo, hệ thống tự động kiểm tra tất cả các ngày làm việc trong khoảng thời gian được chọn (ngoại trừ các ngày **Chủ nhật** là ngày nghỉ mặc định không phục vụ suất ăn và không tính chi phí). Nếu có bất kỳ ngày làm việc nào chưa chốt hoặc chốt thiếu (thiếu bữa Sáng/Tối NNN, thiếu Trưa Tạp vụ KTX, hoặc chưa xác nhận Tiền hoa quả), hệ thống sẽ **từ chối xuất báo cáo** và hiển thị thông báo chi tiết danh sách các ngày / bữa chưa chốt kèm nút chuyển hướng nhanh để HR hoàn tất chốt suất ăn trước. Trên file Excel xuất ra, dòng các ngày Chủ nhật vẫn hiển thị STT và Ngày; các ô số suất ăn, đơn giá, tiền hoa quả, suất ăn tạp vụ để trống / hiển thị dấu gạch ngang (`-`) chuẩn xác giống hệt mẫu file thực tế của công ty, và ô Tổng tiền ngày bằng 0.
+
 **Cấu hình Mốc Cảnh báo Giấy tờ** (Document Warning Threshold Config):
 Cấu hình mốc thời gian cảnh báo hết hạn cho 5 loại giấy tờ pháp lý của Nhân viên nước ngoài: Visa, Tạm trú, Giấy phép lao động (GPLĐ), Hợp đồng lao động và Hộ chiếu. Mỗi loại giấy tờ có thể thiết lập số lượng đi kèm đơn vị tính theo **Ngày** (DAYS) hoặc **Tháng** (MONTHS) (mặc định ban đầu tất cả 5 loại là 30 Ngày). Các mốc được lưu trữ tập trung ở Backend Database để phục vụ hiển thị phân loại trên UI cũng như làm căn cứ gửi Email thông báo cảnh báo tự động.
 
