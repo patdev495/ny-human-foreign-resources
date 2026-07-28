@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
@@ -128,6 +129,32 @@ def get_expiring_documents(
     return service.get_expiring_documents(db, days=days)
 
 
+def _resolve_attachment_file_path(file_path: str | None) -> str | None:
+    if not file_path:
+        return None
+    if os.path.isabs(file_path) and os.path.exists(file_path):
+        return file_path
+
+    # legal_doc_router.py path: backend/features/hr_foreign/routers/legal_doc_router.py
+    # parents[3] points directly to backend/
+    backend_dir = Path(__file__).resolve().parents[3]
+
+    candidates = [
+        backend_dir / file_path,
+        Path(os.getcwd()) / file_path,
+        Path(service.UPLOAD_DIR) / file_path,
+        Path(service.UPLOAD_DIR) / Path(file_path).name,
+        backend_dir / "uploads" / "documents" / Path(file_path).name,
+        backend_dir / "uploads" / Path(file_path).name,
+    ]
+
+    for cand in candidates:
+        if cand.exists():
+            return str(cand)
+
+    return None
+
+
 # --- EXPORT REPORTS ENDPOINTS ---
 
 @router.get("/exports/legal-profile")
@@ -141,14 +168,11 @@ def export_legal_profile(
         attachments_list = []
         all_attachments = db.query(models.DocumentAttachment).all()
         for att in all_attachments:
-            if att.file_path and os.path.exists(att.file_path):
-                emp_code = None
-                emp_name = None
+            full_path = _resolve_attachment_file_path(att.file_path)
+            if full_path:
+                emp = None
                 if att.entity_type == "PASSPORT":
                     emp = db.query(models.ForeignEmployee).filter(models.ForeignEmployee.id == att.entity_id).first()
-                    if emp:
-                        emp_code = emp.employee_code
-                        emp_name = emp.name_latin
                 elif att.entity_type in ("VISA", "TAM_TRU"):
                     if att.entity_type == "VISA":
                         v = db.query(models.Visa).filter(models.Visa.id == att.entity_id).first()
@@ -157,23 +181,21 @@ def export_legal_profile(
                         tt = db.query(models.TamTru).filter(models.TamTru.id == att.entity_id).first()
                         stay = tt.stay if tt else None
                     emp = stay.employee if stay else None
-                    if emp:
-                        emp_code = emp.employee_code
-                        emp_name = emp.name_latin
                 elif att.entity_type == "WORK_PERMIT":
                     wp = db.query(models.WorkPermit).filter(models.WorkPermit.id == att.entity_id).first()
                     emp = wp.employee if wp else None
-                    if emp:
-                        emp_code = emp.employee_code
-                        emp_name = emp.name_latin
                 elif att.entity_type == "CONTRACT":
                     ct = db.query(models.Contract).filter(models.Contract.id == att.entity_id).first()
                     emp = ct.employee if ct else None
-                    if emp:
-                        emp_code = emp.employee_code
-                        emp_name = emp.name_latin
 
-                with open(att.file_path, "rb") as f:
+                # Exclude Janitors from Legal Profile report attachments
+                if emp and emp.employee_type == "JANITORIAL":
+                    continue
+
+                emp_code = emp.employee_code if emp else None
+                emp_name = emp.name_latin if emp else None
+
+                with open(full_path, "rb") as f:
                     content = f.read()
 
                 attachments_list.append({

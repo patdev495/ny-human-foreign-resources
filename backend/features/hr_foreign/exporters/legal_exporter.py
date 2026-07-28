@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import io
 from openpyxl import Workbook
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import DocumentAttachment, ForeignEmployee
@@ -25,7 +26,17 @@ def generate_legal_profile_excel(db: Session, today: datetime.date | None = None
     if today is None:
         today = datetime.date.today()
 
-    employees_db = db.query(ForeignEmployee).order_by(ForeignEmployee.name_latin).all()
+    employees_db = (
+        db.query(ForeignEmployee)
+        .filter(
+            or_(
+                ForeignEmployee.employee_type != "JANITORIAL",
+                ForeignEmployee.employee_type.is_(None),
+            )
+        )
+        .order_by(ForeignEmployee.name_latin)
+        .all()
+    )
     evaluated = evaluate_employee_statuses(db, employees_db, today=today)
 
     all_attachments = db.query(DocumentAttachment).all()

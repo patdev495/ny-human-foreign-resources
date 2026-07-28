@@ -326,6 +326,45 @@ def test_export_api_endpoints(client):
     assert res_presence.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
+def test_export_legal_profile_zip_with_attachments(client):
+    import zipfile
+    emp = client.post(
+        "/api/hr-foreign/employees",
+        json={"name_latin": "WANG LEI", "gender": "Nam", "employee_code": "NV001"},
+    ).json()
+
+    files = {"file": ("ho_chieu_wang.pdf", io.BytesIO(b"Fake PDF content"), "application/pdf")}
+    data = {"entity_type": "PASSPORT", "entity_id": str(emp["id"])}
+    client.post("/api/hr-foreign/attachments", data=data, files=files)
+
+    res_zip = client.get("/api/hr-foreign/exports/legal-profile?include_attachments=true")
+    assert res_zip.status_code == 200
+
+    zip_bytes = io.BytesIO(res_zip.content)
+    with zipfile.ZipFile(zip_bytes, "r") as zf:
+        namelist = zf.namelist()
+        assert "Bao_Cao_Ho_So_Phap_Ly.xlsx" in namelist
+        assert len(namelist) > 1, f"Expected attachments in ZIP, but got only: {namelist}"
+
+
+def test_legal_profile_report_excludes_janitors(client):
+    from openpyxl import load_workbook
+    # Create 1 foreign employee and 1 janitor
+    client.post("/api/hr-foreign/employees", json={"name_latin": "EXPAT 1", "gender": "Nam", "employee_type": "FOREIGN_EMPLOYEE"})
+    client.post("/api/hr-foreign/employees", json={"name_latin": "JANITOR 1", "gender": "Nữ", "employee_type": "JANITORIAL"})
+
+    res = client.get("/api/hr-foreign/exports/legal-profile")
+    assert res.status_code == 200
+
+    excel_bytes = io.BytesIO(res.content)
+    wb = load_workbook(excel_bytes)
+    ws = wb["Danh sách Nhân sự"]
+
+    names_in_excel = [ws.cell(row=r, column=3).value for r in range(2, ws.max_row + 1)]
+    assert "EXPAT 1" in names_in_excel
+    assert "JANITOR 1" not in names_in_excel
+
+
 def test_generate_meal_expense_excel(db_session):
     from features.hr_foreign.excel_exporter import generate_meal_expense_excel
     excel_bytes = generate_meal_expense_excel(db_session, start_date=datetime.date(2026, 8, 1), end_date=datetime.date(2026, 8, 5))
