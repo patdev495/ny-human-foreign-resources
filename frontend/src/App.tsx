@@ -43,8 +43,8 @@ export const App: React.FC = () => {
                   NY
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold tracking-tight">NY HR System</h1>
-                  <p className="text-xs text-slate-400">Hệ thống Quản lý Nhân sự Tập đoàn NY</p>
+                  <h1 className="text-lg font-bold tracking-tight">Nienyi HR System</h1>
+                  <p className="text-xs text-slate-400">Hệ thống Quản lý nhân sự nước ngoài</p>
                 </div>
               </div>
             </div>
@@ -85,8 +85,8 @@ export const App: React.FC = () => {
             activeTab === "EXPORT_PRESENCE" ||
             activeTab === "EXPORT_MEAL" ||
             activeTab === "EXPORT_JANITOR") && (
-            <ReportHub activeTab={activeTab} setActiveTab={setActiveTab} />
-          )}
+              <ReportHub activeTab={activeTab} setActiveTab={setActiveTab} />
+            )}
         </main>
       </div>
     </div>
