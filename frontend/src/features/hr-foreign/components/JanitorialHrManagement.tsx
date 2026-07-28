@@ -11,6 +11,7 @@ export const JanitorialHrManagement: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState<string>("ALL");
+  const [statusFilter, setStatusFilter] = useState<string>("WORKING");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Modal State
@@ -27,6 +28,8 @@ export const JanitorialHrManagement: React.FC = () => {
     salary: 8500000,
     salary_unit: "MONTH",
     role: "Tạp vụ",
+    status: "WORKING",
+    resignation_date: "",
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -60,6 +63,8 @@ export const JanitorialHrManagement: React.FC = () => {
       salary: 8500000,
       salary_unit: "MONTH",
       role: "Tạp vụ KTX",
+      status: "WORKING",
+      resignation_date: "",
       notes: "",
     });
     setIsModalOpen(true);
@@ -74,6 +79,8 @@ export const JanitorialHrManagement: React.FC = () => {
       salary: j.salary ?? 8500000,
       salary_unit: j.salary_unit || (j.salary && j.salary < 1000000 ? "DAY" : "MONTH"),
       role: j.role || "Tạp vụ",
+      status: j.status || "WORKING",
+      resignation_date: j.resignation_date || "",
       notes: j.notes || "",
     });
     setIsModalOpen(true);
@@ -100,6 +107,8 @@ export const JanitorialHrManagement: React.FC = () => {
         salary: formData.salary ? Number(formData.salary) : null,
         salary_unit: formData.salary_unit,
         employee_type: "JANITORIAL",
+        status: formData.status,
+        resignation_date: formData.status === "RESIGNED" && formData.resignation_date ? formData.resignation_date : null,
         notes: formData.notes.trim() || null,
       };
 
@@ -145,9 +154,13 @@ export const JanitorialHrManagement: React.FC = () => {
       if (locationFilter !== "ALL" && (j.workplace_location || "DORMITORY") !== locationFilter) {
         return false;
       }
+      if (statusFilter !== "ALL") {
+        const st = j.status || "WORKING";
+        if (st !== statusFilter) return false;
+      }
       return true;
     });
-  }, [employees, searchQuery, locationFilter]);
+  }, [employees, searchQuery, locationFilter, statusFilter]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -193,19 +206,34 @@ export const JanitorialHrManagement: React.FC = () => {
           <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-bold text-slate-600 shrink-0">Lọc nơi làm việc:</span>
-          <select
-            value={locationFilter}
-            onChange={(e) => setLocationFilter(e.target.value)}
-            className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white font-semibold text-slate-700"
-          >
-            <option value="ALL">Tất cả vị trí</option>
-            <option value="DORMITORY">🏫 KTX (Ký túc xá)</option>
-            <option value="CN09">🏭 Nhà máy CN09</option>
-            <option value="CN15">🏭 Nhà máy CN15</option>
-            <option value="COMPANY">🏢 Văn phòng Công ty</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-600 shrink-0">Trạng thái:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white font-semibold text-slate-700"
+            >
+              <option value="WORKING">✅ Đang làm việc</option>
+              <option value="RESIGNED">🛑 Đã nghỉ việc</option>
+              <option value="ALL">Tất cả trạng thái</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-600 shrink-0">Lọc nơi làm việc:</span>
+            <select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white font-semibold text-slate-700"
+            >
+              <option value="ALL">Tất cả vị trí</option>
+              <option value="DORMITORY">🏫 KTX (Ký túc xá)</option>
+              <option value="CN09">🏭 Nhà máy CN09</option>
+              <option value="CN15">🏭 Nhà máy CN15</option>
+              <option value="COMPANY">🏢 Văn phòng Công ty</option>
+            </select>
+          </div>
         </div>
       </div>
 

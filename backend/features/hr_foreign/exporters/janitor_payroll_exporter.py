@@ -5,9 +5,10 @@ import io
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import ForeignEmployee
+from features.hr_foreign.models import ForeignEmployee, JanitorAttendanceRecord
 
 
 FONT_FAMILY = "Times New Roman"
@@ -39,13 +40,31 @@ def generate_janitor_payroll_excel(
     ws = wb.active
     ws.title = sheet_title
 
-    # Query janitors
+    # Query janitors (include active or those who resigned during/after start_date)
     janitors = (
         db.query(ForeignEmployee)
-        .filter(ForeignEmployee.employee_type == "JANITORIAL")
+        .filter(
+            ForeignEmployee.employee_type == "JANITORIAL",
+            or_(
+                ForeignEmployee.resignation_date.is_(None),
+                ForeignEmployee.resignation_date >= start_date,
+            ),
+        )
         .order_by(ForeignEmployee.id)
         .all()
     )
+
+    # Query attendance records in period
+    att_records = (
+        db.query(JanitorAttendanceRecord)
+        .filter(
+            JanitorAttendanceRecord.attendance_date >= start_date,
+            JanitorAttendanceRecord.attendance_date <= end_date,
+        )
+        .all()
+    )
+    att_dict = {(r.employee_id, r.attendance_date): r for r in att_records}
+
 
     # Calculate days in period
     date_list: list[datetime.date] = []
@@ -147,7 +166,7 @@ def generate_janitor_payroll_excel(
         c8.alignment = Alignment(horizontal="center", vertical="center")
         c9.alignment = Alignment(horizontal="center", vertical="center")
 
-        # Fill dates attendance ('N' for Mon-Sat, empty for Sun)
+        # Fill dates attendance ('N' for Mon-Sat unless recorded, empty for Sun)
         for i, d in enumerate(date_list):
             c_idx = 11 + i
             d_cell = ws.cell(row=workday_row, column=c_idx)
@@ -155,9 +174,20 @@ def generate_janitor_payroll_excel(
             d_cell.border = BORDER_THIN
             d_cell.alignment = Alignment(horizontal="center", vertical="center")
             if d.weekday() == 6:  # Sunday
-                d_cell.value = None
+                d_cell.value = "-"
+            elif emp.resignation_date and d >= emp.resignation_date:
+                d_cell.value = "TV"
             else:
-                d_cell.value = "N"
+                att_rec = att_dict.get((emp.id, d))
+                if att_rec:
+                    if att_rec.absence_type == "FULL_DAY":
+                        d_cell.value = "X"
+                    elif att_rec.absence_type == "HALF_DAY":
+                        d_cell.value = "N/2"
+                    else:
+                        d_cell.value = "N"
+                else:
+                    d_cell.value = "N"
 
         # Formulas for attendance & salary
         first_day_col = get_column_letter(11)
@@ -165,11 +195,11 @@ def generate_janitor_payroll_excel(
         col_att_letter = get_column_letter(col_attendance)
         col_sal_letter = get_column_letter(col_salary)
 
-        # Attendance formula: COUNTIFS
+        # Attendance formula: COUNTIFS for N and N/2
         att_cell = ws.cell(
             row=workday_row,
             column=col_attendance,
-            value=f'=+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"N")+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"4P4N")*0.5+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"L")*1',
+            value=f'=+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"N")+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"N/2")*0.5+COUNTIFS({first_day_col}{workday_row}:{last_day_col}{workday_row},"0.5")*0.5',
         )
         att_cell.alignment = Alignment(horizontal="center", vertical="center")
 

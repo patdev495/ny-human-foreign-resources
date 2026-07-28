@@ -68,6 +68,18 @@ def init_db() -> None:
             )
             conn.execute(
                 text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'foreign_employees') AND name = N'status') "
+                    "ALTER TABLE foreign_employees ADD status NVARCHAR(50) NOT NULL DEFAULT N'WORKING';"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'foreign_employees') AND name = N'resignation_date') "
+                    "ALTER TABLE foreign_employees ADD resignation_date DATE NULL;"
+                )
+            )
+            conn.execute(
+                text(
                     "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_absences') AND name = N'meal_type') "
                     "ALTER TABLE meal_absences ADD meal_type NVARCHAR(50) NOT NULL DEFAULT N'ALL_DAY';"
                 )

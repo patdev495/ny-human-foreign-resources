@@ -8,6 +8,8 @@ interface JanitorFormData {
   salary: number;
   salary_unit: string;
   role: string;
+  status: string;
+  resignation_date: string;
   notes: string;
 }
 
@@ -105,6 +107,31 @@ export const JanitorModal: React.FC<JanitorModalProps> = ({
                 <option value="DAY">VNĐ / Ngày công</option>
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Trạng thái làm việc</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold"
+              >
+                <option value="WORKING">✅ Đang làm việc</option>
+                <option value="RESIGNED">🛑 Đã nghỉ việc</option>
+              </select>
+            </div>
+            {formData.status === "RESIGNED" && (
+              <div>
+                <label className="block text-xs font-bold text-rose-700 mb-1">Ngày nghỉ việc</label>
+                <input
+                  type="date"
+                  value={formData.resignation_date}
+                  onChange={(e) => setFormData({ ...formData, resignation_date: e.target.value })}
+                  className="w-full px-3 py-2 text-xs border border-rose-300 bg-rose-50/50 rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none font-bold text-rose-900"
+                />
+              </div>
+            )}
           </div>
 
           <div>

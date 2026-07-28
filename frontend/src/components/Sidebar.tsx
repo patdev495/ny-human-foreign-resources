@@ -1,23 +1,16 @@
 import React, { useState, useEffect } from "react";
+import {
+  type NavTab,
+  type NavItem,
+  hrForeignItems,
+  janitorItems,
+  exportSubItems,
+  exportItem,
+} from "./sidebar/sidebarItems";
+import { MobileSidebarDrawer } from "./sidebar/MobileSidebarDrawer";
 
-export type NavTab =
-  | "EMPLOYEES"
-  | "ACCOMMODATION"
-  | "DAILY_PRESENCE"
-  | "EXPIRING_DOCS"
-  | "VEHICLE_MANAGEMENT"
-  | "MEAL_MANAGEMENT"
-  | "HR_DOMESTIC_PLACEHOLDER"
-  | "EXPORT_LEGAL"
-  | "EXPORT_PRESENCE"
-  | "EXPORT_MEAL"
-  | "EXPORT_JANITOR";
-
-export interface NavItem {
-  key: NavTab;
-  label: string;
-  icon: React.ReactNode;
-}
+export type { NavTab, NavItem };
+export { hrForeignItems, janitorItems, exportSubItems, exportItem };
 
 interface SidebarProps {
   activeTab: NavTab;
@@ -28,81 +21,6 @@ interface SidebarProps {
   setIsMobileOpen: (open: boolean) => void;
 }
 
-export const hrForeignItems: NavItem[] = [
-  {
-    key: "EMPLOYEES",
-    label: "Hồ sơ Nhân sự",
-    icon: (
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-      </svg>
-    ),
-  },
-  {
-    key: "ACCOMMODATION",
-    label: "Quản lý Chỗ ở & Lưu trú",
-    icon: (
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M3 21h18" />
-        <path d="M9 8h1" />
-        <path d="M9 12h1" />
-        <path d="M9 16h1" />
-        <path d="M14 8h1" />
-        <path d="M14 12h1" />
-        <path d="M14 16h1" />
-        <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
-      </svg>
-    ),
-  },
-  {
-    key: "DAILY_PRESENCE",
-    label: "Thống kê Hiện diện",
-    icon: (
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-        <path d="m9 16 2 2 4-4" />
-      </svg>
-    ),
-  },
-  {
-    key: "EXPIRING_DOCS",
-    label: "Cảnh báo Giấy tờ",
-    icon: (
-      <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
-  },
-];
-
-export const exportSubItems: NavItem[] = [
-  { key: "EXPORT_LEGAL", label: "Hồ sơ & Pháp lý", icon: <span className="text-xs">📄</span> },
-  { key: "EXPORT_PRESENCE", label: "Hiện diện KTX / Khách sạn", icon: <span className="text-xs">🏫</span> },
-  { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <span className="text-xs">🍱</span> },
-  { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <span className="text-xs">🧹</span> },
-];
-
-export const exportItem: NavItem = {
-  key: "EXPORT_LEGAL",
-  label: "Xuất Báo cáo Excel",
-  icon: (
-    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="12" y1="18" x2="12" y2="12" />
-      <line x1="9" y1="15" x2="15" y2="15" />
-    </svg>
-  ),
-};
-
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
@@ -112,23 +30,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
   setIsMobileOpen,
 }) => {
   const isHrForeignActive = hrForeignItems.some((item) => item.key === activeTab);
+  const isJanitorActive =
+    activeTab === "HR_DOMESTIC_PLACEHOLDER" ||
+    activeTab === "JANITOR_PROFILES" ||
+    activeTab === "JANITOR_ATTENDANCE";
   const isExportActive =
     activeTab === "EXPORT_LEGAL" ||
     activeTab === "EXPORT_PRESENCE" ||
     activeTab === "EXPORT_MEAL" ||
     activeTab === "EXPORT_JANITOR";
 
-  const [isHrForeignOpen, setIsHrForeignOpen] = useState(isHrForeignActive || !isExportActive);
+  const [isHrForeignOpen, setIsHrForeignOpen] = useState(isHrForeignActive);
+  const [isJanitorOpen, setIsJanitorOpen] = useState(isJanitorActive);
   const [isExportOpen, setIsExportOpen] = useState(isExportActive);
 
-  // Sync accordion states so opening one automatically closes the other
   useEffect(() => {
     if (isHrForeignActive) {
       setIsHrForeignOpen(true);
+      setIsJanitorOpen(false);
+      setIsExportOpen(false);
+    } else if (isJanitorActive) {
+      setIsJanitorOpen(true);
+      setIsHrForeignOpen(false);
       setIsExportOpen(false);
     } else if (isExportActive) {
       setIsExportOpen(true);
       setIsHrForeignOpen(false);
+      setIsJanitorOpen(false);
     }
   }, [activeTab]);
 
@@ -136,11 +64,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (!isSidebarOpen) {
       setIsSidebarOpen(true);
       setIsHrForeignOpen(true);
+      setIsJanitorOpen(false);
       setIsExportOpen(false);
     } else {
-      const nextOpen = !isHrForeignOpen;
-      setIsHrForeignOpen(nextOpen);
-      if (nextOpen) {
+      const next = !isHrForeignOpen;
+      setIsHrForeignOpen(next);
+      if (next) {
+        setIsJanitorOpen(false);
+        setIsExportOpen(false);
+      }
+    }
+  };
+
+  const handleToggleJanitor = () => {
+    if (!isSidebarOpen) {
+      setIsSidebarOpen(true);
+      setIsJanitorOpen(true);
+      setIsHrForeignOpen(false);
+      setIsExportOpen(false);
+    } else {
+      const next = !isJanitorOpen;
+      setIsJanitorOpen(next);
+      if (next) {
+        setIsHrForeignOpen(false);
         setIsExportOpen(false);
       }
     }
@@ -151,11 +97,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       setIsSidebarOpen(true);
       setIsExportOpen(true);
       setIsHrForeignOpen(false);
+      setIsJanitorOpen(false);
     } else {
-      const nextOpen = !isExportOpen;
-      setIsExportOpen(nextOpen);
-      if (nextOpen) {
+      const next = !isExportOpen;
+      setIsExportOpen(next);
+      if (next) {
         setIsHrForeignOpen(false);
+        setIsJanitorOpen(false);
       }
     }
   };
@@ -172,6 +120,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isSidebarOpen ? "Danh mục Quản lý" : "Menu"}
           </div>
 
+          {/* HR Foreign Accordion */}
           <div className="space-y-1">
             <button
               onClick={handleToggleHrForeign}
@@ -184,12 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <div className="flex items-center gap-3">
                 <span className={isHrForeignActive ? "text-blue-600" : "text-slate-600"}>
-                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
+                  🌐
                 </span>
                 {isSidebarOpen && <span className="truncate">Nhân sự nước ngoài</span>}
               </div>
@@ -210,41 +154,75 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {(isHrForeignOpen || !isSidebarOpen) && (
               <div className={`space-y-1 ${isSidebarOpen ? "pl-3 border-l-2 border-slate-100 ml-4 my-1" : ""}`}>
-                {hrForeignItems.map((item) => {
-                  const isActive = activeTab === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => setActiveTab(item.key)}
-                      title={!isSidebarOpen ? item.label : undefined}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-blue-600 text-white font-bold shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                      } ${!isSidebarOpen ? "justify-center" : ""}`}
-                    >
-                      <span>{item.icon}</span>
-                      {isSidebarOpen && <span className="truncate">{item.label}</span>}
-                    </button>
-                  );
-                })}
+                {hrForeignItems.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveTab(item.key)}
+                    title={!isSidebarOpen ? item.label : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === item.key
+                        ? "bg-blue-600 text-white font-bold shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    } ${!isSidebarOpen ? "justify-center" : ""}`}
+                  >
+                    <span>{item.icon}</span>
+                    {isSidebarOpen && <span className="truncate">{item.label}</span>}
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
+          {/* Janitor Accordion */}
           <div className="pt-2 space-y-1">
             <button
-              onClick={() => setActiveTab("HR_DOMESTIC_PLACEHOLDER")}
+              onClick={handleToggleJanitor}
               title={!isSidebarOpen ? "Nhân sự Tạp vụ" : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
-                activeTab === "HR_DOMESTIC_PLACEHOLDER"
-                  ? "bg-amber-500 text-white font-bold shadow-xs"
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+                isJanitorActive
+                  ? "text-amber-700 bg-amber-50/80 border border-amber-100"
                   : "text-slate-700 hover:bg-slate-100"
               } ${!isSidebarOpen ? "justify-center" : ""}`}
             >
-              <span className="text-amber-500 text-lg">🧹</span>
-              {isSidebarOpen && <span className="truncate">Nhân sự Tạp vụ</span>}
+              <div className="flex items-center gap-3">
+                <span className="text-amber-500 text-lg">🧹</span>
+                {isSidebarOpen && <span className="truncate">Nhân sự Tạp vụ</span>}
+              </div>
+              {isSidebarOpen && (
+                <svg
+                  className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                    isJanitorOpen ? "rotate-180" : ""
+                  }`}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
             </button>
+
+            {(isJanitorOpen || !isSidebarOpen) && (
+              <div className={`space-y-1 ${isSidebarOpen ? "pl-3 border-l-2 border-amber-100 ml-4 my-1" : ""}`}>
+                {janitorItems.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveTab(item.key)}
+                    title={!isSidebarOpen ? item.label : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === item.key
+                        ? "bg-amber-600 text-white font-bold shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    } ${!isSidebarOpen ? "justify-center" : ""}`}
+                  >
+                    <span>{item.icon}</span>
+                    {isSidebarOpen && <span className="truncate">{item.label}</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button
               onClick={() => setActiveTab("VEHICLE_MANAGEMENT")}
               title={!isSidebarOpen ? "Quản lý xe" : undefined}
@@ -257,6 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="text-blue-600 text-lg">🚐</span>
               {isSidebarOpen && <span className="truncate">Quản lý xe</span>}
             </button>
+
             <button
               onClick={() => setActiveTab("MEAL_MANAGEMENT")}
               title={!isSidebarOpen ? "Chi phí bữa ăn" : undefined}
@@ -305,122 +284,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {(isExportOpen || !isSidebarOpen) && (
               <div className={`space-y-1 ${isSidebarOpen ? "pl-3 border-l-2 border-emerald-100 ml-4 my-1" : ""}`}>
-                {exportSubItems.map((item) => {
-                  const isActive = activeTab === item.key;
-                  return (
-                    <button
-                      key={item.key}
-                      onClick={() => setActiveTab(item.key)}
-                      title={!isSidebarOpen ? item.label : undefined}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isActive
-                          ? "bg-emerald-600 text-white font-bold shadow-xs"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                      } ${!isSidebarOpen ? "justify-center" : ""}`}
-                    >
-                      <span>{item.icon}</span>
-                      {isSidebarOpen && <span className="truncate">{item.label}</span>}
-                    </button>
-                  );
-                })}
+                {exportSubItems.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveTab(item.key)}
+                    title={!isSidebarOpen ? item.label : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      activeTab === item.key
+                        ? "bg-emerald-600 text-white font-bold shadow-xs"
+                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                    } ${!isSidebarOpen ? "justify-center" : ""}`}
+                  >
+                    <span>{item.icon}</span>
+                    {isSidebarOpen && <span className="truncate">{item.label}</span>}
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
       </aside>
 
-      {/* Mobile Drawer */}
-      {isMobileOpen && (
-        <div className="sm:hidden fixed inset-0 z-50 flex">
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
-            onClick={() => setIsMobileOpen(false)}
-          />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white p-4 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-              <span className="font-bold text-slate-800 text-sm">Danh mục Quản lý</span>
-              <button
-                onClick={() => setIsMobileOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="space-y-1">
-              {hrForeignItems.map((item) => (
-                <button
-                  key={item.key}
-                  onClick={() => {
-                    setActiveTab(item.key);
-                    setIsMobileOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                    activeTab === item.key ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </button>
-              ))}
-              <button
-                onClick={() => {
-                  setActiveTab("HR_DOMESTIC_PLACEHOLDER");
-                  setIsMobileOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                  activeTab === "HR_DOMESTIC_PLACEHOLDER" ? "bg-amber-500 text-white" : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                🧹 <span>Nhân sự Tạp vụ</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("VEHICLE_MANAGEMENT");
-                  setIsMobileOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                  activeTab === "VEHICLE_MANAGEMENT" ? "bg-blue-600 text-white" : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                🚐 <span>Quản lý xe</span>
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("MEAL_MANAGEMENT");
-                  setIsMobileOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                  activeTab === "MEAL_MANAGEMENT" ? "bg-amber-600 text-white" : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                🍱 <span>Chi phí bữa ăn</span>
-              </button>
-
-              <div className="pt-2 border-t border-slate-200 space-y-1">
-                <div className="px-3 py-1 text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                  {exportItem.icon}
-                  <span>{exportItem.label}</span>
-                </div>
-                {exportSubItems.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      setActiveTab(item.key);
-                      setIsMobileOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
-                      activeTab === item.key ? "bg-emerald-600 text-white" : "text-emerald-800 hover:bg-emerald-50"
-                    }`}
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <MobileSidebarDrawer
+        isMobileOpen={isMobileOpen}
+        setIsMobileOpen={setIsMobileOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
     </>
   );
 };

@@ -7,6 +7,7 @@ import { VehicleManagement } from "./features/vehicle-management/components/Vehi
 import { DailyPresenceReport } from "./features/hr-foreign/components/DailyPresenceReport";
 import { ReportHub } from "./features/hr-foreign/components/ReportHub";
 import { JanitorialHrManagement } from "./features/hr-foreign/components/JanitorialHrManagement";
+import { JanitorDailyAttendance } from "./features/hr-foreign/components/JanitorDailyAttendance";
 import { Sidebar } from "./components/Sidebar";
 import type { NavTab } from "./components/Sidebar";
 
@@ -76,7 +77,10 @@ export const App: React.FC = () => {
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
           {activeTab === "VEHICLE_MANAGEMENT" && <VehicleManagement />}
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
-          {activeTab === "HR_DOMESTIC_PLACEHOLDER" && <JanitorialHrManagement />}
+          {(activeTab === "HR_DOMESTIC_PLACEHOLDER" || activeTab === "JANITOR_PROFILES") && (
+            <JanitorialHrManagement />
+          )}
+          {activeTab === "JANITOR_ATTENDANCE" && <JanitorDailyAttendance />}
           {(activeTab === "EXPORT_LEGAL" ||
             activeTab === "EXPORT_PRESENCE" ||
             activeTab === "EXPORT_MEAL" ||

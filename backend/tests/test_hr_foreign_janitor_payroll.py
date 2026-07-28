@@ -123,7 +123,7 @@ def test_generate_janitor_payroll_excel(db_session):
     # 01/07 is Wed (Col K / Col 11). 05/07 is Sun (Col O / Col 15).
     # Sunday cell should be None / empty
     assert ws.cell(row=8, column=11).value == "N"
-    assert ws.cell(row=8, column=15).value is None or ws.cell(row=8, column=15).value == ""
+    assert ws.cell(row=8, column=15).value == "-"
 
     # Check formula in attendance total column (col AR / 44): =COUNTIFS(...)
     ar8_val = str(ws.cell(row=8, column=44).value or "")

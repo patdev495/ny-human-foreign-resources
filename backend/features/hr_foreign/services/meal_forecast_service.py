@@ -4,7 +4,7 @@ import datetime
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import EventDay, ForeignEmployee, MealAbsence, MealPriceConfig, MealSessionLock, Stay
+from features.hr_foreign.models import EventDay, ForeignEmployee, JanitorAttendanceRecord, MealAbsence, MealPriceConfig, MealSessionLock, Stay
 from features.hr_foreign.schemas import (
     DailyMealEmployeeItem,
     DailyMealForecastResponse,
@@ -38,6 +38,12 @@ def get_daily_meal_forecast(
         if (price_cfg and price_cfg.day_type_name)
         else ("Ngày bình thường" if day_type == "NORMAL" else day_type)
     )
+
+    # 1. Foreign employees & Stays forecast calculations
+    # ...
+    # 2. Breakfast & Dinner summaries
+    # ... (code below)
+
 
     locks = db.query(MealSessionLock).filter(MealSessionLock.lock_date == target_date).all()
     locks_map = {l.meal_session: l for l in locks}
@@ -121,7 +127,7 @@ def get_daily_meal_forecast(
         notes=bf_lock.notes if bf_lock else None,
     )
 
-    janitor_ktx_count = (
+    total_janitor_ktx = (
         db.query(ForeignEmployee)
         .filter(
             ForeignEmployee.employee_type == "JANITORIAL",
@@ -133,9 +139,29 @@ def get_daily_meal_forecast(
                 ForeignEmployee.salary_unit != "DAY",
                 ForeignEmployee.salary_unit.is_(None),
             ),
+            or_(
+                ForeignEmployee.status != "RESIGNED",
+                ForeignEmployee.resignation_date.is_(None),
+                ForeignEmployee.resignation_date > target_date,
+            ),
         )
         .count()
     )
+
+    absent_ktx_janitors_cnt = (
+        db.query(JanitorAttendanceRecord)
+        .join(ForeignEmployee, ForeignEmployee.id == JanitorAttendanceRecord.employee_id)
+        .filter(
+            JanitorAttendanceRecord.attendance_date == target_date,
+            ForeignEmployee.employee_type == "JANITORIAL",
+            or_(
+                ForeignEmployee.workplace_location == "DORMITORY",
+                ForeignEmployee.workplace_location.is_(None),
+            ),
+        )
+        .count()
+    )
+    janitor_ktx_count = max(0, total_janitor_ktx - absent_ktx_janitors_cnt)
 
     lunch_summary = DailyMealSessionSummary(
         meal_session="LUNCH",

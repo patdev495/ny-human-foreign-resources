@@ -6,6 +6,7 @@ from .meal_router import router as meal_router
 from .legal_doc_router import router as legal_doc_router
 from .accommodation_router import router as accommodation_router
 from .email_router import router as email_router
+from .janitor_router import router as janitor_router
 
 router = APIRouter()
 
@@ -15,6 +16,8 @@ router.include_router(meal_router)
 router.include_router(legal_doc_router)
 router.include_router(accommodation_router)
 router.include_router(email_router)
+router.include_router(janitor_router)
 
 __all__ = ["router"]
+
 

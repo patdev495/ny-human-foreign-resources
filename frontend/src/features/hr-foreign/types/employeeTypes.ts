@@ -21,6 +21,8 @@ export interface ForeignEmployee {
   salary?: number | null;
   salary_unit?: "MONTH" | "DAY" | string;
   employee_type?: "FOREIGN" | "JANITORIAL" | string;
+  status?: "WORKING" | "RESIGNED" | string;
+  resignation_date?: string | null;
   notes?: string | null;
   is_in_vietnam?: boolean;
   is_overdue_exit?: boolean;
@@ -53,6 +55,8 @@ export interface ForeignEmployeeCreate {
   salary?: number | null;
   salary_unit?: string;
   employee_type?: "FOREIGN" | "JANITORIAL" | string;
+  status?: string;
+  resignation_date?: string | null;
   notes?: string | null;
 }
 

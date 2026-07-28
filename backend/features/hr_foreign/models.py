@@ -43,6 +43,8 @@ class ForeignEmployee(Base):
     salary = Column(Float, nullable=True)               # Mức lương
     salary_unit = Column(Unicode(20), nullable=True, default="MONTH")  # MONTH, DAY
     employee_type = Column(Unicode(50), nullable=False, default="FOREIGN")  # FOREIGN, JANITORIAL
+    status = Column(Unicode(50), nullable=False, default="WORKING")         # WORKING, RESIGNED
+    resignation_date = Column(Date, nullable=True)                          # NGÀY NGHỈ VIỆC
     notes = Column(UnicodeText, nullable=True)
 
     stays = relationship("Stay", back_populates="employee", cascade="all, delete-orphan")
@@ -273,6 +275,26 @@ class EmailDeliveryLog(Base):
     total_expiring_docs = Column(Integer, nullable=False, default=0)
     status = Column(Unicode(50), nullable=False, default="SUCCESS")  # SUCCESS, FAILED
     error_message = Column(UnicodeText, nullable=True)
+
+
+class JanitorAttendanceRecord(Base):
+    """Bản ghi điểm danh/vắng nghỉ hàng ngày dành cho Khối Tạp vụ."""
+    __tablename__ = "janitor_attendance_records"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    employee_id = Column(Integer, ForeignKey("foreign_employees.id", ondelete="CASCADE"), nullable=False, index=True)
+    attendance_date = Column(Date, nullable=False, index=True)
+    absence_type = Column(Unicode(20), nullable=False)  # FULL_DAY, HALF_DAY
+    reason = Column(Unicode(255), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.datetime.now)
+    updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    __table_args__ = (
+        UniqueConstraint("employee_id", "attendance_date", name="uq_janitor_emp_attendance_date"),
+    )
+
+    employee = relationship("ForeignEmployee", backref="janitor_attendance_records")
+
 
 
 

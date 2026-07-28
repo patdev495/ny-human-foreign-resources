@@ -70,7 +70,7 @@ Danh mục định nghĩa các loại ngày trong hệ thống và đơn giá b�
 - **Loại ngày đặc biệt / Sự kiện do HR định nghĩa**: Khi tạo mới/chỉnh sửa sự kiện (`PRESIDENT_VISIT`, `TET`...), HR phải thiết lập đầy đủ các mức giá (không được bỏ trống). Hệ thống tự động gợi ý điền sẵn theo giá Ngày bình thường (`NORMAL`).
 
 **Nơi làm việc Tạp vụ** (Janitor Workplace Location):
-Phân loại vị trí làm việc của Nhân sự Lao công / Tạp vụ: **KTX** (`DORMITORY`) hoặc **Công ty** (`COMPANY`). Chỉ những tạp vụ có nơi làm việc tại **KTX** mới được tính chi phí suất ăn trưa vào Báo cáo Chi phí Suất ăn KTX (`Suất ăn tạp vụ`). Lao công làm tại Công ty không tính vào báo cáo KTX.
+Phân loại vị trí làm việc của Nhân sự Lao công / Tạp vụ: **KTX** (`DORMITORY`) hoặc **Công ty** (`COMPANY`). Chỉ những tạp vụ có nơi làm việc tại **KTX** mới được tính chi phí suất ăn trưa vào Báo cáo Chi phí Suất ăn KTX (`Suất ăn tạp vụ`). Lao công làm tại Công ty không tính vào báo cáo KTX. Nếu Tạp vụ KTX được ghi nhận **Nghỉ** (nửa ngày hoặc cả ngày) trong Bản ghi Điểm danh Tạp vụ của ngày đó, hệ thống sẽ tự động trừ đi suất ăn trưa gợi ý tương ứng trong Báo cáo Dự báo Suất ăn & Chốt suất ăn bữa Trưa.
 
 **Cài đặt Sự kiện / Gán loại ngày** (Event Settings & Date Assignment):
 Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một khoảng ngày:
@@ -128,7 +128,10 @@ Báo cáo Excel 1 Sheet duy nhất (`dd.MM - dd.MM`) tính toán chi phí ăn u�
 - **Ràng buộc Chốt suất ăn trước khi xuất**: Khi HR thực hiện xuất báo cáo, hệ thống tự động kiểm tra tất cả các ngày làm việc trong khoảng thời gian được chọn (ngoại trừ các ngày **Chủ nhật** là ngày nghỉ mặc định không phục vụ suất ăn và không tính chi phí). Nếu có bất kỳ ngày làm việc nào chưa chốt hoặc chốt thiếu (thiếu bữa Sáng/Tối NNN, thiếu Trưa Tạp vụ KTX, hoặc chưa xác nhận Tiền hoa quả), hệ thống sẽ **từ chối xuất báo cáo** và hiển thị thông báo chi tiết danh sách các ngày / bữa chưa chốt kèm nút chuyển hướng nhanh để HR hoàn tất chốt suất ăn trước. Trên file Excel xuất ra, dòng các ngày Chủ nhật vẫn hiển thị STT và Ngày; các ô số suất ăn, đơn giá, tiền hoa quả, suất ăn tạp vụ để trống / hiển thị dấu gạch ngang (`-`) chuẩn xác giống hệt mẫu file thực tế của công ty, và ô Tổng tiền ngày bằng 0.
 
 **Báo cáo Excel Chấm công & Lương Tạp vụ** (Janitor Attendance & Payroll Excel Report):
-Báo cáo Excel chấm công và tính lương cho toàn bộ nhân sự Lao công / Tạp vụ (`employee_type = 'JANITORIAL'`) trong khoảng thời gian (chu kỳ tháng). File chứa các cột thông tin nhân sự (Mã NV, Họ và tên, Bộ phận, Nơi làm việc...), chuỗi các ngày trong tháng với ký tự chấm công ('N': ngày làm việc, 'X': nghỉ phép/vắng, Chủ nhật để trống), cột tổng hợp Số công (`COUNTIFS`), Mức lương (tháng hoặc ngày), và Thành tiền.
+Báo cáo Excel chấm công và tính lương cho toàn bộ nhân sự Lao công / Tạp vụ (`employee_type = 'JANITORIAL'`) trong khoảng thời gian (chu kỳ tháng). File chứa các cột thông tin nhân sự (Mã NV, Họ và tên, Bộ phận, Nơi làm việc...), chuỗi các ngày trong tháng với ký tự chấm công ('N': ngày làm việc, 'X': nghỉ phép/vắng cả ngày, '0.5': nghỉ nửa ngày, Chủ nhật để trống), cột tổng hợp Số công (`COUNTIFS`), Mức lương (tháng hoặc ngày), và Thành tiền.
+
+**Ghi nhận Nghỉ Tạp vụ** (Janitor Daily Attendance Record):
+Bản ghi điểm danh hàng ngày dành riêng cho Khối Tạp vụ (`JANITORIAL`). Mặc định tất cả Tạp vụ đi làm đủ (1.0 công). HR sử dụng giao diện Điểm danh hàng ngày (truy cập qua mục menu sổ xuống **"Nhân sự Tạp vụ"** $\rightarrow$ **"Điểm danh hàng ngày"** trên Sidebar; mục còn lại là **"Hồ sơ & Thông tin"**) để ghi nhận các trường hợp vắng/nghỉ: **Nghỉ cả ngày** (1 ngày vắng, ký hiệu `X`), hoặc **Nghỉ nửa ngày** (0.5 công, ký hiệu `0.5`), kèm theo **Lý do nghỉ** (ví dụ: nghỉ phép, nghỉ ốm, việc riêng...). Hỗ trợ ghi nhận nhanh cho một ngày đơn lẻ hoặc đăng ký nghỉ theo khoảng ngày (`start_date` đến `end_date`), cho phép xem/sửa quá khứ cũng như đăng ký trước trong tương lai. Dữ liệu này được tổng hợp trực tiếp vào Báo cáo Chấm công & Lương Tạp vụ và Báo cáo Suất ăn KTX (nếu tạp vụ KTX nghỉ trưa).
 
 
 **Cấu hình Mốc Cảnh báo Giấy tờ** (Document Warning Threshold Config):

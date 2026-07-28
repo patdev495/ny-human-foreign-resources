@@ -28,6 +28,8 @@ class ForeignEmployeeBase(BaseModel):
     salary: float | None = None
     salary_unit: str | None = "MONTH"  # "MONTH" | "DAY"
     employee_type: str = "FOREIGN"  # "FOREIGN" | "JANITORIAL"
+    status: str = "WORKING"  # "WORKING" | "RESIGNED"
+    resignation_date: datetime.date | None = None
     notes: str | None = None
 
 
