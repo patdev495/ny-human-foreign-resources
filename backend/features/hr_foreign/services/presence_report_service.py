@@ -11,7 +11,7 @@ from features.hr_foreign.schemas import (
     DailyPresenceReportResponse,
     DailyPresenceSummary,
 )
-from .employee_service import evaluate_employee_statuses, get_employees
+from .employee_crud_service import evaluate_employee_statuses, get_employees
 
 
 def get_daily_presence_report(

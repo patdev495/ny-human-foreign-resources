@@ -4,7 +4,15 @@ import datetime
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import EventDay, ForeignEmployee, JanitorAttendanceRecord, MealAbsence, MealPriceConfig, MealSessionLock, Stay
+from features.hr_foreign.models import (
+    EventDay,
+    ForeignEmployee,
+    JanitorAttendanceRecord,
+    MealAbsence,
+    MealPriceConfig,
+    MealSessionLock,
+    Stay,
+)
 from features.hr_foreign.schemas import (
     DailyMealEmployeeItem,
     DailyMealForecastResponse,
@@ -17,6 +25,7 @@ from .meal_price_service import seed_default_meal_prices
 def get_daily_meal_forecast(
     db: Session, target_date: datetime.date
 ) -> DailyMealForecastResponse:
+    """Calculate daily meal forecast breakdown for KTX residents and janitor lunch."""
     seed_default_meal_prices(db)
 
     event_day = db.query(EventDay).filter(EventDay.event_date == target_date).first()
@@ -38,12 +47,6 @@ def get_daily_meal_forecast(
         if (price_cfg and price_cfg.day_type_name)
         else ("Ngày bình thường" if day_type == "NORMAL" else day_type)
     )
-
-    # 1. Foreign employees & Stays forecast calculations
-    # ...
-    # 2. Breakfast & Dinner summaries
-    # ... (code below)
-
 
     locks = db.query(MealSessionLock).filter(MealSessionLock.lock_date == target_date).all()
     locks_map = {l.meal_session: l for l in locks}
@@ -201,6 +204,7 @@ def get_daily_meal_forecast(
 
 
 def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessionLock:
+    """Lock or update snapshot for a specific meal session (BREAKFAST, LUNCH, DINNER)."""
     existing = (
         db.query(MealSessionLock)
         .filter(
@@ -224,3 +228,42 @@ def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessio
     db.commit()
     db.refresh(lock_item)
     return lock_item
+
+
+def validate_meal_session_locks_for_period(
+    db: Session, start_date: datetime.date, end_date: datetime.date
+) -> dict[str, list[dict[str, str | list[str]]]]:
+    """Check if all working days (excluding Sundays) in start_date..end_date have meal session locks."""
+    locks = (
+        db.query(MealSessionLock)
+        .filter(
+            MealSessionLock.lock_date >= start_date,
+            MealSessionLock.lock_date <= end_date,
+        )
+        .all()
+    )
+    locked_map: dict[datetime.date, set[str]] = {}
+    for l in locks:
+        locked_map.setdefault(l.lock_date, set()).add(l.meal_session)
+
+    missing_dates: list[dict[str, str | list[str]]] = []
+    curr_d = start_date
+    while curr_d <= end_date:
+        if curr_d.weekday() != 6:
+            day_locks = locked_map.get(curr_d, set())
+            missing_sessions = []
+            if "BREAKFAST" not in day_locks:
+                missing_sessions.append("BREAKFAST")
+            if "DINNER" not in day_locks:
+                missing_sessions.append("DINNER")
+            if "LUNCH" not in day_locks:
+                missing_sessions.append("LUNCH")
+
+            if missing_sessions:
+                missing_dates.append({
+                    "date": curr_d.isoformat(),
+                    "missing_sessions": missing_sessions
+                })
+        curr_d += datetime.timedelta(days=1)
+
+    return {"missing_dates": missing_dates}

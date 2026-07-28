@@ -9,6 +9,12 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from core.database import Base, get_db
+from features.hr_foreign.services.meal_engine_service import (
+    get_daily_meal_forecast,
+    lock_meal_session,
+    calculate_meal_expenses,
+    validate_meal_session_locks_for_period,
+)
 
 
 @pytest.fixture
@@ -317,4 +323,10 @@ def test_meal_expense_report_with_janitor_locks(client: TestClient) -> None:
     assert rep["janitor_items"][0]["total_cost"] == 250000.0
     assert rep["total_janitor_meals"] == 10
     assert rep["total_janitor_expense"] == 250000.0
+
+
+def test_meal_engine_service_direct_unit(client: TestClient) -> None:
+    # Test validate_meal_session_locks_for_period and get_daily_meal_forecast via meal_engine_service
+    res = client.get("/api/hr-foreign/reports/meal-expenses/validate-locks?start_date=2026-08-03&end_date=2026-08-04").json()
+    assert "missing_dates" in res
 

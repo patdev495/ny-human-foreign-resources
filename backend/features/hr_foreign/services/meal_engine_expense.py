@@ -19,49 +19,10 @@ from features.hr_foreign.schemas import (
 from .meal_price_service import seed_default_meal_prices
 
 
-def validate_meal_session_locks_for_period(
-    db: Session, start_date: datetime.date, end_date: datetime.date
-) -> dict[str, list[dict[str, str | list[str]]]]:
-    """Check if all working days (excluding Sundays) in start_date..end_date have meal session locks."""
-    locks = (
-        db.query(MealSessionLock)
-        .filter(
-            MealSessionLock.lock_date >= start_date,
-            MealSessionLock.lock_date <= end_date,
-        )
-        .all()
-    )
-    locked_map: dict[datetime.date, set[str]] = {}
-    for l in locks:
-        locked_map.setdefault(l.lock_date, set()).add(l.meal_session)
-
-    missing_dates: list[dict[str, str | list[str]]] = []
-    curr_d = start_date
-    while curr_d <= end_date:
-        # Skip Sunday (weekday == 6)
-        if curr_d.weekday() != 6:
-            day_locks = locked_map.get(curr_d, set())
-            missing_sessions = []
-            if "BREAKFAST" not in day_locks:
-                missing_sessions.append("BREAKFAST")
-            if "DINNER" not in day_locks:
-                missing_sessions.append("DINNER")
-            if "LUNCH" not in day_locks:
-                missing_sessions.append("LUNCH")
-            
-            if missing_sessions:
-                missing_dates.append({
-                    "date": curr_d.isoformat(),
-                    "missing_sessions": missing_sessions
-                })
-        curr_d += datetime.timedelta(days=1)
-
-    return {"missing_dates": missing_dates}
-
-
 def calculate_meal_expenses(
     db: Session, start_date: datetime.date, end_date: datetime.date
 ) -> MealExpenseReportResponse:
+    """Calculate aggregate meal expense report items for a date range."""
     seed_default_meal_prices(db)
 
     event_days_map = {
@@ -248,4 +209,3 @@ def calculate_meal_expenses(
         total_janitor_meals=total_janitor_meals,
         total_janitor_expense=total_janitor_expense,
     )
-
