@@ -38,7 +38,7 @@ def seed_default_providers_and_routes(db: Session) -> None:
 
     db.flush()
 
-    if db.query(VendorRoute).count() > 0:
+    if db.query(VendorRoute).filter(VendorRoute.provider_id == p_binh_an.id).count() > 0:
         db.commit()
         return
 
@@ -70,8 +70,8 @@ def seed_default_providers_and_routes(db: Session) -> None:
         ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "ĐÌNH TRÁM", "4 chỗ", 150000.0),
         ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "SONG KHÊ NỘI HOÀNG", "4 chỗ", 200000.0),
         ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HÀ NỘI", "4 chỗ", 500000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "SÂN BAY NỘI BÀI", "4 chỗ", 500000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "SÂN BAY NỘI BÀI", "7 chỗ", 550000.0),
+        ("Gửi hàng / Phản cung", "NienYi CN09_CN15", "Sân bay Nội Bài", "4 chỗ", 500000.0),
+        ("Gửi hàng / Phản cung", "NienYi CN09_CN15", "Sân bay Nội Bài", "7 chỗ", 700000.0),
         ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HẢI PHÒNG / CẢNG", "4 chỗ", 130000.0),
         ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Thuận Thành BN", "4 chỗ", 450000.0),
         ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Thuận Thành BN", "7 chỗ", 550000.0),
