@@ -27,7 +27,7 @@ export interface NavItem {
 export const hrForeignItems: NavItem[] = [
   {
     key: "EMPLOYEES",
-    label: "Hồ sơ Nhân sự",
+    label: "Hồ Sơ",
     icon: (
       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -39,7 +39,7 @@ export const hrForeignItems: NavItem[] = [
   },
   {
     key: "ACCOMMODATION",
-    label: "Quản lý Chỗ ở & Lưu trú",
+    label: "Chỗ ở & Lưu trú",
     icon: (
       <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 21h18" />
@@ -80,7 +80,7 @@ export const hrForeignItems: NavItem[] = [
 ];
 
 export const janitorItems: NavItem[] = [
-  { key: "JANITOR_PROFILES", label: "Hồ sơ & Thông tin", icon: <span className="text-xs">📋</span> },
+  { key: "JANITOR_PROFILES", label: "Hồ Sơ", icon: <span className="text-xs">📋</span> },
   { key: "JANITOR_ATTENDANCE", label: "Điểm danh hàng ngày", icon: <span className="text-xs">📅</span> },
 ];
 
@@ -91,7 +91,7 @@ export const vehicleItems: NavItem[] = [
 ];
 
 export const exportSubItems: NavItem[] = [
-  { key: "EXPORT_LEGAL", label: "Hồ sơ & Pháp lý", icon: <span className="text-xs">📄</span> },
+  { key: "EXPORT_LEGAL", label: "Hồ sơ người nước ngoài", icon: <span className="text-xs">📄</span> },
   { key: "EXPORT_PRESENCE", label: "Hiện diện KTX / Khách sạn", icon: <span className="text-xs">🏫</span> },
   { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <span className="text-xs">🍱</span> },
   { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <span className="text-xs">🧹</span> },
