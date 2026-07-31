@@ -19,7 +19,7 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans">
       {/* Top Header Navbar */}
-      <header className="bg-slate-900 text-white shadow-md sticky top-0 z-40">
+      <header className="bg-white text-slate-800 shadow-2xs sticky top-0 z-40 border-b border-slate-200">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -29,7 +29,7 @@ export const App: React.FC = () => {
                   setIsMobileOpen(!isMobileOpen);
                 }}
                 title={isSidebarOpen ? "Thu gọn Sidebar" : "Mở rộng Sidebar"}
-                className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors cursor-pointer"
+                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer border border-slate-200"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="3" y1="12" x2="21" y2="12" />
@@ -39,18 +39,18 @@ export const App: React.FC = () => {
               </button>
 
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black text-xl text-white shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xl shadow-xs">
                   NY
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold tracking-tight">Nienyi HR System</h1>
-                  <p className="text-xs text-slate-400">Hệ thống Quản lý nhân sự nước ngoài</p>
+                  <h1 className="text-lg font-bold tracking-tight text-slate-900">Nienyi HR System</h1>
+                  <p className="text-xs text-slate-500 font-medium">Hệ thống Quản lý nhân sự nước ngoài</p>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="hidden md:inline-flex text-xs font-semibold px-3 py-1 bg-slate-800 text-blue-400 border border-slate-700 rounded-full">
+              <span className="hidden md:inline-flex text-xs font-bold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full shadow-2xs">
                 Module: hr-foreign
               </span>
             </div>
@@ -75,7 +75,12 @@ export const App: React.FC = () => {
           {activeTab === "ACCOMMODATION" && <AccommodationManagement />}
           {activeTab === "DAILY_PRESENCE" && <DailyPresenceReport />}
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
-          {activeTab === "VEHICLE_MANAGEMENT" && <VehicleManagement />}
+          {(activeTab === "VEHICLE_MANAGEMENT" ||
+            activeTab === "VEHICLE_DISPATCH" ||
+            activeTab === "VEHICLE_ODOMETER" ||
+            activeTab === "VEHICLE_CONTRACTS") && (
+            <VehicleManagement activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
           {activeTab === "MEAL_MANAGEMENT" && <MealManagement />}
           {(activeTab === "HR_DOMESTIC_PLACEHOLDER" || activeTab === "JANITOR_PROFILES") && (
             <JanitorialHrManagement />

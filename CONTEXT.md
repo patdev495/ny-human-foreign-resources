@@ -78,22 +78,47 @@ Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một kh
 - **Ngày đơn lẻ**: Nhập 1 trong 2 ô ngày tháng (hoặc `start_date` == `end_date`) + Chọn Loại ngày $\rightarrow$ Gán loại ngày cho ngày đơn lẻ đó.
 
 **Quản lý xe** (Vehicle Management):
-Sub-system / Module độc lập quản lý việc điều động phương tiện di chuyển, danh mục loại xe, xe công ty, xe thuê ngoài và bảng giá/chi phí điều xe. Ngang cấp với các phân hệ Nhân sự trên thanh điều hướng Sidebar.
+Sub-system / Phân hệ độc lập quản lý việc điều động phương tiện di chuyển, danh mục nhà xe, xe công ty, xe thuê ngoài và hợp đồng / bảng giá chi phí điều xe. Trên Sidebar, phân hệ này hiển thị dưới dạng nhóm Accordion gồm 3 mục con tinh gọn: **Nhật ký Điều xe**, **Nhật ký Quãng đường di chuyển**, và **Quản lý Hợp đồng & Nhà xe**.
 
-**Nhóm sở hữu xe** (Vehicle Ownership Group):
-Phân loại hình thức sở hữu của phương tiện trong Danh sách xe, gồm 2 nhóm:
-- **Xe công ty** (`COMPANY_OWNED`): Xe thuộc sở hữu hoặc do tài xế công ty quản lý (khởi tạo gồm: "A Ngọc", "A Đại").
-- **Xe thuê ngoài** (`OUTSOURCED`): Xe thuê từ nhà cung cấp dịch vụ ngoài (vd: xe 4 chỗ, 7 chỗ, 16 chỗ...).
+**Quản lý Hợp đồng & Nhà xe** (Unified Vehicle Contract & Provider Management):
+Mục quản lý tập trung toàn bộ hợp đồng và quy tắc tính cước của tất cả các nhà xe (cả nhà xe công ty và nhà xe ngoài). Giao diện được thiết kế mô đun dạng Sub-tab mở rộng để sẵn sàng tiếp nhận thêm các loại hợp đồng/nhà xe mới trong tương lai. Hiện tại gồm 2 loại chính:
+- **Hợp đồng Thuê xe Khoán tháng** (chuyến xe công ty / Đức Anh): Quản lý gói cước khoán tháng, hạn mức KM, đơn giá phụ trội KM, phụ cấp ca đêm, ngày lễ/chủ nhật, chi phí lưu đêm.
+- **Hợp đồng Tuyến đường & Đơn giá chuyến** (nhà xe ngoài / Bình An...): Quản lý bảng giá tuyến cố định (khứ hồi/1 chiều), đơn giá KM ngoài hợp đồng, và phụ phí thời gian chờ.
+
+**Nhà xe / Đơn vị vận tải** (Vehicle Provider):
+Đơn vị cung cấp dịch vụ vận tải hoặc quản lý nhóm xe, gồm:
+- **Xe ngoài** (`OUTSOURCED`): Các nhà xe đối tác theo hợp đồng (vd: **Bình An**). Mỗi nhà xe có bảng giá tuyến đường riêng.
+- **Xe công ty** (`COMPANY_OWNED`): Nhóm xe thuộc sở hữu hoặc thuê khoán cố định theo tháng phục vụ công ty (vd: **Chú Ngọc**, **Chú Đại**, **Xe Đức Anh** - gồm 2 xe 7 chỗ TOYOTA Innova và 1 xe tải 8 tấn CNHTC).
+
+**Bảng giá Hợp đồng Tuyến đường** (Vendor Route Matrix):
+Danh mục các tuyến đường định sẵn và đơn giá cố định theo hợp đồng cho từng loại xe (4 chỗ, 7 chỗ, 16 chỗ...). Mặc định áp dụng quy tắc khứ hồi **Ngược lại đồng giá**.
+
+**Cơ chế Tính cước Tự động**:
+- **Tuyến cố định trong HĐ** (`FIXED_ROUTE`): Tự động lấy đơn giá theo tuyến đường đã thỏa thuận trong hợp đồng.
+- **Chạy theo KM ngoài HĐ** (`KM_BASED`): Tính phí mặc định **14.000 đ/km** (đã bao gồm xăng dầu, cầu đường, bến đỗ).
+- **Phụ phí thời gian chờ**: Mặc định **30.000 đ/giờ** (`THỜI GIAN CHỜ: 30K/h`).
+- $\text{Tổng cước gợi ý} = \text{Giá cơ bản (Tuyến cố định hoặc KM)} + (\text{Số giờ chờ} \times 30.000\text{đ})$. HR có quyền điều chỉnh số tiền chốt thực tế.
+
+**Kỳ đối chiếu thanh toán cước xe** (Vehicle Billing Cycle):
+Khung thời gian lọc và chốt cước thuê xe ngoài hàng tháng, mặc định tính từ **ngày 26 tháng trước đến ngày 25 tháng này** (VD: *26.04 - 25.05*).
+
+**Bảng giá Hợp đồng Thuê xe khoán tháng Đức Anh** (Monthly Leased Vehicle Contract Pricing Matrix):
+Cấu hình bảng giá khoán tháng cho nhóm xe Đức Anh thuộc Đội xe công ty:
+- **Gói Xe 7 chỗ** (2 xe TOYOTA Innova: `98A-369.00` - Lái xe **Anh Ngọc** & `98A-819.88` - Lái xe **Chú Đại**): Giá thuê cơ bản **25.000.000 VNĐ/tháng/xe** (hạn mức 3.000 km/tháng). Đơn giá km phụ trội: **6.500 VNĐ/km**.
+  - *Giờ làm việc chuẩn*: 7h00 AM - 18h00 PM (Thứ 2 đến Thứ 7).
+  - *Ngày thường*: Chạy trong khoảng 18h00 - 22h00 trả hỗ trợ phụ cấp cố định **100.000 VNĐ** (chạy bao nhiêu cũng 100k); Tăng ca tính **50.000 VNĐ/giờ** cho khoảng trước 7h00 AM và sau 22h00 PM.
+  - *Chủ nhật & Ngày Lễ/Tết*: Mức ngày **1.000.000 VNĐ/ngày** (Chủ nhật) / **1.200.000 VNĐ/ngày** (Lễ Tết); Tăng ca tính **50.000 VNĐ/giờ** cho khoảng trước 7h30 AM và sau 18h00 PM. Qua đêm: **300.000 VNĐ/đêm**.
+- **Gói Xe tải 8 tấn** (1 xe CNHTC 7.4 tấn: `99H-103.78`): Giá thuê cơ bản **42.000.000 VNĐ/tháng/xe** (hạn mức 3.000 km/tháng). Đơn giá km phụ trội: **10.000 VNĐ/km**.
+  - *Giờ làm việc chuẩn*: 8h00 AM - 18h00 PM (Thứ 2 đến Thứ 7).
+  - *Ngày thường*: Không có mốc cố định 100k; cứ ra ngoài khung 8h00 - 18h00 (trước 8h00 AM và sau 18h00 PM) là tính tăng ca **50.000 VNĐ/giờ**.
+  - *Chủ nhật & Ngày Lễ/Tết*: Mức ngày **1.000.000 VNĐ/ngày** (Chủ nhật) / **1.200.000 VNĐ/ngày** (Lễ Tết); Tăng ca trước 8h00 AM và sau 18h00 PM tính **100.000 VNĐ/giờ**. Chi phí ăn ngoài: **50.000 VNĐ/bữa**. Qua đêm: **300.000 VNĐ/đêm**.
+
+**Nhật ký Quãng đường di chuyển** (Daily Vehicle Distance Log):
+Giao diện quản lý riêng dưới dạng Tab **"Nhật ký Quãng đường di chuyển"** trong phân hệ Quản lý xe, cho phép HR ghi nhận chỉ số công tơ mét đầu ngày (`start_km`) và cuối ngày (`end_km`) của từng xe Đức Anh (hỗ trợ tải tệp ảnh bằng chứng odometer tài xế gửi) để tính tự động tổng KM thực tế chạy trong ngày và lũy kế KM trong chu kỳ 26 tháng trước -> 25 tháng này. Các chuyến điều xe lẻ trong ngày ghi nhận hành trình (điểm đi, điểm đến) và thời điểm bắt đầu/kết thúc mà không bắt buộc nhập số KM từng chuyến.
 
 **Điều xe** (Vehicle Dispatch):
-Bản ghi tạo và quản lý chuyến đi đưa đón nhân sự trực tiếp. HR có thể tạo mới chuyến đi bất kỳ lúc nào và chỉnh sửa lại thông tin/chi phí sau này nếu có thay đổi.
-Các thông tin lưu trữ gồm:
-- **Ngày điều xe** (`dispatch_date`): Ngày thực hiện chuyến đi.
-- **Tuyến đường**: **Điểm đi** (`pickup_location` - vd: KTX, Sân bay Nội Bài, Công ty...) và **Điểm đến** (`dropoff_location` - vd: Nhà máy, Khách sạn Mường Thanh, Cửa khẩu...).
-- **Thông tin xe & Tài xế**: Chọn từ Danh sách xe (gợi ý sẵn thông tin tài xế/biển số/đơn giá mặc định, cho phép sửa trực tiếp).
-- **Hành khách / Nhân sự**: Tên nhân sự hoặc số lượng người di chuyển.
-- **Chi phí chuyến đi** (`cost`): Số tiền chi phí cho chuyến đi (HR có thể cập nhật/sửa thoải mái bất cứ lúc nào).
-- **Ghi chú** (`notes`): Ghi chú bổ sung cho chuyến đi.
+Bản ghi tạo và quản lý chuyến đi đưa đón nhân sự trực tiếp. HR có thể chọn Nhà xe, Tuyến đường HĐ hoặc nhập số KM, hệ thống tự động gợi ý giá và lưu lại thông tin tài xế, biển số, hành khách và chi phí.
+
 
 
 

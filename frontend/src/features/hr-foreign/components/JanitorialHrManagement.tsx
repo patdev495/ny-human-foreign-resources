@@ -164,13 +164,15 @@ export const JanitorialHrManagement: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <span className="p-2.5 bg-amber-100 text-amber-700 rounded-xl text-xl shadow-xs">🧹</span>
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            🧹
+          </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">Quản lý Nhân sự Tạp vụ</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold tracking-tight text-white">Quản lý Nhân sự Tạp vụ</h1>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
               Quản lý hồ sơ nhân viên tạp vụ nội địa, nơi làm việc (KTX, CN09, CN15) và mức lương tháng/ngày.
             </p>
           </div>
@@ -178,7 +180,7 @@ export const JanitorialHrManagement: React.FC = () => {
 
         <button
           onClick={handleOpenAddModal}
-          className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 bg-white text-sky-800 font-extrabold text-xs rounded-xl shadow-xs hover:bg-sky-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
         >
           <span>➕</span>
           <span>Thêm Nhân viên Tạp vụ</span>

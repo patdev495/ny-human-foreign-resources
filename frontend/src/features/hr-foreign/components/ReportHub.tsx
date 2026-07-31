@@ -49,21 +49,23 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 bg-indigo-50 text-indigo-600 rounded-lg text-lg">📊</span>
-            <h1 className="text-2xl font-bold text-slate-800">Trung tâm Xuất Báo cáo Excel</h1>
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            📊
           </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Tổng hợp và xuất dữ liệu báo cáo chuẩn hóa theo từng bộ phận nghiệp vụ (HR, KTX, Kế toán).
-          </p>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white">Trung tâm Xuất Báo cáo Excel</h1>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
+              Tổng hợp và xuất dữ liệu báo cáo chuẩn hóa theo từng bộ phận nghiệp vụ (HR, KTX, Kế toán).
+            </p>
+          </div>
         </div>
 
         {/* Sub-report selector tabs */}
         {setActiveTab && (
-          <div className="flex flex-wrap gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+          <div className="flex flex-wrap gap-1.5 bg-slate-800 p-1.5 rounded-xl border border-slate-700 shrink-0">
             {REPORT_TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -71,7 +73,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   currentTab === tab.key
                     ? "bg-emerald-600 text-white shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/70"
+                    : "text-slate-300 hover:text-white hover:bg-slate-700"
                 }`}
               >
                 <span>{tab.icon}</span>

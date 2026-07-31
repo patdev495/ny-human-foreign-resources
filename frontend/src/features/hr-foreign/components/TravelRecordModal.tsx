@@ -93,7 +93,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 bg-slate-900 text-white flex justify-between items-center">
+        <div className="px-6 py-4 border-b border-sky-600/30 bg-gradient-to-r from-sky-700 to-blue-800 text-white flex justify-between items-center">
           <div>
             <h3 className="text-base font-bold flex items-center gap-2">
               {isInVietnam ? (

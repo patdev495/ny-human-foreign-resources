@@ -13,28 +13,28 @@ export const AccommodationManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center">
-            <span className="p-2 bg-indigo-100 text-indigo-600 rounded-lg mr-3">
-              🏠
-            </span>
-            Quản lý Chỗ ở & Lưu trú
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Hợp nhất quản lý Ký túc xá (KTX) và Khách sạn lưu trú cho nhân viên nước ngoài.
-          </p>
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            🏠
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white">Quản lý Chỗ ở & Lưu trú</h1>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
+              Hợp nhất quản lý Ký túc xá (KTX) và Khách sạn lưu trú cho nhân viên nước ngoài.
+            </p>
+          </div>
         </div>
 
         {/* Main Tab Navigation */}
-        <div className="flex items-center space-x-1 bg-slate-100 p-1.5 rounded-xl border border-slate-200/80">
+        <div className="flex items-center space-x-1 bg-sky-950/25 backdrop-blur-xs p-1.5 rounded-xl border border-sky-400/30 shrink-0">
           <button
             onClick={() => setActiveTab("OCCUPANCY")}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "OCCUPANCY"
-                ? "bg-white text-indigo-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                : "text-sky-100 hover:text-white hover:bg-white/15"
             }`}
           >
             📊 Sơ đồ hiện trạng
@@ -42,10 +42,10 @@ export const AccommodationManagement: React.FC = () => {
 
           <button
             onClick={() => setActiveTab("CATALOG")}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "CATALOG"
-                ? "bg-white text-indigo-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                : "text-sky-100 hover:text-white hover:bg-white/15"
             }`}
           >
             🏢 Danh mục Chỗ ở
@@ -53,10 +53,10 @@ export const AccommodationManagement: React.FC = () => {
 
           <button
             onClick={() => setActiveTab("HISTORY")}
-            className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${
+            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all ${
               activeTab === "HISTORY"
-                ? "bg-white text-indigo-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
+                ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                : "text-sky-100 hover:text-white hover:bg-white/15"
             }`}
           >
             📜 Lịch sử lưu trú

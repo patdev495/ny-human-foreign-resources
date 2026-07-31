@@ -16,7 +16,7 @@ def get_source_files() -> list[Path]:
 
     # Backend python files
     for p in backend_dir.rglob("*.py"):
-        if any(ignored in p.parts for ignored in [".venv", "__pycache__", "build", "dist"]):
+        if any(ignored in p.parts for ignored in [".venv", "__pycache__", "build", "dist", "tests"]):
             continue
         source_files.append(p)
 

@@ -239,26 +239,34 @@ export const ExpiringDocsAlert: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            Cảnh báo Giấy tờ sắp Hết hạn & Thiếu thông tin (5 mục)
-            {totalExpiring > 0 && (
-              <span className="px-2.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">
-                {totalExpiring} cần lưu ý
-              </span>
-            )}
-          </h2>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Cảnh báo các giấy tờ sắp hết hạn theo mốc đã cấu hình & thiếu thông tin. 💡 <em>Bấm vào nhân sự để mở hồ sơ chỉnh sửa ngay.</em>
-          </p>
+    <div className="space-y-6">
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            ⚠️
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-white">
+                Cảnh báo Giấy tờ sắp Hết hạn & Thiếu thông tin
+              </h1>
+              {totalExpiring > 0 && (
+                <span className="px-2.5 py-0.5 bg-amber-400/25 text-amber-100 text-xs font-bold rounded-full border border-amber-300/40">
+                  {totalExpiring} cần lưu ý
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
+              Cảnh báo các giấy tờ sắp hết hạn theo mốc đã cấu hình & thiếu thông tin. Bấm vào nhân sự để mở hồ sơ chỉnh sửa ngay.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setIsConfigModalOpen(true)}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-colors"
+            className="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all border border-amber-400/40"
           >
             <span>⚙️</span> Cấu hình mốc cảnh báo
           </button>

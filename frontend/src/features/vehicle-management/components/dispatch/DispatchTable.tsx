@@ -52,6 +52,7 @@ export const DispatchTable: React.FC<DispatchTableProps> = ({ dispatches, onEdit
                     </div>
                     <div className="text-[11px] text-slate-500">
                       TX: {d.driver_name || "Chưa chọn"} {d.license_plate ? `(${d.license_plate})` : ""}
+                      {d.driver_phone ? <span className="font-mono text-slate-600"> • 📞 {d.driver_phone}</span> : ""}
                     </div>
                   </td>
                   <td className="p-3">

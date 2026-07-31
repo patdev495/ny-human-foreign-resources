@@ -37,7 +37,7 @@ export const GroupedPresenceView: React.FC<Props> = ({
                   key={`ktx-${g.group_name}`}
                   className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all overflow-hidden"
                 >
-                  <div className="bg-slate-900 text-white px-4 py-2.5 flex items-center justify-between">
+                  <div className="bg-gradient-to-r from-sky-700 to-blue-800 text-white px-4 py-2.5 flex items-center justify-between">
                     <span className="font-bold text-sm">Phòng {g.group_name}</span>
                     <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
                       {g.count} người

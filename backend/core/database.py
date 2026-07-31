@@ -91,6 +91,12 @@ def init_db() -> None:
                 )
             )
 
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'driver_phone') "
+                    "ALTER TABLE vehicle_dispatches ADD driver_phone NVARCHAR(50) NULL;"
+                )
+            )
             # Ensure vehicle_management tables use NVARCHAR in SQL Server
             if engine.name == "mssql":
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN name NVARCHAR(200) NOT NULL;"))
@@ -100,6 +106,7 @@ def init_db() -> None:
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN vehicle_name NVARCHAR(200) NOT NULL;"))
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN driver_name NVARCHAR(200) NULL;"))
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN license_plate NVARCHAR(50) NULL;"))
+                conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN driver_phone NVARCHAR(50) NULL;"))
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN pickup_location NVARCHAR(255) NULL;"))
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN dropoff_location NVARCHAR(255) NULL;"))
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicle_dispatches') ALTER TABLE vehicle_dispatches ALTER COLUMN passenger_name NVARCHAR(255) NULL;"))
@@ -148,6 +155,19 @@ def init_db() -> None:
                     "ALTER TABLE meal_session_locks ADD meal_session NVARCHAR(20) NOT NULL DEFAULT N'BREAKFAST';"
                 )
             )
+            # Ensure monthly_vehicle_contracts has sunday standard time columns
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'monthly_vehicle_contracts') AND name = N'sunday_standard_start_time') "
+                    "ALTER TABLE monthly_vehicle_contracts ADD sunday_standard_start_time NVARCHAR(10) NOT NULL DEFAULT N'07:30';"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'monthly_vehicle_contracts') AND name = N'sunday_standard_end_time') "
+                    "ALTER TABLE monthly_vehicle_contracts ADD sunday_standard_end_time NVARCHAR(10) NOT NULL DEFAULT N'18:00';"
+                )
+            )
     except Exception:
         # Ignore if non-SQL Server dialect or table doesn't exist yet
         pass
@@ -179,6 +199,16 @@ def init_db() -> None:
                     conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN foreign_dinner_price FLOAT NOT NULL DEFAULT 40000;"))
                 if "janitor_meal_price" not in mpc_cols:
                     conn.execute(text("ALTER TABLE meal_price_configs ADD COLUMN janitor_meal_price FLOAT NOT NULL DEFAULT 25000;"))
+                if "monthly_vehicle_contracts" in inspector.get_table_names():
+                    mvc_cols = [c["name"] for c in inspector.get_columns("monthly_vehicle_contracts")]
+                    if "sunday_standard_start_time" not in mvc_cols:
+                        conn.execute(text("ALTER TABLE monthly_vehicle_contracts ADD COLUMN sunday_standard_start_time VARCHAR(10) DEFAULT '07:30';"))
+                    if "sunday_standard_end_time" not in mvc_cols:
+                        conn.execute(text("ALTER TABLE monthly_vehicle_contracts ADD COLUMN sunday_standard_end_time VARCHAR(10) DEFAULT '18:00';"))
+                if "vehicle_dispatches" in inspector.get_table_names():
+                    vd_cols = [c["name"] for c in inspector.get_columns("vehicle_dispatches")]
+                    if "driver_phone" not in vd_cols:
+                        conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN driver_phone VARCHAR(50);"))
         except Exception:
             pass
 

@@ -91,20 +91,27 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
   });
 
   return (
-    <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">Quản lý Hồ sơ Nhân sự Nước ngoài</h2>
-          <p className="text-sm text-slate-500">Danh sách nhân sự nước ngoài công tác & lưu trú</p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            🌐
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white">Quản lý Hồ sơ Nhân sự Nước ngoài</h1>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">Danh sách nhân sự nước ngoài công tác & lưu trú</p>
+          </div>
         </div>
         <button
           onClick={() => { setEditingEmp(null); setIsModalOpen(true); }}
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-xs cursor-pointer transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-white text-sky-800 font-extrabold text-xs rounded-xl shadow-xs hover:bg-sky-50 cursor-pointer transition-all shrink-0"
         >
           + Thêm Hồ sơ Nhân sự
         </button>
       </div>
+
+      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
 
       {/* Search + Filter */}
       <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
@@ -222,6 +229,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
         passportNumber={deleteTarget?.passport_number}
         department={deleteTarget?.department}
       />
+      </div>
     </div>
   );
 };

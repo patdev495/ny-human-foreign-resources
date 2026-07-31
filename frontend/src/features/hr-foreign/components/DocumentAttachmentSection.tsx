@@ -251,7 +251,7 @@ export const DocumentAttachmentSection: React.FC<DocumentAttachmentSectionProps>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-fade-in">
           <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-4xl max-h-[90vh] flex flex-col border border-slate-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-900 text-white">
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-sky-700 to-blue-800 text-white">
               <div className="flex items-center gap-2 truncate pr-4">
                 <span className="font-semibold text-sm truncate">{previewAttachment.file_name}</span>
                 <span className="text-xs text-slate-400 shrink-0">

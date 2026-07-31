@@ -94,27 +94,32 @@ export const DailyPresenceReport: React.FC = () => {
     });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Header & Controls */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <span>Thống kê Hiện diện & Chỗ ở</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-semibold border border-blue-200">
-              Hàng ngày
-            </span>
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Tra cứu số lượng & vị trí lưu trú của nhân sự nước ngoài đang có mặt tại Việt Nam.
-          </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            📊
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold tracking-tight text-white">Thống kê Hiện diện & Chỗ ở</h1>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/20 text-white font-semibold border border-white/30">
+                Hàng ngày
+              </span>
+            </div>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
+              Tra cứu số lượng & vị trí lưu trú của nhân sự nước ngoài đang có mặt tại Việt Nam.
+            </p>
+          </div>
         </div>
 
         {/* Date Selector */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <div className="flex items-center bg-sky-950/25 backdrop-blur-xs p-1 rounded-xl border border-sky-400/30">
             <button
               onClick={() => setOffsetDate(-1)}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all"
+              className="px-2.5 py-1 text-xs font-semibold text-sky-100 hover:text-white hover:bg-white/15 rounded-lg transition-all"
               title="Hôm qua"
             >
               &larr;
@@ -123,15 +128,15 @@ export const DailyPresenceReport: React.FC = () => {
               onClick={() => setTargetDate(getTodayStr())}
               className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
                 targetDate === getTodayStr()
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white"
+                  ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                  : "text-sky-100 hover:text-white hover:bg-white/15"
               }`}
             >
               Hôm nay
             </button>
             <button
               onClick={() => setOffsetDate(1)}
-              className="px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-all"
+              className="px-2.5 py-1 text-xs font-semibold text-sky-100 hover:text-white hover:bg-white/15 rounded-lg transition-all"
               title="Ngày mai"
             >
               &rarr;

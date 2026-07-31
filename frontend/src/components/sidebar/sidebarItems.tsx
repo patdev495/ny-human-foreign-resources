@@ -6,6 +6,9 @@ export type NavTab =
   | "DAILY_PRESENCE"
   | "EXPIRING_DOCS"
   | "VEHICLE_MANAGEMENT"
+  | "VEHICLE_DISPATCH"
+  | "VEHICLE_ODOMETER"
+  | "VEHICLE_CONTRACTS"
   | "MEAL_MANAGEMENT"
   | "HR_DOMESTIC_PLACEHOLDER"
   | "JANITOR_PROFILES"
@@ -79,6 +82,12 @@ export const hrForeignItems: NavItem[] = [
 export const janitorItems: NavItem[] = [
   { key: "JANITOR_PROFILES", label: "Hồ sơ & Thông tin", icon: <span className="text-xs">📋</span> },
   { key: "JANITOR_ATTENDANCE", label: "Điểm danh hàng ngày", icon: <span className="text-xs">📅</span> },
+];
+
+export const vehicleItems: NavItem[] = [
+  { key: "VEHICLE_DISPATCH", label: "Nhật ký Điều xe", icon: <span className="text-xs">📅</span> },
+  { key: "VEHICLE_ODOMETER", label: "Quãng đường di chuyển", icon: <span className="text-xs">📟</span> },
+  { key: "VEHICLE_CONTRACTS", label: "Hợp đồng và bảng giá", icon: <span className="text-xs">📑</span> },
 ];
 
 export const exportSubItems: NavItem[] = [

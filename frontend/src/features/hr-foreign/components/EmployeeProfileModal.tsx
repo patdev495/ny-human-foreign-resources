@@ -62,7 +62,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
+        <div className="px-6 py-4 border-b border-sky-600/30 flex justify-between items-center bg-gradient-to-r from-sky-700 to-blue-800 text-white">
           <div>
             <h3 className="text-lg font-bold">
               Hồ sơ Chi tiết 360° — {data?.employee.name_latin || "Đang tải..."}

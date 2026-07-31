@@ -1,9 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { calculateCost, fetchProviders, fetchVendorRoutes } from "../../api";
+import { DispatchPricingSection } from "./DispatchPricingSection";
 import type {
   OwnershipGroup,
+  RouteType,
   Vehicle,
   VehicleDispatch,
   VehicleDispatchCreatePayload,
+  VehicleProvider,
+  VendorRoute,
 } from "../../types";
 
 interface DispatchModalProps {
@@ -27,16 +32,141 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const [providers, setProviders] = useState<VehicleProvider[]>([]);
+  const [vendorRoutes, setVendorRoutes] = useState<VendorRoute[]>([]);
+  const [seatType, setSeatType] = useState<string>("4 chỗ");
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchProviders().then(setProviders).catch(console.error);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (formData.provider_id) {
+      fetchVendorRoutes(formData.provider_id).then(setVendorRoutes).catch(console.error);
+    } else {
+      setVendorRoutes([]);
+    }
+  }, [formData.provider_id]);
+
+  // Recalculate cost automatically when route selection, km, or waiting hours change
+  const handleCalculateCost = async (
+    pId?: number | null,
+    vRouteId?: number | null,
+    rType?: RouteType,
+    km?: number,
+    waiting?: number,
+    seats?: string
+  ) => {
+    const targetProviderId = pId !== undefined ? pId : formData.provider_id;
+    const targetRouteId = vRouteId !== undefined ? vRouteId : formData.vendor_route_id;
+    const targetRouteType = rType !== undefined ? rType : (formData.route_type || "FIXED_ROUTE");
+    const targetKm = km !== undefined ? km : (formData.distance_km || 0);
+    const targetWaiting = waiting !== undefined ? waiting : (formData.waiting_hours || 0);
+    const targetSeat = seats || seatType;
+
+    try {
+      const res = await calculateCost({
+        provider_id: targetProviderId,
+        vendor_route_id: targetRouteId,
+        route_type: targetRouteType,
+        seat_type: targetSeat,
+        distance_km: targetKm,
+        waiting_hours: targetWaiting,
+      });
+      setFormData((prev) => ({
+        ...prev,
+        calculated_cost: res.total_calculated_cost,
+        cost: res.total_calculated_cost > 0 ? res.total_calculated_cost : prev.cost,
+      }));
+    } catch (err) {
+      console.error("Lỗi tính phí tự động:", err);
+    }
+  };
+
+  const handleProviderChange = (providerIdStr: string) => {
+    const pId = providerIdStr ? parseInt(providerIdStr, 10) : undefined;
+    const selectedP = providers.find((p) => p.id === pId);
+    const og: OwnershipGroup = selectedP?.provider_type || "COMPANY_OWNED";
+
+    const defaultVehicle = og === "COMPANY_OWNED"
+      ? vehicles.find((v) => (pId ? v.provider_id === pId : true) || v.ownership_group === "COMPANY_OWNED")
+      : undefined;
+
+    setFormData((prev) => ({
+      ...prev,
+      provider_id: pId,
+      provider_name: selectedP?.name || "",
+      ownership_group: og,
+      vendor_route_id: undefined,
+      vehicle_id: defaultVehicle ? defaultVehicle.id : undefined,
+      vehicle_name: defaultVehicle ? defaultVehicle.name : "",
+      driver_name: defaultVehicle ? defaultVehicle.driver_name || "" : "",
+      license_plate: defaultVehicle ? defaultVehicle.license_plate || "" : "",
+      driver_phone: defaultVehicle ? defaultVehicle.driver_phone || "" : "",
+    }));
+    handleCalculateCost(pId, undefined);
+  };
+
+  const handleRouteSelect = (routeIdStr: string) => {
+    if (!routeIdStr) {
+      setFormData((prev) => ({ ...prev, vendor_route_id: undefined }));
+      return;
+    }
+    const rId = parseInt(routeIdStr, 10);
+    const selectedR = vendorRoutes.find((r) => r.id === rId);
+    if (selectedR) {
+      setFormData((prev) => ({
+        ...prev,
+        vendor_route_id: selectedR.id,
+        pickup_location: selectedR.pickup_location,
+        dropoff_location: selectedR.dropoff_location,
+        route_type: "FIXED_ROUTE",
+        vehicle_name: prev.vehicle_name && prev.ownership_group === "COMPANY_OWNED"
+          ? prev.vehicle_name
+          : `Xe ${selectedR.seat_type} (${prev.provider_name || "Thuê ngoài"})`,
+      }));
+      setSeatType(selectedR.seat_type);
+      handleCalculateCost(formData.provider_id, selectedR.id, "FIXED_ROUTE", formData.distance_km, formData.waiting_hours, selectedR.seat_type);
+    }
+  };
+
+  const filteredVehicles = vehicles.filter((v) => {
+    if (formData.provider_id) {
+      const selectedP = providers.find((p) => p.id === formData.provider_id);
+      if (selectedP) {
+        if (v.provider_id) {
+          return v.provider_id === selectedP.id;
+        }
+        return v.ownership_group === selectedP.provider_type;
+      }
+    }
+    if (formData.ownership_group) {
+      return v.ownership_group === formData.ownership_group;
+    }
+    return true;
+  });
+
+  const handleSwapLocations = () => {
+    setFormData((prev) => ({
+      ...prev,
+      pickup_location: prev.dropoff_location,
+      dropoff_location: prev.pickup_location,
+    }));
+  };
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">
-          {editingDispatch ? "Chỉnh sửa Bản ghi Điều xe" : "Tạo Đơn Điều xe mới"}
+      <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2">
+          <span>🚐</span> {editingDispatch ? "Chỉnh sửa Bản ghi Điều xe" : "Tạo Đơn Điều xe mới"}
         </h3>
 
         <form onSubmit={onSave} className="space-y-4">
+          {/* Header Row: Date & Pickup Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -61,148 +191,162 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Chọn loại xe từ Danh sách xe
-            </label>
-            <select
-              value={formData.vehicle_id || ""}
-              onChange={(e) => onVehicleSelect(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            >
-              <option value="">-- Chọn xe gợi ý --</option>
-              {vehicles.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.ownership_group === "COMPANY_OWNED" ? "[Công ty]" : "[Thuê ngoài]"} {v.name}{" "}
-                  {v.driver_name ? `- TX: ${v.driver_name}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+          {/* Provider & Vehicle Selection */}
+          <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Tên Xe / Loại xe <span className="text-rose-500">*</span>
+                Nhà xe / Đơn vị <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={formData.provider_id || ""}
+                onChange={(e) => handleProviderChange(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-semibold text-slate-800"
+              >
+                <option value="">-- Chọn Nhà xe / Nhóm xe --</option>
+                {providers.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.provider_type === "COMPANY_OWNED" ? "🏢 [Công ty]" : "🚕 [Thuê ngoài]"} {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Gợi ý từ Xe khả dụng</label>
+              <select
+                value={formData.vehicle_id || ""}
+                onChange={(e) => onVehicleSelect(e.target.value)}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              >
+                <option value="">-- Chọn xe khả dụng --</option>
+                {filteredVehicles.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.ownership_group === "COMPANY_OWNED" ? "🏢" : "🚕"} {v.name}{" "}
+                    {v.driver_name ? `(${v.driver_name})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Tên Xe / Mô tả phương tiện <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.vehicle_name}
                 onChange={(e) => setFormData({ ...formData, vehicle_name: e.target.value })}
-                placeholder="VD: A Ngọc, Xe 7 chỗ..."
+                placeholder="VD: Xe 7 chỗ (Bình An), Chú Ngọc..."
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Nhóm sở hữu</label>
-              <select
-                value={formData.ownership_group}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    ownership_group: e.target.value as OwnershipGroup,
-                  })
-                }
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              <label className="block text-xs font-bold text-slate-700 mb-1">Tài xế, Biển số & SĐT</label>
+              <div className="grid grid-cols-3 gap-1.5">
+                <input
+                  type="text"
+                  value={formData.driver_name || ""}
+                  onChange={(e) => setFormData({ ...formData, driver_name: e.target.value })}
+                  placeholder="Tài xế"
+                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none"
+                />
+                <input
+                  type="text"
+                  value={formData.license_plate || ""}
+                  onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
+                  placeholder="Biển số"
+                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none"
+                />
+                <input
+                  type="text"
+                  value={formData.driver_phone || ""}
+                  onChange={(e) => setFormData({ ...formData, driver_phone: e.target.value })}
+                  placeholder="SĐT tài xế"
+                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Pricing Logic Section */}
+          <DispatchPricingSection
+            formData={formData}
+            setFormData={setFormData}
+            vendorRoutes={vendorRoutes}
+            onRouteSelect={handleRouteSelect}
+            onCalculateCost={handleCalculateCost}
+          />
+
+
+          {/* Locations & Passenger */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700">Lộ trình di chuyển</span>
+              <button
+                type="button"
+                onClick={handleSwapLocations}
+                className="text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-100/70 hover:bg-blue-200/80 px-2 py-0.5 rounded-md transition-colors cursor-pointer flex items-center gap-1 border border-blue-200"
+                title="Đảo vị trí Điểm đi và Điểm đến"
               >
-                <option value="COMPANY_OWNED">🏢 Xe công ty</option>
-                <option value="OUTSOURCED">🚕 Xe thuê ngoài</option>
-              </select>
+                <span>🔄</span> Đảo chiều chuyến đi (Chiều về)
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Điểm đi (Pickup) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.pickup_location || ""}
+                  onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
+                  placeholder="VD: KTX, Sân bay Nội Bài..."
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Điểm đến (Dropoff) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.dropoff_location || ""}
+                  onChange={(e) => setFormData({ ...formData, dropoff_location: e.target.value })}
+                  placeholder="VD: Nhà máy, Khách sạn..."
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  required
+                />
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tài xế</label>
-              <input
-                type="text"
-                value={formData.driver_name || ""}
-                onChange={(e) => setFormData({ ...formData, driver_name: e.target.value })}
-                placeholder="Tên tài xế"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Biển số xe</label>
-              <input
-                type="text"
-                value={formData.license_plate || ""}
-                onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
-                placeholder="Biển số"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Điểm đi (Pickup) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.pickup_location || ""}
-                onChange={(e) => setFormData({ ...formData, pickup_location: e.target.value })}
-                placeholder="VD: KTX Nhà máy, Sân bay Nội Bài..."
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Điểm đến (Dropoff) <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.dropoff_location || ""}
-                onChange={(e) => setFormData({ ...formData, dropoff_location: e.target.value })}
-                placeholder="VD: Khách sạn Mường Thanh, Công ty..."
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tên Hành khách / Nhân sự</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Hành khách / Đoàn công tác</label>
               <input
                 type="text"
                 value={formData.passenger_name || ""}
                 onChange={(e) => setFormData({ ...formData, passenger_name: e.target.value })}
-                placeholder="VD: WANG LEI, Đoàn chuyên gia..."
+                placeholder="VD: WANG LEI..."
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Số hành khách</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Chi phí chốt thực tế (VNĐ) <span className="text-slate-400 font-normal">(Có thể sửa)</span>
+              </label>
               <input
                 type="number"
-                min="1"
-                value={formData.passenger_count}
-                onChange={(e) =>
-                  setFormData({ ...formData, passenger_count: parseInt(e.target.value, 10) || 1 })
-                }
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                min="0"
+                step="10000"
+                value={formData.cost}
+                onChange={(e) => setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 text-xs font-bold text-emerald-700 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Chi phí thực tế (VNĐ) <span className="text-slate-400 font-normal">(Sửa thoải mái)</span>
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="10000"
-              value={formData.cost}
-              onChange={(e) =>
-                setFormData({ ...formData, cost: parseFloat(e.target.value) || 0 })
-              }
-              className="w-full px-3 py-2 text-xs font-bold text-emerald-700 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
           </div>
 
           <div>
@@ -236,3 +380,4 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
     </div>
   );
 };
+

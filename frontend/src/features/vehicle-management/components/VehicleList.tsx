@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { createVehicle, deleteVehicle, fetchVehicles, updateVehicle } from "../api";
 import type { OwnershipGroup, Vehicle, VehicleCreatePayload } from "../types";
 
-
 export const VehicleList: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [activeTab, setActiveTab] = useState<OwnershipGroup | "ALL">("ALL");
@@ -133,12 +132,14 @@ export const VehicleList: React.FC = () => {
           </button>
         </div>
 
-        <button
-          onClick={() => handleOpenModal()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-2 cursor-pointer self-start sm:self-auto"
-        >
-          <span>➕</span> Thêm Loại xe / Xe mới
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleOpenModal()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs transition-colors flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+          >
+            <span>➕</span> Thêm Loại xe / Xe mới
+          </button>
+        </div>
       </div>
 
       {/* Loading & Error states */}
@@ -326,6 +327,7 @@ export const VehicleList: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };

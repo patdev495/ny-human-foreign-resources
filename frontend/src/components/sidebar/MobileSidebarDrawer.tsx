@@ -3,6 +3,7 @@ import {
   type NavTab,
   hrForeignItems,
   janitorItems,
+  vehicleItems,
   exportSubItems,
   exportItem,
 } from "./sidebarItems";
@@ -61,7 +62,7 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
           <div className="pt-2 border-t border-slate-200 space-y-1">
             <div className="px-3 py-1 text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-              🧹 <span>Nhân sự Tạp vụ</span>
+              <span>Nhân sự Tạp vụ</span>
             </div>
             {janitorItems.map((item) => (
               <button
@@ -79,16 +80,25 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             ))}
           </div>
 
-          <button
-            onClick={() => handleSelect("VEHICLE_MANAGEMENT")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-              activeTab === "VEHICLE_MANAGEMENT"
-                ? "bg-blue-600 text-white"
-                : "text-slate-700 hover:bg-slate-100"
-            }`}
-          >
-            🚐 <span>Quản lý xe</span>
-          </button>
+          <div className="pt-2 border-t border-slate-200 space-y-1">
+            <div className="px-3 py-1 text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center gap-1.5">
+              <span>Quản lý xe</span>
+            </div>
+            {vehicleItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => handleSelect(item.key)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
+                  activeTab === item.key
+                    ? "bg-blue-600 text-white"
+                    : "text-blue-800 hover:bg-blue-50"
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
 
           <button
             onClick={() => handleSelect("MEAL_MANAGEMENT")}
@@ -98,12 +108,11 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
                 : "text-slate-700 hover:bg-slate-100"
             }`}
           >
-            🍱 <span>Chi phí bữa ăn</span>
+            <span>Chi phí bữa ăn</span>
           </button>
 
           <div className="pt-2 border-t border-slate-200 space-y-1">
             <div className="px-3 py-1 text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-              {exportItem.icon}
               <span>{exportItem.label}</span>
             </div>
             {exportSubItems.map((item) => (

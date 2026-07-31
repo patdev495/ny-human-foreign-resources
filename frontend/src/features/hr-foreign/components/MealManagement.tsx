@@ -1,55 +1,47 @@
 import React, { useState } from "react";
 import { MealForecastBoard } from "./MealForecastBoard";
-import { MealExpenseReport } from "./MealExpenseReport";
+// import { MealExpenseReport } from "./MealExpenseReport";
 import { MealConfigAndEvents } from "./MealConfigAndEvents";
 
 export const MealManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"DAILY_FORECAST" | "REPORT" | "CONFIG">(
+  const [activeTab, setActiveTab] = useState<"DAILY_FORECAST" | "CONFIG">(
     "DAILY_FORECAST"
   );
 
   return (
     <div className="space-y-6">
-      {/* Module Header */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 bg-amber-50 text-amber-600 rounded-lg text-lg">🍱</span>
-            <h1 className="text-2xl font-bold text-slate-800">Quản lý & Thống kê Suất ăn</h1>
+      {/* Top Header Banner */}
+      <div className="bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
+            🍱
           </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Dự báo & chốt suất ăn hằng ngày (Sáng & Tối), tổng hợp chi phí bữa ăn KTX & cấu hình đơn giá theo từng mốc thời gian / sự kiện.
-          </p>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white">Quản lý & Thống kê Suất ăn</h1>
+            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
+              Dự báo & chốt suất ăn hằng ngày (Sáng & Tối), tổng hợp chi phí bữa ăn KTX & cấu hình đơn giá theo từng mốc thời gian / sự kiện.
+            </p>
+          </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-1.5 bg-sky-950/25 backdrop-blur-xs p-1.5 rounded-xl border border-sky-400/30 shrink-0">
           <button
             onClick={() => setActiveTab("DAILY_FORECAST")}
             className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === "DAILY_FORECAST"
-                ? "bg-white text-blue-700 shadow-xs font-extrabold"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                : "text-sky-100 hover:text-white hover:bg-white/15"
             }`}
           >
             🍱 Thống kê & Chốt Hằng ngày
           </button>
           <button
-            onClick={() => setActiveTab("REPORT")}
-            className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === "REPORT"
-                ? "bg-white text-blue-700 shadow-xs font-extrabold"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            📊 Báo cáo Chi phí Bữa ăn
-          </button>
-          <button
             onClick={() => setActiveTab("CONFIG")}
             className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
               activeTab === "CONFIG"
-                ? "bg-white text-blue-700 shadow-xs font-extrabold"
-                : "text-slate-600 hover:text-slate-900"
+                ? "bg-white text-sky-800 shadow-xs font-extrabold"
+                : "text-sky-100 hover:text-white hover:bg-white/15"
             }`}
           >
             ⚙️ Cấu hình Đơn giá & Sự kiện
@@ -59,7 +51,6 @@ export const MealManagement: React.FC = () => {
 
       {/* Render selected view */}
       {activeTab === "DAILY_FORECAST" && <MealForecastBoard />}
-      {activeTab === "REPORT" && <MealExpenseReport />}
       {activeTab === "CONFIG" && <MealConfigAndEvents />}
     </div>
   );
