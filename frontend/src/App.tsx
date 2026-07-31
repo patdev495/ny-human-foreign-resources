@@ -90,7 +90,7 @@ export const App: React.FC = () => {
             activeTab === "EXPORT_PRESENCE" ||
             activeTab === "EXPORT_MEAL" ||
             activeTab === "EXPORT_JANITOR") && (
-              <ReportHub activeTab={activeTab} setActiveTab={setActiveTab} />
+              <ReportHub activeTab={activeTab} />
             )}
         </main>
       </div>

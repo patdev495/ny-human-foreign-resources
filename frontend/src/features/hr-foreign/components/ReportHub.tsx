@@ -8,16 +8,8 @@ interface ReportHubProps {
   setActiveTab?: (tab: NavTab) => void;
 }
 
-const REPORT_TABS: { key: NavTab; label: string; icon: string }[] = [
-  { key: "EXPORT_LEGAL", label: "Hồ sơ & Pháp lý", icon: "📄" },
-  { key: "EXPORT_PRESENCE", label: "Hiện diện chỗ ở KTX", icon: "🏫" },
-  { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: "🍱" },
-  { key: "EXPORT_JANITOR", label: "Lương Tạp vụ", icon: "🧹" },
-];
-
 export const ReportHub: React.FC<ReportHubProps> = ({
   activeTab = "EXPORT_LEGAL",
-  setActiveTab,
 }) => {
   const {
     includeAttachments,
@@ -62,26 +54,6 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Sub-report selector tabs */}
-        {setActiveTab && (
-          <div className="flex flex-wrap gap-1.5 bg-slate-800 p-1.5 rounded-xl border border-slate-700 shrink-0">
-            {REPORT_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  currentTab === tab.key
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "text-slate-300 hover:text-white hover:bg-slate-700"
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {errorMessage && (
