@@ -12,7 +12,7 @@ export const ProfileStaysTab: React.FC<Props> = ({ stays }) => {
         <p className="text-xs text-slate-400 italic py-4 text-center">Chưa có lịch sử đợt lưu trú nào.</p>
       ) : (
         stays.map((stay) => {
-          const isActive = !stay.end_date || stay.end_date >= new Date().toISOString().split("T")[0];
+          const isActive = !stay.end_date || stay.end_date > new Date().toISOString().split("T")[0];
           return (
             <div
               key={stay.id}

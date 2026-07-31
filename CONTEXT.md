@@ -17,8 +17,11 @@ Nơi ở do công ty cung cấp cho Nhân viên nước ngoài. Được tổ ch
 **Khách sạn** (Hotel):
 Cơ sở lưu trú đối tác (vd: Khách sạn Mường Thanh, Khách sạn Rex, Khách sạn Hòa Bình). Được quản lý trong Danh mục Khách sạn.
 
+**Lưu trú Khách sạn** (Hotel Stay):
+Một đợt ở khách sạn của Nhân viên nước ngoài. Khi tạo mới bắt buộc phải có **Ngày vào** (`start_date`). Khi rời đi, HR thao tác Trả phòng Khách sạn để nhập **Ngày ra** (`end_date`). **Số tiền hóa đơn thanh toán** (`invoice_amount`) và các **Tài liệu đính kèm** (Hóa đơn GTGT, Giấy tờ tạm trú khách sạn, Xác nhận phòng) có thể đính kèm ngay lúc trả phòng hoặc cập nhật/bổ sung sau (linh hoạt theo thời điểm đối tác xuất hóa đơn). Dữ liệu này làm nền tảng cho chức năng tổng hợp đối chiếu chi phí khách sạn theo khoảng ngày.
+
 **Loại chỗ ở** (Accommodation Type):
-Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Một Lưu trú sẽ liên kết tới một **Phòng KTX** (nếu là KTX) hoặc một **Khách sạn** + **Số phòng khách sạn** (nếu là Khách sạn). Chỉ người ở KTX mới phát sinh chi phí ăn uống (`has_meals = True`). Người ở Khách sạn không phát sinh chi phí ăn (`has_meals = False`).
+Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Một Lưu trú sẽ liên kết tới một **Phòng KTX** (nếu là KTX) hoặc một **Khách sạn** + **Số phòng khách sạn** (nếu là Khách sạn). Chỉ người ở KTX mới phát sinh chi phí ăn uống (`has_meals = True`). Người ở Khách sạn không phát sinh chi phí ăn KTX (`has_meals = False`) mà quản lý theo số tiền hóa đơn đợt ở.
 
 **Vị trí giường** (Bed Location):
 Vị trí chỗ ngủ được phân bổ cụ thể trong một **Phòng KTX** hoặc **Khách sạn** (vd: Giường A, Giường B, 2 giường, 1 giường…). Thuộc về một **Lưu trú** cụ thể.
@@ -35,15 +38,19 @@ Một lần cấp phép nhập cảnh / lưu trú hợp pháp của Nhân viên 
 **Tạm trú**:
 Một lần đăng ký tạm trú tại địa phương. Thuộc về một Lưu trú. Có thể gia hạn nhiều lần trong cùng một Lưu trú → nhiều bản ghi Tạm trú trên 1 Lưu trú.
 
-**Ngày phải về nước** (Required Exit Date):
-Hạn chót lịch trình cất cánh / về nước của Nhân viên nước ngoài trong một Đợt lưu trú (phân biệt với ngày hết hạn Visa hay Tạm trú).
+**Ngày dự kiến về nước** (Expected Exit Date):
+Mốc thời gian dự kiến cất cánh / kết thúc đợt lưu trú tại Việt Nam của Nhân viên nước ngoài trong một đợt di chuyển (`TravelRecord`). Dùng làm căn cứ tính toán cảnh báo quá hạn đợt lưu trú (`is_overdue_exit`) và xếp lịch điều xe đưa đón sân bay.
+
+**Ngày thực tế đã về nước** (Actual Exit Date):
+Ngày thực tế Nhân viên nước ngoài đã bay / xuất cảnh rời Việt Nam. Khi trường này có giá trị, trạng thái nhân sự chuyển sang "Đã về nước".
+_Avoid_: "ngày phải về nước", "hạn về nước"
 
 **Loại hình** (Stay Type):
 Tính chất của một **Lưu trú** cụ thể: **Cố định** (đóng quân dài hạn, ăn cơm đều đặn) hoặc **Công tác** (sang ngắn hạn theo đợt). Cùng một người có thể cố định ở chuyến này, công tác ở chuyến khác — Loại hình thuộc về Lưu trú, không thuộc về Nhân viên nước ngoài.
 _Avoid_: "thường trú", "tạm thời"
 
 **Vắng ăn** (Meal Absence):
-Bản ghi đăng ký vắng ăn của Nhân viên nước ngoài cho một ngày cụ thể trong đợt Lưu trú (ví dụ: về nước tạm thời, nghỉ phép, đi công tác ngoài). Hỗ trợ phân loại theo **Loại bữa vắng** (`meal_type`): **Sáng** (BREAKFAST), **Tối** (DINNER), hoặc **Cả ngày** (ALL_DAY - mặc định). Mặc định mọi ngày trong Lưu trú KTX là có ăn cả 2 bữa.
+Bản ghi đăng ký vắng ăn của Nhân viên nước ngoài cho một ngày cụ thể trong đợt Lưu trú (ví dụ: về nước tạm thời, nghỉ phép, đi công tác ngoài). Hỗ trợ phân loại theo **Loại bữa vắng** (`meal_type`): **Sáng** (BREAKFAST), **Tối** (DINNER), hoặc **Cả ngày** (ALL_DAY - mặc định). Mặc định mọi ngày trong Lưu trú KTX là có ăn cả 2 bữa. Trường hợp nhân sự vắng ăn thay đổi lịch đột xuất (vd: đăng ký vắng cả ngày nhưng tối về ăn), HR sẽ chủ động điều chỉnh bản ghi Vắng ăn (chuyển từ Vắng cả ngày sang Vắng bữa Sáng) hoặc điều chỉnh số suất thực chốt tại Modal Chốt suất ăn.
 _Avoid_: "điểm danh", "check-in"
 
 **Đăng ký ăn thêm** (Extra Meal Request):
@@ -144,7 +151,7 @@ Báo cáo Excel 2 Tab gồm:
 
 **Báo cáo Excel Hiện diện & Chỗ ở** (Presence & Accommodation Excel Report):
 Báo cáo Excel 3 Tab gồm:
-- **Sheet 1 (`[Sơ đồ KTX & Khách sạn]`)**: Danh sách nhân sự đang ở Việt Nam và đã xếp chỗ (KTX / Khách sạn).
+- **Sheet 1 (`[Sơ đồ KTX & Khách sạn]`)**: Danh sách nhân sự đang ở Việt Nam và đã xếp chỗ (KTX / Khách sạn). Cột *"Nơi ở / Phòng"* hiển thị rõ *"Phòng 1601"* (với KTX) hoặc *"Khách sạn Mường Thanh - P.201"* (với Khách sạn), kèm cột Phân loại chỗ ở (`accommodation_type`) và Số tiền hóa đơn đợt ở (`invoice_amount`).
 - **Sheet 2 (`[Chưa xếp chỗ ở]`)**: Danh sách nhân sự đang ở Việt Nam nhưng chưa được phân bổ phòng.
 - **Sheet 3 (`[Đã về nước]`)**: Danh sách nhân sự hiện không ở Việt Nam (kèm ngày thực tế đã về và ngày dự kiến sang đợt tới).
 

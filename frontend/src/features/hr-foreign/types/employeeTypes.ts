@@ -12,7 +12,6 @@ export interface ForeignEmployee {
   expected_entry_date?: string | null;
   expected_exit_date?: string | null;
   actual_exit_date?: string | null;
-  required_exit_date?: string | null;
   phone?: string | null;
   department?: string | null;
   role?: string | null;
@@ -46,7 +45,6 @@ export interface ForeignEmployeeCreate {
   entry_date?: string | null;
   expected_exit_date?: string | null;
   actual_exit_date?: string | null;
-  required_exit_date?: string | null;
   phone?: string | null;
   department?: string | null;
   role?: string | null;

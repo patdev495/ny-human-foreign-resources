@@ -34,7 +34,6 @@ class ForeignEmployee(Base):
     expected_entry_date = Column(Date, nullable=True)  # NGÀY DỰ KIẾN SANG VIỆT NAM
     expected_exit_date = Column(Date, nullable=True)   # NGÀY DỰ KIẾN VỀ NƯỚC
     actual_exit_date = Column(Date, nullable=True)     # NGÀY THỰC TẾ ĐÃ VỀ NƯỚC
-    required_exit_date = Column(Date, nullable=True)  # NGÀY PHẢI VỀ NƯỚC (từ Excel KTX / legacy)
     phone = Column(Unicode(100), nullable=True)
     department = Column(Unicode(100), nullable=True)  # Vị trí công việc (Lao động kỹ thuật, Giám đốc...)
     role = Column(Unicode(255), nullable=True)         # Chức danh công việc chi tiết
@@ -102,6 +101,7 @@ class Stay(Base):
     bed_location = Column(Unicode(50), nullable=True)  # Vị trí giường (A, B, 2 giường...) từ Excel
     stay_type = Column(Unicode(50), nullable=False, default="CO_DINH")  # CO_DINH, CONG_TAC
     has_meals = Column(Boolean, nullable=False, default=True)
+    invoice_amount = Column(Float, nullable=True)  # Số tiền hóa đơn đợt ở (khách sạn)
     start_date = Column(Date, nullable=True)
     expected_end_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)

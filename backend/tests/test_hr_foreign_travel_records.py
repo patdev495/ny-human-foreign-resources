@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -87,7 +88,7 @@ def test_reject_new_trip_when_open_trip_exists(client: TestClient, emp_id: int) 
     # Attempt to add a second trip without closing the first
     res = client.post(
         f"/api/hr-foreign/employees/{emp_id}/travel-records",
-        json={"entry_date": "2026-09-01", "expected_exit_date": "2026-11-01"},
+        json={"entry_date": "2026-06-01", "expected_exit_date": "2026-11-01"},
     )
     assert res.status_code == 400
     assert "chưa có Ngày về thực tế" in res.json()["detail"]
@@ -103,16 +104,16 @@ def test_add_trip_after_closed_previous(client: TestClient, emp_id: int) -> None
         json={
             "entry_date": "2026-05-10",
             "expected_exit_date": "2026-08-10",
-            "actual_exit_date": "2026-08-05",
+            "actual_exit_date": "2026-06-01",
         },
     )
     # Second trip — should succeed
     res = client.post(
         f"/api/hr-foreign/employees/{emp_id}/travel-records",
-        json={"entry_date": "2026-09-01", "expected_exit_date": "2026-11-01"},
+        json={"entry_date": "2026-07-01", "expected_exit_date": "2026-11-01"},
     )
     assert res.status_code == 201, res.json()
-    assert res.json()["entry_date"] == "2026-09-01"
+    assert res.json()["entry_date"] == "2026-07-01"
 
     res = client.get(f"/api/hr-foreign/employees/{emp_id}/travel-records")
     assert len(res.json()) == 2
@@ -280,6 +281,26 @@ def test_record_exit_optional_actual_exit_date_updates_expected_dates(
     assert emp["actual_exit_date"] is None
     assert emp["expected_exit_date"] == "2026-09-15"
     assert emp["is_in_vietnam"] is True
+
+
+def test_reject_future_actual_dates(client: TestClient, emp_id: int) -> None:
+    future_date = (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
+
+    # Reject future entry_date
+    res = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"entry_date": future_date},
+    )
+    assert res.status_code == 400
+    assert "khuyến nghị" in res.json()["detail"].lower() or "tương lai" in res.json()["detail"].lower()
+
+    # Reject future actual_exit_date
+    res = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/record-exit",
+        json={"actual_exit_date": future_date},
+    )
+    assert res.status_code == 400
+    assert "tương lai" in res.json()["detail"].lower()
 
 
 

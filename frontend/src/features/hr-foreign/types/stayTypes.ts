@@ -10,6 +10,7 @@ export interface Stay {
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
+  invoice_amount?: number | null;
   start_date?: string | null;
   expected_end_date?: string | null;
   end_date?: string | null;
@@ -25,6 +26,7 @@ export interface StayCreate {
   bed_location?: string | null;
   stay_type: "CO_DINH" | "CONG_TAC";
   has_meals: boolean;
+  invoice_amount?: number | null;
   start_date?: string | null;
   expected_end_date?: string | null;
   end_date?: string | null;

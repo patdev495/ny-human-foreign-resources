@@ -34,6 +34,17 @@ def _validate_travel_record_dates(
     expected_exit: datetime.date | None,
     actual_exit: datetime.date | None,
 ) -> None:
+    today = datetime.date.today()
+    if entry and entry > today:
+        raise HTTPException(
+            status_code=400,
+            detail="Ngày thực tế đến Việt Nam không được chọn ngày tương lai. Để lên lịch sang, vui lòng nhập vào 'Ngày dự kiến sang'.",
+        )
+    if actual_exit and actual_exit > today:
+        raise HTTPException(
+            status_code=400,
+            detail="Ngày thực tế đã về nước không được chọn ngày tương lai. Để lên lịch về, vui lòng nhập vào 'Ngày dự kiến về'.",
+        )
     if entry:
         if actual_exit and actual_exit < entry:
             raise HTTPException(
@@ -75,14 +86,31 @@ def create_travel_record(
         )
         .first()
     )
+    today = datetime.date.today()
     if open_trip:
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Đợt sang ngày {open_trip.entry_date} chưa có Ngày về thực tế. "
-                f"Vui lòng chốt Ngày về thực tế cho đợt cũ trước khi thêm đợt đến mới."
-            ),
-        )
+        if not open_trip.entry_date or open_trip.entry_date > today:
+            open_trip.entry_date = payload.entry_date
+            if payload.expected_entry_date:
+                open_trip.expected_entry_date = payload.expected_entry_date
+            if payload.expected_exit_date:
+                open_trip.expected_exit_date = payload.expected_exit_date
+            if payload.notes:
+                open_trip.notes = payload.notes
+            emp.entry_date = payload.entry_date
+            emp.expected_entry_date = open_trip.expected_entry_date
+            emp.expected_exit_date = open_trip.expected_exit_date
+            emp.actual_exit_date = None
+            db.commit()
+            db.refresh(open_trip)
+            return open_trip
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Đợt sang ngày {open_trip.entry_date} chưa có Ngày về thực tế. "
+                    f"Vui lòng chốt Ngày về thực tế cho đợt cũ trước khi thêm đợt đến mới."
+                ),
+            )
 
     record = TravelRecord(employee_id=emp.id, **payload.model_dump())
     db.add(record)
@@ -159,6 +187,11 @@ def record_employee_exit(
         db.add(latest_tr)
 
     if payload.actual_exit_date:
+        if payload.actual_exit_date > datetime.date.today():
+            raise HTTPException(
+                status_code=400,
+                detail="Ngày thực tế đã về nước không được chọn ngày tương lai. Để lên lịch về, vui lòng nhập vào 'Ngày dự kiến về'.",
+            )
         if latest_tr.entry_date and payload.actual_exit_date < latest_tr.entry_date:
             raise HTTPException(
                 status_code=400,

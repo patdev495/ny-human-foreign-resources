@@ -38,7 +38,6 @@ export const PassportSection: React.FC<PassportSectionProps> = ({
         department: employee.department || null,
         role: employee.role || null,
         notes: employee.notes || null,
-        required_exit_date: employee.required_exit_date || null,
         passport_number: passportNumber.trim() || null,
         passport_expiry: passportExpiry || null,
       });

@@ -25,7 +25,7 @@ def generate_presence_accommodation_excel(db: Session, today: datetime.date | No
     headers1 = [
         "STT", "Loại chỗ ở", "Tên Cơ sở / Phòng", "Số phòng KS", "Vị trí giường",
         "Mã NV", "Họ tên Latin", "Họ tên Trung Quốc", "Số Hộ chiếu", "Bộ phận",
-        "Loại hình", "Đăng ký ăn", "Ngày vào ở", "Ngày dự kiến về"
+        "Loại hình", "Đăng ký ăn", "Số tiền hóa đơn đợt ở", "Ngày vào ở", "Ngày dự kiến về"
     ]
     apply_header_style(ws1, headers1)
 
@@ -34,7 +34,7 @@ def generate_presence_accommodation_excel(db: Session, today: datetime.date | No
         emp_obj = next((e for e in employees_db if e.id == emp_eval.id), None)
         active_stay = None
         if emp_obj:
-            active_stay = next((s for s in emp_obj.stays if s.end_date is None or s.end_date >= today), None)
+            active_stay = next((s for s in emp_obj.stays if s.end_date is None or s.end_date > today), None)
 
         acc_type = active_stay.accommodation_type if active_stay else "KTX"
         unit_name = emp_eval.current_room_number or ""
@@ -42,6 +42,7 @@ def generate_presence_accommodation_excel(db: Session, today: datetime.date | No
         hotel_room = active_stay.hotel_room_number if active_stay else ""
         stay_type = active_stay.stay_type if active_stay else "CO_DINH"
         has_meals = "Có" if (active_stay and active_stay.has_meals) else "Không"
+        inv_amt = active_stay.invoice_amount if (active_stay and active_stay.invoice_amount is not None) else ""
         start_date = active_stay.start_date.strftime("%d/%m/%Y") if (active_stay and active_stay.start_date) else ""
         exp_end = emp_eval.expected_exit_date.strftime("%d/%m/%Y") if emp_eval.expected_exit_date else ""
 
@@ -49,7 +50,7 @@ def generate_presence_accommodation_excel(db: Session, today: datetime.date | No
             idx, acc_type, unit_name, hotel_room, bed_loc,
             emp_eval.employee_code or "", emp_eval.name_latin, emp_eval.name_chinese or "",
             emp_eval.passport_number or "", emp_eval.department or "",
-            format_work_type(stay_type), has_meals, start_date, exp_end
+            format_work_type(stay_type), has_meals, inv_amt, start_date, exp_end
         ])
     auto_fit_columns(ws1)
 

@@ -187,7 +187,7 @@ def get_expiring_documents(
 
     active_stays = (
         db.query(Stay)
-        .filter(or_(Stay.end_date.is_(None), Stay.end_date >= today))
+        .filter(or_(Stay.end_date.is_(None), Stay.end_date > today))
         .all()
     )
     active_stay_map = defaultdict(list)

@@ -147,7 +147,8 @@ export const DailyPresenceReport: React.FC = () => {
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs"
+            style={{ colorScheme: "light", color: "#0f172a" }}
+            className="px-3 py-1.5 text-xs font-semibold bg-white text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs cursor-pointer [color-scheme:light]"
           />
         </div>
       </div>
@@ -284,7 +285,11 @@ export const DailyPresenceReport: React.FC = () => {
       {selectedEmpId && (
         <EmployeeProfileModal
           isOpen={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
+          onClose={() => {
+            setIsProfileOpen(false);
+            loadReport(targetDate);
+          }}
+          onUpdate={() => loadReport(targetDate)}
           employeeId={selectedEmpId}
         />
       )}

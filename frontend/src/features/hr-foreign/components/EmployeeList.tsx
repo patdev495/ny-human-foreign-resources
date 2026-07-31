@@ -215,7 +215,12 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
       <EmployeeProfileModal
         isOpen={isProfileOpen}
-        onClose={() => { setIsProfileOpen(false); setProfileEmpId(null); }}
+        onClose={() => {
+          setIsProfileOpen(false);
+          setProfileEmpId(null);
+          loadData();
+        }}
+        onUpdate={loadData}
         employeeId={profileEmpId}
       />
 

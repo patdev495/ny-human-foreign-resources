@@ -11,10 +11,12 @@ import type { UnclosedMealLockItem } from "../types";
 export function useReportHub() {
   const today = new Date();
   const year = today.getFullYear();
-  const monthStr = String(today.getMonth() + 1).padStart(2, "0");
+  const month = today.getMonth();
+  const monthStr = String(month + 1).padStart(2, "0");
 
   const firstDayOfMonth = `${year}-${monthStr}-01`;
-  const day30OfMonth = `${year}-${monthStr}-30`;
+  const lastDayObj = new Date(year, month + 1, 0);
+  const lastDayOfMonth = `${year}-${monthStr}-${String(lastDayObj.getDate()).padStart(2, "0")}`;
   const todayStr = today.toISOString().split("T")[0];
 
   const [includeAttachments, setIncludeAttachments] = useState(true);
@@ -25,7 +27,7 @@ export function useReportHub() {
   const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
   const [mealEndDate, setMealEndDate] = useState(todayStr);
   const [janitorStartDate, setJanitorStartDate] = useState(firstDayOfMonth);
-  const [janitorEndDate, setJanitorEndDate] = useState(day30OfMonth);
+  const [janitorEndDate, setJanitorEndDate] = useState(lastDayOfMonth);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Missing meal locks state for warning modal

@@ -371,8 +371,9 @@ export const ExpiringDocsAlert: React.FC = () => {
         initialTab={selectedTab}
         onClose={() => {
           setIsProfileModalOpen(false);
-          loadData(); // refresh data after editing
+          loadData();
         }}
+        onUpdate={loadData}
       />
     </div>
   );

@@ -17,7 +17,10 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
   activeStay,
   onSuccess,
 }) => {
-  const isInVietnam = Boolean(employee.entry_date && !employee.actual_exit_date);
+  const isInVietnam =
+    employee.is_in_vietnam !== undefined
+      ? employee.is_in_vietnam
+      : Boolean(employee.entry_date && !employee.actual_exit_date);
 
   const [actualExitDate, setActualExitDate] = useState<string>("");
   const [entryDate, setEntryDate] = useState<string>("");
@@ -49,7 +52,14 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
     e.preventDefault();
     setError(null);
     setSaving(true);
+    const todayStr = new Date().toISOString().split("T")[0];
     try {
+      if (actualExitDate && actualExitDate > todayStr) {
+        throw new Error("Ngày thực tế đã về nước không được chọn ngày tương lai. Để lên lịch về, vui lòng điền vào 'Ngày dự kiến về'.");
+      }
+      if (entryDate && entryDate > todayStr) {
+        throw new Error("Ngày thực tế đến Việt Nam không được chọn ngày tương lai. Để lên lịch sang, vui lòng điền vào 'Ngày dự kiến sang'.");
+      }
       if (isInVietnam) {
         if (!actualExitDate && !expectedExitDate && !expectedEntryDate) {
           throw new Error("Vui lòng nhập/cập nhật ít nhất 1 mốc ngày (Dự kiến về nước, Thực tế về nước, hoặc Dự kiến sang)");
@@ -148,6 +158,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
                   <input
                     type="date"
                     value={actualExitDate}
+                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setActualExitDate(e.target.value)}
                     className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-medium"
                   />
@@ -259,6 +270,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
                   <input
                     type="date"
                     value={entryDate}
+                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setEntryDate(e.target.value)}
                     className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-medium"
                   />

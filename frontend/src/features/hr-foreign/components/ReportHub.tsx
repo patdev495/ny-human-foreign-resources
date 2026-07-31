@@ -182,7 +182,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 type="date"
                 value={mealStartDate}
                 onChange={(e) => setMealStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-amber-500"
+                style={{ colorScheme: "light", color: "#0f172a" }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-amber-500 [color-scheme:light]"
               />
             </div>
             <div>
@@ -193,7 +194,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 type="date"
                 value={mealEndDate}
                 onChange={(e) => setMealEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-amber-500"
+                style={{ colorScheme: "light", color: "#0f172a" }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-amber-500 [color-scheme:light]"
               />
             </div>
           </div>
@@ -247,7 +249,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 type="date"
                 value={janitorStartDate}
                 onChange={(e) => setJanitorStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-purple-500"
+                style={{ colorScheme: "light", color: "#0f172a" }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-purple-500 [color-scheme:light]"
               />
             </div>
             <div>
@@ -258,7 +261,8 @@ export const ReportHub: React.FC<ReportHubProps> = ({
                 type="date"
                 value={janitorEndDate}
                 onChange={(e) => setJanitorEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-purple-500"
+                style={{ colorScheme: "light", color: "#0f172a" }}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs bg-white text-slate-800 font-medium focus:ring-2 focus:ring-purple-500 [color-scheme:light]"
               />
             </div>
           </div>

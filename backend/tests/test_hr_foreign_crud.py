@@ -124,7 +124,7 @@ def test_employee_travel_date_validation(client: TestClient) -> None:
     # 3. Reject creating a new entry date while old trip is still open (no actual_exit_date)
     new_trip_payload = {
         **valid_payload,
-        "entry_date": "2026-09-01",       # New trip attempt
+        "entry_date": "2026-06-01",       # New trip attempt
         "expected_exit_date": "2026-11-01",  # Also updated so Rule 1 doesn't fire
     }
     res = client.put(f"/api/hr-foreign/employees/{emp_id}", json=new_trip_payload)

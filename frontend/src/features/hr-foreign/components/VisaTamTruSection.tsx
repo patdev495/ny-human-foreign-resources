@@ -114,7 +114,7 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
 }) => {
   // Pick the active (or latest) stay for creating new records
   const today = new Date().toISOString().split("T")[0]!;
-  const activeStay = stays.find((s) => !s.end_date || s.end_date >= today) ?? stays[0];
+  const activeStay = stays.find((s) => !s.end_date || s.end_date > today) ?? stays[0];
 
   // Visa state
   const [showAddVisa, setShowAddVisa] = useState(false);

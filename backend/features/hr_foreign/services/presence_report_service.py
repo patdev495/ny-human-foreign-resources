@@ -21,7 +21,7 @@ def get_daily_presence_report(
         db.query(Stay)
         .filter(
             or_(Stay.start_date.is_(None), Stay.start_date <= target_date),
-            or_(Stay.end_date.is_(None), Stay.end_date >= target_date),
+            or_(Stay.end_date.is_(None), Stay.end_date > target_date),
         )
         .all()
     )
@@ -88,7 +88,8 @@ def get_daily_presence_report(
 
     all_employees = [e for e in get_employees(db) if e.employee_type != "JANITORIAL" and not (e.role and "tạp vụ" in e.role.lower())]
     emp_statuses = evaluate_employee_statuses(db, all_employees, today=target_date)
-    
+
+    stay_emp_ids = {s.employee_id for s in stays if s.employee_id}
     exited_items: list[DailyPresenceItem] = []
     for emp_read in emp_statuses:
         if not emp_read.is_in_vietnam:
@@ -108,6 +109,23 @@ def get_daily_presence_report(
                     notes=emp_read.notes,
                 )
             )
+        elif emp_read.id not in stay_emp_ids:
+            unassigned_item = DailyPresenceItem(
+                employee_id=emp_read.id,
+                employee_code=emp_read.employee_code,
+                name_latin=emp_read.name_latin,
+                name_chinese=emp_read.name_chinese,
+                gender=emp_read.gender,
+                department=emp_read.department,
+                phone=emp_read.phone,
+                accommodation_type="KTX",
+                location_name="Chưa xếp phòng",
+                start_date=emp_read.entry_date,
+                expected_end_date=emp_read.expected_exit_date,
+                notes=emp_read.notes,
+            )
+            items.append(unassigned_item)
+            unassigned_items.append(unassigned_item)
 
     ktx_groups = [
         DailyPresenceGroup(group_name=k, count=len(v), items=v)

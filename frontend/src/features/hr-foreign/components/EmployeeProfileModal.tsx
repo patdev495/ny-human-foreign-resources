@@ -16,6 +16,7 @@ interface EmployeeProfileModalProps {
   employeeId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  onUpdate?: () => void;
   initialTab?: ProfileTab;
 }
 
@@ -24,6 +25,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
   employeeId,
   isOpen,
   onClose,
+  onUpdate,
   initialTab,
 }) => {
   const [data, setData] = useState<EmployeeHistoryResponse | null>(null);
@@ -51,6 +53,11 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
       setLoading(false);
     }
   }, [employeeId, isOpen]);
+
+  const handleRefresh = useCallback(async () => {
+    await loadData();
+    onUpdate?.();
+  }, [loadData, onUpdate]);
 
   useEffect(() => {
     loadData();
@@ -134,8 +141,8 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                   <div>
                     <span className="text-slate-500 block mb-0.5">📅 Ngày đến Việt Nam:</span>
                     <span className="font-mono font-bold text-slate-800">
-                      {data.employee.entry_date && !data.employee.actual_exit_date ? (
-                        data.employee.entry_date
+                      {data.employee.is_in_vietnam ? (
+                        data.employee.entry_date || "-"
                       ) : (
                         <span className="text-slate-400 italic font-normal">Chưa đến Việt Nam</span>
                       )}
@@ -143,20 +150,18 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                   </div>
                   <div>
                     <span className="text-slate-500 block mb-0.5">
-                      {data.employee.entry_date && !data.employee.actual_exit_date
-                        ? "⏳ Ngày dự kiến về:"
-                        : "⏳ Ngày dự kiến sang:"}
+                      {data.employee.is_in_vietnam ? "⏳ Ngày dự kiến về:" : "⏳ Ngày dự kiến sang:"}
                     </span>
                     <span className="font-mono font-bold text-amber-700">
-                      {data.employee.entry_date && !data.employee.actual_exit_date
-                        ? data.employee.expected_exit_date || data.employee.required_exit_date || "-"
+                      {data.employee.is_in_vietnam
+                        ? data.employee.expected_exit_date || "-"
                         : data.employee.expected_entry_date || "-"}
                     </span>
                   </div>
                   <div>
                     <span className="text-slate-500 block mb-0.5">✈️ Ngày thực tế đã về:</span>
                     <span className="font-mono font-bold text-rose-700">
-                      {data.employee.entry_date && !data.employee.actual_exit_date ? (
+                      {data.employee.is_in_vietnam ? (
                         "Chưa về nước"
                       ) : (
                         data.employee.actual_exit_date || "-"
@@ -277,7 +282,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 stays={data.stays}
                 visas={data.visas}
                 tamTrus={data.tam_trus}
-                onRefresh={loadData}
+                onRefresh={handleRefresh}
               />
             )}
 
@@ -285,7 +290,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
             {activeTab === "PASSPORT" && (
               <PassportSection
                 employee={data.employee}
-                onRefresh={loadData}
+                onRefresh={handleRefresh}
               />
             )}
           </div>
@@ -298,7 +303,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
             onClose={() => setIsTravelModalOpen(false)}
             employee={data.employee}
             activeStay={data.stays.find((s) => !s.end_date)}
-            onSuccess={loadData}
+            onSuccess={handleRefresh}
           />
         )}
 

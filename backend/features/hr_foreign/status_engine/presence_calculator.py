@@ -9,6 +9,7 @@ from features.hr_foreign.models import (
     ForeignEmployee,
     Stay,
     TamTru,
+    TravelRecord,
     Visa,
     WorkPermit,
 )
@@ -86,6 +87,16 @@ def evaluate_employee_statuses(
     for c in contracts:
         contracts_by_emp[c.employee_id].append(c)
 
+    travel_records = (
+        db.query(TravelRecord)
+        .filter(TravelRecord.employee_id.in_(emp_ids))
+        .order_by(TravelRecord.entry_date.desc(), TravelRecord.id.desc())
+        .all()
+    )
+    tr_by_emp: dict[int, list[TravelRecord]] = defaultdict(list)
+    for tr in travel_records:
+        tr_by_emp[tr.employee_id].append(tr)
+
     results: list[ForeignEmployeeRead] = []
     for emp in employees:
         res = ForeignEmployeeRead.model_validate(emp)
@@ -95,32 +106,44 @@ def evaluate_employee_statuses(
             reverse=True,
         )
         latest_stay = emp_stays[0] if emp_stays else None
+        emp_trs = tr_by_emp.get(emp.id, [])
+        latest_completed_tr = next((tr for tr in emp_trs if tr.actual_exit_date is not None), None)
+        latest_completed_stay = next((s for s in emp_stays if s.end_date is not None), None)
+
+        last_exit_date = emp.actual_exit_date
+        if not last_exit_date:
+            if latest_completed_tr and latest_completed_tr.actual_exit_date:
+                last_exit_date = latest_completed_tr.actual_exit_date
+            elif latest_completed_stay and latest_completed_stay.end_date:
+                last_exit_date = latest_completed_stay.end_date
 
         active_stay = next(
-            (s for s in emp_stays if s.end_date is None or s.end_date >= today), None
+            (s for s in emp_stays if s.end_date is None or s.end_date > today), None
         )
 
         effective_entry = emp.entry_date or (latest_stay.start_date if latest_stay else None)
         effective_expected_exit = (
             emp.expected_exit_date
             or (latest_stay.expected_end_date if latest_stay else None)
-            or emp.required_exit_date
         )
-        effective_actual_exit = emp.actual_exit_date or (latest_stay.end_date if latest_stay else None)
 
         res.entry_date = effective_entry
         res.expected_exit_date = effective_expected_exit
-        res.actual_exit_date = effective_actual_exit
         
-        if effective_actual_exit and effective_actual_exit <= today:
+        if emp.actual_exit_date and emp.actual_exit_date <= today:
             res.is_in_vietnam = False
+            res.actual_exit_date = emp.actual_exit_date
+        elif last_exit_date and (not emp.entry_date or emp.entry_date > today):
+            res.is_in_vietnam = False
+            res.actual_exit_date = last_exit_date
         elif effective_entry and effective_entry <= today:
             res.is_in_vietnam = True
+            res.actual_exit_date = emp.actual_exit_date
         else:
-            has_exited_legacy = bool(emp.required_exit_date and emp.required_exit_date < today)
-            res.is_in_vietnam = bool(active_stay and not has_exited_legacy)
+            res.is_in_vietnam = bool(active_stay)
+            res.actual_exit_date = last_exit_date if not bool(active_stay) else emp.actual_exit_date
 
-        if res.is_in_vietnam and effective_actual_exit is None and effective_expected_exit and effective_expected_exit < today:
+        if res.is_in_vietnam and res.actual_exit_date is None and effective_expected_exit and effective_expected_exit < today:
             res.is_overdue_exit = True
         else:
             res.is_overdue_exit = False

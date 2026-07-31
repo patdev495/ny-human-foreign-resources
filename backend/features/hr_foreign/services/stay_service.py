@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import Hotel, Room, Stay
+from features.hr_foreign.models import Hotel, Room, Stay, TravelRecord
 from features.hr_foreign.schemas import (
     ResidentInfo,
     RoomOccupancyRead,
@@ -17,7 +17,7 @@ def get_active_stay_for_employee(
 ) -> Stay | None:
     query = db.query(Stay).filter(
         Stay.employee_id == employee_id,
-        or_(Stay.end_date.is_(None), Stay.end_date >= target_date),
+        or_(Stay.end_date.is_(None), Stay.end_date > target_date),
     )
     if exclude_stay_id:
         query = query.filter(Stay.id != exclude_stay_id)
@@ -36,7 +36,7 @@ def get_stays(
         query = query.filter(Stay.employee_id == employee_id)
     if status == "active":
         today = datetime.date.today()
-        query = query.filter(or_(Stay.end_date.is_(None), Stay.end_date >= today))
+        query = query.filter(or_(Stay.end_date.is_(None), Stay.end_date > today))
     return query.all()
 
 
@@ -49,9 +49,35 @@ def create_stay(db: Session, payload: StayCreate) -> Stay:
     return stay
 
 
+def _sync_stay_checkout_with_travel_record(db: Session, stay: Stay, end_date: datetime.date) -> None:
+    emp = stay.employee
+    if not emp:
+        return
+    emp.actual_exit_date = end_date
+    latest_tr = (
+        db.query(TravelRecord)
+        .filter(TravelRecord.employee_id == emp.id, TravelRecord.actual_exit_date.is_(None))
+        .order_by(TravelRecord.entry_date.desc(), TravelRecord.id.desc())
+        .first()
+    )
+    if latest_tr:
+        latest_tr.actual_exit_date = end_date
+    elif emp.entry_date:
+        latest_tr = TravelRecord(
+            employee_id=emp.id,
+            entry_date=emp.entry_date,
+            expected_exit_date=emp.expected_exit_date,
+            actual_exit_date=end_date,
+        )
+        db.add(latest_tr)
+
+
 def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
+    previous_end_date = stay.end_date
     for key, value in payload.model_dump().items():
         setattr(stay, key, value)
+    if stay.end_date and stay.end_date != previous_end_date:
+        _sync_stay_checkout_with_travel_record(db, stay, stay.end_date)
     db.commit()
     db.refresh(stay)
     return stay
@@ -59,6 +85,7 @@ def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
 
 def checkout_stay(db: Session, stay: Stay, end_date: datetime.date) -> Stay:
     stay.end_date = end_date
+    _sync_stay_checkout_with_travel_record(db, stay, end_date)
     db.commit()
     db.refresh(stay)
     return stay
@@ -76,7 +103,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
             .filter(
                 Stay.room_id == room.id,
                 Stay.accommodation_type == "KTX",
-                or_(Stay.end_date.is_(None), Stay.end_date >= today),
+                or_(Stay.end_date.is_(None), Stay.end_date > today),
             )
             .all()
         )
@@ -93,6 +120,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                         stay_id=stay.id,
                         stay_type=stay.stay_type,
                         has_meals=stay.has_meals,
+                        invoice_amount=stay.invoice_amount,
                         bed_location=stay.bed_location,
                         start_date=stay.start_date,
                         end_date=stay.end_date,
@@ -119,7 +147,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
             .filter(
                 Stay.hotel_id == hotel.id,
                 Stay.accommodation_type == "HOTEL",
-                or_(Stay.end_date.is_(None), Stay.end_date >= today),
+                or_(Stay.end_date.is_(None), Stay.end_date > today),
             )
             .all()
         )
@@ -141,6 +169,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                         stay_id=stay.id,
                         stay_type=stay.stay_type,
                         has_meals=stay.has_meals,
+                        invoice_amount=stay.invoice_amount,
                         bed_location=bed_loc,
                         start_date=stay.start_date,
                         end_date=stay.end_date,

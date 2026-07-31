@@ -14,6 +14,7 @@ class StayBase(BaseModel):
     bed_location: str | None = None
     stay_type: str  # "CO_DINH" | "CONG_TAC"
     has_meals: bool = True
+    invoice_amount: float | None = None
     start_date: datetime.date | None = None
     expected_end_date: datetime.date | None = None
     end_date: datetime.date | None = None
@@ -50,6 +51,7 @@ class ResidentInfo(BaseModel):
     stay_id: int
     stay_type: str
     has_meals: bool
+    invoice_amount: float | None = None
     bed_location: str | None = None
     start_date: datetime.date | None = None
     end_date: datetime.date | None = None

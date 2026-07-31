@@ -15,13 +15,13 @@ export const ExitedPresenceTable: React.FC<Props> = ({
       <div className="p-4 bg-rose-50/50 border-b border-rose-200 flex items-center justify-between">
         <div>
           <h3 className="font-bold text-sm text-rose-900 flex items-center gap-2">
-            <span>✈️ Danh sách Nhân sự Đã về nước</span>
+            <span>✈️ Danh sách Nhân sự Vắng mặt tại Việt Nam (Đã về nước / Chưa sang)</span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 font-bold">
               {filteredExitedItems.length} người
             </span>
           </h3>
           <p className="text-xs text-rose-600 mt-0.5">
-            Nhân sự tạm vắng mặt tại Việt Nam tính đến mốc ngày này.
+            Nhân sự hiện không ở Việt Nam (đã làm thủ tục về nước hoặc đang ở nước ngoài chờ đợt sang).
           </p>
         </div>
       </div>

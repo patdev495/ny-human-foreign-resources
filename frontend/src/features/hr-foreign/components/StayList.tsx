@@ -167,7 +167,7 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
               </tr>
             ) : (
               stays.map((stay) => {
-                const isActive = !stay.end_date || stay.end_date >= new Date().toISOString().split("T")[0];
+                const isActive = !stay.end_date || stay.end_date > new Date().toISOString().split("T")[0];
                 return (
                   <tr key={stay.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 font-mono text-slate-500">#{stay.id}</td>

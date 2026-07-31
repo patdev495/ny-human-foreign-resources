@@ -16,3 +16,8 @@ echo   - Backend API Docs : http://localhost:8000/docs
 echo   - Local Web App    : http://localhost:5173
 echo   - LAN Web Access   : Xem dia chi IP hien thi trong cua so Terminal Frontend (Vd: http://192.168.x.x:5173)
 echo.
+
+
+
+
+

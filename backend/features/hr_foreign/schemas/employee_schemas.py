@@ -19,7 +19,6 @@ class ForeignEmployeeBase(BaseModel):
     expected_entry_date: datetime.date | None = None
     expected_exit_date: datetime.date | None = None
     actual_exit_date: datetime.date | None = None
-    required_exit_date: datetime.date | None = None
     phone: str | None = None
     department: str | None = None
     role: str | None = None

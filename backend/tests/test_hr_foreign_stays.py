@@ -120,3 +120,113 @@ def test_stay_with_expected_end_date(client: TestClient) -> None:
     stay_data = res.json()
     assert stay_data["expected_end_date"] == "2026-10-31"
 
+
+def test_hotel_stay_invoice_amount_and_checkout(client: TestClient) -> None:
+    emp_res = client.post(
+        "/api/hr-foreign/employees",
+        json={
+            "name_latin": "ZHANG SAN",
+            "gender": "Nam",
+            "nationality": "Trung Quoc",
+        },
+    )
+    emp_id = emp_res.json()["id"]
+
+    hotel_res = client.post(
+        "/api/hr-foreign/hotels",
+        json={"name": "Khách sạn Mường Thanh", "address": "Bắc Giang"},
+    )
+    hotel_id = hotel_res.json()["id"]
+
+    # 1. Create Hotel Stay with mandatory start_date and no invoice_amount yet
+    stay_payload = {
+        "employee_id": emp_id,
+        "accommodation_type": "HOTEL",
+        "hotel_id": hotel_id,
+        "hotel_room_number": "P.302",
+        "stay_type": "CONG_TAC",
+        "has_meals": False,
+        "start_date": "2026-07-01",
+    }
+    res = client.post("/api/hr-foreign/stays", json=stay_payload)
+    assert res.status_code == 201
+    stay_id = res.json()["id"]
+    assert res.json()["invoice_amount"] is None
+
+    # 2. Checkout Hotel stay and provide invoice_amount (flexible entry)
+    update_res = client.put(
+        f"/api/hr-foreign/stays/{stay_id}",
+        json={
+            **stay_payload,
+            "end_date": "2026-07-15",
+            "invoice_amount": 15000000.0,
+        },
+    )
+    assert update_res.status_code == 200
+    assert update_res.json()["end_date"] == "2026-07-15"
+    assert update_res.json()["invoice_amount"] == 15000000.0
+
+
+def test_checkout_stay_syncs_travel_record_and_employee_actual_exit(client: TestClient) -> None:
+    # 1. Create employee with an open travel record (entry_date set, actual_exit_date None)
+    emp_res = client.post(
+        "/api/hr-foreign/employees",
+        json={
+            "name_latin": "CHEN SHI PU",
+            "gender": "Nam",
+            "nationality": "Trung Quoc",
+            "entry_date": "2026-05-01",
+        },
+    )
+    emp_id = emp_res.json()["id"]
+
+    room_res = client.post("/api/hr-foreign/rooms", json={"room_number": "505"})
+    room_id = room_res.json()["id"]
+
+    # 2. Create Stay
+    stay_res = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": emp_id,
+            "accommodation_type": "KTX",
+            "room_id": room_id,
+            "stay_type": "CO_DINH",
+            "has_meals": True,
+            "start_date": "2026-05-01",
+        },
+    )
+    stay_id = stay_res.json()["id"]
+
+    # 3. Checkout stay with end_date = 2026-07-31
+    checkout_res = client.put(
+        f"/api/hr-foreign/stays/{stay_id}",
+        json={
+            "employee_id": emp_id,
+            "accommodation_type": "KTX",
+            "room_id": room_id,
+            "stay_type": "CO_DINH",
+            "has_meals": True,
+            "start_date": "2026-05-01",
+            "end_date": "2026-07-31",
+        },
+    )
+    assert checkout_res.status_code == 200
+
+    # 4. Check employee profile history -> travel_records must have actual_exit_date = 2026-07-31
+    hist_res = client.get(f"/api/hr-foreign/employees/{emp_id}/history")
+    assert hist_res.status_code == 200
+    hist_data = hist_res.json()
+    
+    assert len(hist_data["travel_records"]) == 1
+    assert hist_data["travel_records"][0]["actual_exit_date"] == "2026-07-31"
+    assert hist_data["employee"]["actual_exit_date"] == "2026-07-31"
+
+    # 5. Room occupancy board must no longer list this checked-out stay in room 505 today
+    occ_res = client.get("/api/hr-foreign/rooms/occupancy")
+    assert occ_res.status_code == 200
+    room_505 = next((r for r in occ_res.json() if r["room_number"] == "505"), None)
+    assert room_505 is not None
+    assert len(room_505["active_residents"]) == 0
+
+
+
