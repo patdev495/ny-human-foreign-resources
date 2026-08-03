@@ -83,9 +83,14 @@ export interface VehicleDispatch {
   pickup_location?: string | null;
   dropoff_location?: string | null;
   pickup_time?: string | null;
+  return_time?: string | null;
   passenger_name?: string | null;
   passenger_count: number;
   
+  start_km?: number | null;
+  end_km?: number | null;
+  odometer_km?: number | null;
+
   vendor_route_id?: number | null;
   route_type?: RouteType;
   distance_km?: number;
@@ -109,8 +114,13 @@ export interface VehicleDispatchCreatePayload {
   pickup_location?: string | null;
   dropoff_location?: string | null;
   pickup_time?: string | null;
+  return_time?: string | null;
   passenger_name?: string | null;
   passenger_count: number;
+
+  start_km?: number | null;
+  end_km?: number | null;
+  odometer_km?: number | null;
   
   vendor_route_id?: number | null;
   route_type?: RouteType;

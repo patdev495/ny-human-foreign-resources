@@ -406,6 +406,23 @@ def test_get_contract_pdf(client: TestClient) -> None:
     assert "inline" in res.headers.get("content-disposition", "")
 
 
+def test_export_vehicle_excel(client: TestClient) -> None:
+    # 1. Export Excel for COMPANY_OWNED (Đức Anh - 3 vehicles with separate sheets)
+    res_company = client.get("/api/vehicle-management/export-excel?provider_type=COMPANY_OWNED&from_date=2026-05-01&to_date=2026-05-31")
+    assert res_company.status_code == 200
+    assert "spreadsheetml" in res_company.headers["content-type"]
+    assert "Bao_Cao_Chi_Phi_Xe_Duc_Anh" in res_company.headers["content-disposition"]
+    assert len(res_company.content) > 1000
+
+    # 2. Export Excel for OUTSOURCED (Bình An)
+    res_outsourced = client.get("/api/vehicle-management/export-excel?provider_type=OUTSOURCED&from_date=2026-05-01&to_date=2026-05-31")
+    assert res_outsourced.status_code == 200
+    assert "spreadsheetml" in res_outsourced.headers["content-type"]
+    assert "Bang_Ke_Chuyen_Xe_Binh_An" in res_outsourced.headers["content-disposition"]
+    assert len(res_outsourced.content) > 1000
+
+
+
 
 
 

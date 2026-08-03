@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { VehicleContractManagement } from "./VehicleContractManagement";
-import { OdometerLogList } from "./OdometerLogList";
+import { VehicleStatsManagement } from "./VehicleStatsManagement";
 import { VehicleDispatchList } from "./VehicleDispatchList";
 import type { NavTab } from "../../../components/Sidebar";
 
-type SubTabKey = "DISPATCH" | "ODOMETER" | "CONTRACTS";
+type SubTabKey = "DISPATCH" | "STATS" | "CONTRACTS";
 
 interface VehicleManagementProps {
   activeTab?: NavTab;
@@ -18,8 +18,8 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
     switch (tab) {
       case "VEHICLE_DISPATCH":
         return "DISPATCH";
-      case "VEHICLE_ODOMETER":
-        return "ODOMETER";
+      case "VEHICLE_STATS":
+        return "STATS";
       case "VEHICLE_CONTRACTS":
         return "CONTRACTS";
       default:
@@ -45,17 +45,17 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
           title: "Nhật ký Điều xe",
           desc: "Theo dõi nhật ký các chuyến điều xe đưa đón nhân sự, tra cứu lịch trình và chi phí cước xe.",
         };
-      case "ODOMETER":
+      case "STATS":
         return {
-          icon: "📟",
-          title: "Nhật ký Quãng đường di chuyển",
-          desc: "Ghi nhận chỉ số công tơ mét đầu ngày & cuối ngày của các xe Đức Anh để theo dõi tổng KM thực tế.",
+          icon: "📊",
+          title: "Thống kê & Quãng đường di chuyển",
+          desc: "Báo cáo thống kê cước phí vận tải, ghi nhận chỉ số công tơ mét đầu/cuối ngày cho xe thuê khoán tháng (Đức Anh).",
         };
       case "CONTRACTS":
         return {
           icon: "📑",
           title: "Quản lý Hợp đồng & Nhà xe",
-          desc: "Quản lý tập trung thông tin nhà xe, danh mục xe/lái xe, hợp đồng cước khoán tháng Đức Anh và bảng giá tuyến đường Bình An.",
+          desc: "Quản lý tập trung thông tin nhà xe, danh mục xe/lái xe, hợp đồng xe công ty (Đức Anh) và bảng giá tuyến đường Bình An.",
         };
     }
   };
@@ -79,7 +79,7 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
 
       {/* Sub-Tab Content */}
       {activeSubTab === "DISPATCH" && <VehicleDispatchList />}
-      {activeSubTab === "ODOMETER" && <OdometerLogList />}
+      {activeSubTab === "STATS" && <VehicleStatsManagement />}
       {activeSubTab === "CONTRACTS" && <VehicleContractManagement />}
     </div>
   );

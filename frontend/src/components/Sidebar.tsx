@@ -38,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const isVehicleActive =
     activeTab === "VEHICLE_MANAGEMENT" ||
     activeTab === "VEHICLE_DISPATCH" ||
-    activeTab === "VEHICLE_ODOMETER" ||
+    activeTab === "VEHICLE_STATS" ||
     activeTab === "VEHICLE_CONTRACTS";
   const isExportActive =
     activeTab === "EXPORT_LEGAL" ||

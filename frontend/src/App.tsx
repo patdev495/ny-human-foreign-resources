@@ -77,7 +77,7 @@ export const App: React.FC = () => {
           {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
           {(activeTab === "VEHICLE_MANAGEMENT" ||
             activeTab === "VEHICLE_DISPATCH" ||
-            activeTab === "VEHICLE_ODOMETER" ||
+            activeTab === "VEHICLE_STATS" ||
             activeTab === "VEHICLE_CONTRACTS") && (
             <VehicleManagement activeTab={activeTab} setActiveTab={setActiveTab} />
           )}

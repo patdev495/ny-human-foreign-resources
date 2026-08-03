@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { calculateCost, fetchProviders, fetchVendorRoutes } from "../../api";
+import { DispatchOdometerSection } from "./DispatchOdometerSection";
 import { DispatchPricingSection } from "./DispatchPricingSection";
 import type {
   OwnershipGroup,
@@ -181,11 +182,20 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Giờ đón</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Giờ đón (Xuất phát)</label>
               <input
                 type="time"
                 value={formData.pickup_time || ""}
                 onChange={(e) => setFormData({ ...formData, pickup_time: e.target.value })}
+                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Giờ về (Kết thúc chuyến)</label>
+              <input
+                type="time"
+                value={formData.return_time || ""}
+                onChange={(e) => setFormData({ ...formData, return_time: e.target.value })}
                 className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -205,7 +215,9 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
                 <option value="">-- Chọn Nhà xe / Nhóm xe --</option>
                 {providers.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.provider_type === "COMPANY_OWNED" ? "🏢 [Công ty]" : "🚕 [Thuê ngoài]"} {p.name}
+                    {p.provider_type === "COMPANY_OWNED"
+                      ? "🏢 Xe công ty (Đức Anh)"
+                      : `🚕 Nhà xe ${p.name}`}
                   </option>
                 ))}
               </select>
@@ -270,14 +282,18 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
             </div>
           </div>
 
-          {/* Pricing Logic Section */}
-          <DispatchPricingSection
-            formData={formData}
-            setFormData={setFormData}
-            vendorRoutes={vendorRoutes}
-            onRouteSelect={handleRouteSelect}
-            onCalculateCost={handleCalculateCost}
-          />
+          {/* Pricing Logic or Odometer Section */}
+          {formData.ownership_group === "COMPANY_OWNED" ? (
+            <DispatchOdometerSection formData={formData} setFormData={setFormData} />
+          ) : (
+            <DispatchPricingSection
+              formData={formData}
+              setFormData={setFormData}
+              vendorRoutes={vendorRoutes}
+              onRouteSelect={handleRouteSelect}
+              onCalculateCost={handleCalculateCost}
+            />
+          )}
 
 
           {/* Locations & Passenger */}

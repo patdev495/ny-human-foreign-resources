@@ -112,8 +112,13 @@ class VehicleDispatchBase(BaseModel):
     pickup_location: Optional[str] = None
     dropoff_location: Optional[str] = None
     pickup_time: Optional[str] = None
+    return_time: Optional[str] = None
     passenger_name: Optional[str] = None
     passenger_count: int = 1
+
+    start_km: Optional[float] = None
+    end_km: Optional[float] = None
+    odometer_km: Optional[float] = None
 
     vendor_route_id: Optional[int] = None
     route_type: RouteType = RouteType.FIXED_ROUTE

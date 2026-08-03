@@ -97,6 +97,18 @@ def init_db() -> None:
                     "ALTER TABLE vehicle_dispatches ADD driver_phone NVARCHAR(50) NULL;"
                 )
             )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'start_km') "
+                    "ALTER TABLE vehicle_dispatches ADD start_km FLOAT NULL;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'end_km') "
+                    "ALTER TABLE vehicle_dispatches ADD end_km FLOAT NULL;"
+                )
+            )
             # Ensure vehicle_management tables use NVARCHAR in SQL Server
             if engine.name == "mssql":
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN name NVARCHAR(200) NOT NULL;"))
@@ -168,6 +180,18 @@ def init_db() -> None:
                     "ALTER TABLE monthly_vehicle_contracts ADD sunday_standard_end_time NVARCHAR(10) NOT NULL DEFAULT N'18:00';"
                 )
             )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'odometer_km') "
+                    "ALTER TABLE vehicle_dispatches ADD odometer_km FLOAT NULL;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'return_time') "
+                    "ALTER TABLE vehicle_dispatches ADD return_time NVARCHAR(20) NULL;"
+                )
+            )
     except Exception:
         # Ignore if non-SQL Server dialect or table doesn't exist yet
         pass
@@ -209,6 +233,14 @@ def init_db() -> None:
                     vd_cols = [c["name"] for c in inspector.get_columns("vehicle_dispatches")]
                     if "driver_phone" not in vd_cols:
                         conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN driver_phone VARCHAR(50);"))
+                    if "start_km" not in vd_cols:
+                        conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN start_km FLOAT;"))
+                    if "end_km" not in vd_cols:
+                        conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN end_km FLOAT;"))
+                    if "odometer_km" not in vd_cols:
+                        conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN odometer_km FLOAT;"))
+                    if "return_time" not in vd_cols:
+                        conn.execute(text("ALTER TABLE vehicle_dispatches ADD COLUMN return_time VARCHAR(20);"))
         except Exception:
             pass
 

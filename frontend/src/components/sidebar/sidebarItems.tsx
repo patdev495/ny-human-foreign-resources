@@ -7,7 +7,7 @@ export type NavTab =
   | "EXPIRING_DOCS"
   | "VEHICLE_MANAGEMENT"
   | "VEHICLE_DISPATCH"
-  | "VEHICLE_ODOMETER"
+  | "VEHICLE_STATS"
   | "VEHICLE_CONTRACTS"
   | "MEAL_MANAGEMENT"
   | "HR_DOMESTIC_PLACEHOLDER"
@@ -86,7 +86,7 @@ export const janitorItems: NavItem[] = [
 
 export const vehicleItems: NavItem[] = [
   { key: "VEHICLE_DISPATCH", label: "Nhật ký Điều xe", icon: <span className="text-xs">📅</span> },
-  { key: "VEHICLE_ODOMETER", label: "Quãng đường di chuyển", icon: <span className="text-xs">📟</span> },
+  { key: "VEHICLE_STATS", label: "Thống kê", icon: <span className="text-xs">📊</span> },
   { key: "VEHICLE_CONTRACTS", label: "Hợp đồng và bảng giá", icon: <span className="text-xs">📑</span> },
 ];
 

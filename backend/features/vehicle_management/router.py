@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -192,6 +193,38 @@ def get_monthly_reconciliation_report(
     db: Session = Depends(get_db),
 ):
     return service.get_monthly_reconciliation_report(db, billing_month=billing_month)
+
+
+@router.get("/export-excel")
+def export_vehicle_excel(
+    provider_type: str = Query("COMPANY_OWNED", description="COMPANY_OWNED or OUTSOURCED"),
+    from_date: Optional[str] = Query(None, description="Format: YYYY-MM-DD"),
+    to_date: Optional[str] = Query(None, description="Format: YYYY-MM-DD"),
+    db: Session = Depends(get_db),
+):
+    from fastapi.responses import StreamingResponse
+    from features.vehicle_management.services.excel_service import (
+        generate_duc_anh_excel_report,
+        generate_binh_an_excel_report,
+    )
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    f_date = from_date or f"{today[:7]}-01"
+    t_date = to_date or today
+
+    if provider_type == "COMPANY_OWNED":
+        excel_io = generate_duc_anh_excel_report(db, f_date, t_date)
+        filename = f"Bao_Cao_Chi_Phi_Xe_Duc_Anh_{f_date}_den_{t_date}.xlsx"
+    else:
+        excel_io = generate_binh_an_excel_report(db, f_date, t_date)
+        filename = f"Bang_Ke_Chuyen_Xe_Binh_An_{f_date}_den_{t_date}.xlsx"
+
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(
+        excel_io,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
 
 
 @router.get("/contracts/pdf/{doc_key}")

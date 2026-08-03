@@ -214,4 +214,32 @@ export async function fetchMonthlyReconciliation(
   return res.json();
 }
 
+export async function exportVehicleExcel(
+  providerType: "COMPANY_OWNED" | "OUTSOURCED",
+  fromDate?: string,
+  toDate?: string
+): Promise<void> {
+  const query = new URLSearchParams();
+  query.append("provider_type", providerType);
+  if (fromDate) query.append("from_date", fromDate);
+  if (toDate) query.append("to_date", toDate);
+
+  const res = await fetch(`${API_BASE}/export-excel?${query.toString()}`);
+  if (!res.ok) {
+    throw new Error(`Lỗi khi xuất báo cáo Excel: ${res.statusText}`);
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = providerType === "COMPANY_OWNED"
+    ? `Bao_Cao_Chi_Phi_3_Xe_Duc_Anh_${fromDate || ""}_den_${toDate || ""}.xlsx`
+    : `Bang_Ke_Chuyen_Xe_Binh_An_${fromDate || ""}_den_${toDate || ""}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 

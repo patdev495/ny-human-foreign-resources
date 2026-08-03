@@ -161,9 +161,15 @@ class VehicleDispatch(Base):
     pickup_location: Mapped[Optional[str]] = mapped_column(Unicode(255), nullable=True)
     dropoff_location: Mapped[Optional[str]] = mapped_column(Unicode(255), nullable=True)
     pickup_time: Mapped[Optional[str]] = mapped_column(Unicode(20), nullable=True)
+    return_time: Mapped[Optional[str]] = mapped_column(Unicode(20), nullable=True)
     passenger_name: Mapped[Optional[str]] = mapped_column(Unicode(255), nullable=True)
     passenger_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     
+    # Odometer fields (optional for company vehicles)
+    start_km: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    end_km: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    odometer_km: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+
     # Pricing fields
     vendor_route_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("vendor_routes.id", ondelete="SET NULL"), nullable=True

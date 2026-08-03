@@ -47,13 +47,27 @@ export const DispatchFilterBar: React.FC<DispatchFilterBarProps> = ({
             className="px-2.5 py-1.5 text-xs font-bold border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 bg-white"
           >
             <option value="ALL">🚕 Tất cả Đơn vị & Nhóm xe</option>
-            <option value="COMPANY_OWNED">🏢 Đội xe Công ty</option>
-            <option value="OUTSOURCED">🚕 Tất cả Xe thuê ngoài</option>
-            {uniqueOutsourcedProviders.map((p) => (
-              <option key={p.id} value={`PROVIDER_${p.id}`}>
-                &nbsp;&nbsp;&nbsp;↳ 🚕 Nhà xe {p.name}
+            <option value="COMPANY_OWNED">🏢 Xe công ty (Đức Anh)</option>
+            {uniqueOutsourcedProviders.length <= 1 ? (
+              <option
+                value={
+                  uniqueOutsourcedProviders.length === 1
+                    ? `PROVIDER_${uniqueOutsourcedProviders[0].id}`
+                    : "OUTSOURCED"
+                }
+              >
+                🚕 Nhà xe Bình An (Theo chuyến)
               </option>
-            ))}
+            ) : (
+              <>
+                <option value="OUTSOURCED">🚕 Tất cả Xe thuê ngoài</option>
+                {uniqueOutsourcedProviders.map((p) => (
+                  <option key={p.id} value={`PROVIDER_${p.id}`}>
+                    &nbsp;&nbsp;&nbsp;↳ 🚕 Nhà xe {p.name}
+                  </option>
+                ))}
+              </>
+            )}
           </select>
 
           {/* Manual Date Range Filter */}

@@ -18,6 +18,7 @@ import { DispatchFilterBar } from "./dispatch/DispatchFilterBar";
 import { DispatchKpiBanner } from "./dispatch/DispatchKpiBanner";
 import { DispatchModal } from "./dispatch/DispatchModal";
 import { DispatchTable } from "./dispatch/DispatchTable";
+import { QuickOdometerModal } from "./dispatch/QuickOdometerModal";
 
 export const VehicleDispatchList: React.FC = () => {
   const [dispatches, setDispatches] = useState<VehicleDispatch[]>([]);
@@ -31,6 +32,10 @@ export const VehicleDispatchList: React.FC = () => {
   const [toDate, setToDate] = useState<string>("");
   const [selectedProviderFilter, setSelectedProviderFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Quick Odometer Modal State
+  const [quickOdoDispatch, setQuickOdoDispatch] = useState<VehicleDispatch | null>(null);
+  const [isQuickOdoOpen, setIsQuickOdoOpen] = useState<boolean>(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -140,6 +145,8 @@ export const VehicleDispatchList: React.FC = () => {
         pickup_time: dispatch.pickup_time || "",
         passenger_name: dispatch.passenger_name || "",
         passenger_count: dispatch.passenger_count || 1,
+        start_km: dispatch.start_km ?? undefined,
+        end_km: dispatch.end_km ?? undefined,
         vendor_route_id: dispatch.vendor_route_id || undefined,
         route_type: dispatch.route_type || "FIXED_ROUTE",
         distance_km: dispatch.distance_km || 0,
@@ -171,6 +178,8 @@ export const VehicleDispatchList: React.FC = () => {
         pickup_time: "08:00",
         passenger_name: "",
         passenger_count: 1,
+        start_km: undefined,
+        end_km: undefined,
         route_type: "FIXED_ROUTE",
         distance_km: 0,
         waiting_hours: 0,
@@ -234,6 +243,10 @@ export const VehicleDispatchList: React.FC = () => {
           dispatches={dispatches}
           onEdit={(d) => handleOpenModal(d)}
           onDelete={handleDelete}
+          onQuickOdo={(d) => {
+            setQuickOdoDispatch(d);
+            setIsQuickOdoOpen(true);
+          }}
         />
       )}
 
@@ -246,6 +259,13 @@ export const VehicleDispatchList: React.FC = () => {
         onVehicleSelect={handleVehicleSelect}
         onSave={handleSave}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <QuickOdometerModal
+        isOpen={isQuickOdoOpen}
+        dispatch={quickOdoDispatch}
+        onClose={() => setIsQuickOdoOpen(false)}
+        onSuccess={loadData}
       />
     </div>
   );
