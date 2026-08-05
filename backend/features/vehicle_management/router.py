@@ -239,10 +239,18 @@ def get_contract_pdf(doc_key: str):
     from fastapi.responses import Response
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    hd_dir = os.path.abspath(os.path.join(base_dir, "..", "..", "..", "HD"))
+    possible_hd_dirs = [
+        os.path.join(os.getcwd(), "HD"),
+        os.path.abspath(os.path.join(os.getcwd(), "..", "HD")),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "..", "HD")),
+        os.path.abspath(os.path.join(base_dir, "..", "..", "HD")),
+        os.path.abspath(os.path.join(base_dir, "..", "HD")),
+    ]
+    hd_dir = next((d for d in possible_hd_dirs if os.path.exists(d)), None)
 
-    if not os.path.exists(hd_dir):
+    if not hd_dir:
         raise HTTPException(status_code=404, detail="Thư mục HD chứa file hợp đồng không tồn tại")
+
 
     files = os.listdir(hd_dir)
     target_filename = None

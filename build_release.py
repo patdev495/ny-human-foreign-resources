@@ -89,7 +89,22 @@ def package_release() -> None:
         shutil.copy(src_env, os.path.join(RELEASE_DIR, ".env"))
         print("Copied environment configuration files.")
 
-    # 5. Create release/run.bat
+    # 5. Copy HD directory if present
+    src_hd = os.path.join(ROOT_DIR, "HD")
+    dst_hd = os.path.join(RELEASE_DIR, "HD")
+    if os.path.exists(src_hd):
+        print(f"Copying {src_hd} -> {dst_hd}...")
+        shutil.copytree(src_hd, dst_hd)
+
+    # 6. Copy report directory if present
+    src_report = os.path.join(ROOT_DIR, "report")
+    dst_report = os.path.join(RELEASE_DIR, "report")
+    if os.path.exists(src_report):
+        print(f"Copying {src_report} -> {dst_report}...")
+        shutil.copytree(src_report, dst_report)
+
+    # 7. Create release/run.bat
+
     run_bat_content = """@echo off
 chcp 65001 > NUL
 title NY Human Resources System Server

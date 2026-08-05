@@ -10,16 +10,27 @@ from sqlalchemy.orm import Session
 from features.vehicle_management.models import MonthlyVehicleContract, VehicleDispatch
 
 
+def get_report_dir() -> Optional[Path]:
+    possible_dirs = [
+        Path.cwd() / "report",
+        Path.cwd().parent / "report",
+        Path(__file__).resolve().parents[4] / "report",
+        Path(__file__).resolve().parents[3] / "report",
+        Path(__file__).resolve().parents[2] / "report",
+        Path(__file__).resolve().parents[1] / "report",
+    ]
+    for d in possible_dirs:
+        if d.exists():
+            return d
+    return None
+
+
 def find_sample_template(license_plate: str) -> Optional[Path]:
     if not license_plate:
         return None
-    
-    # Try relative to base dir or workspace root
-    base_dir = Path(__file__).resolve().parents[4] / "report"
-    if not base_dir.exists():
-        base_dir = Path(__file__).resolve().parents[3] / "report"
-    
-    if not base_dir.exists():
+
+    base_dir = get_report_dir()
+    if not base_dir:
         return None
 
     clean_plate = license_plate.replace("-", "").replace(".", "").upper()
@@ -30,6 +41,7 @@ def find_sample_template(license_plate: str) -> Optional[Path]:
            ("10378" in clean_plate and "10378" in clean_fname):
             return f
     return None
+
 
 
 def populate_vehicle_from_template(
@@ -137,10 +149,8 @@ def populate_vehicle_from_template(
 
 
 def find_binh_an_template() -> Optional[Path]:
-    base_dir = Path(__file__).resolve().parents[4] / "report"
-    if not base_dir.exists():
-        base_dir = Path(__file__).resolve().parents[3] / "report"
-    if not base_dir.exists():
+    base_dir = get_report_dir()
+    if not base_dir:
         return None
 
     for name in ["template_binh_an.xlsx", "NIENYI-BÌNH AN 07.xlsx", "NIENYI-BINH AN 07.xlsx"]:
@@ -148,6 +158,7 @@ def find_binh_an_template() -> Optional[Path]:
         if p.exists():
             return p
     return None
+
 
 
 def get_bilingual_purpose(text: str) -> str:
