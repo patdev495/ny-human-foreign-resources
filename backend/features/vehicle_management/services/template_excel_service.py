@@ -156,7 +156,12 @@ def populate_vehicle_from_template(
             cell = ws.cell(row=total_r, column=c)
             if cell.value and str(cell.value).startswith("="):
                 new_val = str(cell.value).replace("41)", f"{last_row})").replace("42", f"{total_r}")
-                cell.value = new_val
+        # Delete trailing empty formatted rows below signature block
+        sig_row = total_r + 2
+        if ws.max_row > sig_row:
+            trailing_count = ws.max_row - sig_row
+            ws.delete_rows(sig_row + 1, trailing_count)
+
 
 
 
