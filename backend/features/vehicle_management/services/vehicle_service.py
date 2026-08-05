@@ -218,9 +218,11 @@ def seed_duc_anh_vehicles_and_contracts(db: Session) -> None:
         else:
             c_data = item["contract"]
             if isinstance(c_data, dict):
-                existing_c.contract_name = c_data["contract_name"]
+                for k, val in c_data.items():
+                    setattr(existing_c, k, val)
 
     db.commit()
+
 
 
 def get_vehicles(db: Session, ownership_group: Optional[OwnershipGroup] = None) -> List[Vehicle]:
