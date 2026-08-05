@@ -183,6 +183,13 @@ def populate_vehicle_from_template(
             trailing_count = ws.max_row - sig_row
             ws.delete_rows(sig_row + 1, trailing_count)
 
+        # 5. Purge ghost row_dimensions entries (openpyxl does NOT remove these on
+        #    delete_rows, so Excel still renders blank yellow/white rows for every
+        #    row_dimension entry that has a stored height beyond sig_row).
+        for rd_key in list(ws.row_dimensions.keys()):
+            if rd_key > sig_row:
+                del ws.row_dimensions[rd_key]
+
 
 
 
