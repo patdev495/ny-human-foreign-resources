@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
+import re
 from typing import Optional
+
 from openpyxl import load_workbook
 from sqlalchemy.orm import Session
 
@@ -148,19 +150,39 @@ def populate_vehicle_from_template(
         start_del = 12 + day_idx
         del_count = 42 - start_del
         last_row = 11 + day_idx
+
+        # 1. Shift or unmerge merged cell ranges to prevent openpyxl ghost rows
+        for m in list(ws.merged_cells.ranges):
+            if m.min_row >= start_del and m.max_row < start_del + del_count:
+                ws.unmerge_cells(range_string=str(m))
+            elif m.min_row >= start_del + del_count:
+                min_r, min_c, max_r, max_c = m.min_row, m.min_col, m.max_row, m.max_col
+                ws.unmerge_cells(range_string=str(m))
+                ws.merge_cells(start_row=min_r - del_count, start_column=min_c, end_row=max_r - del_count, end_column=max_c)
+
+        # 2. Delete excess template rows
         ws.delete_rows(start_del, del_count)
         total_r = start_del
 
-        # Update Total row formulas to sum only rows 12..last_row
-        for c in range(1, 30):
+        # 3. Update Total row formulas using regex to prevent circular references
+        for c in range(1, 35):
             cell = ws.cell(row=total_r, column=c)
             if cell.value and str(cell.value).startswith("="):
-                new_val = str(cell.value).replace("41)", f"{last_row})").replace("42", f"{total_r}")
-        # Delete trailing empty formatted rows below signature block
+                val = str(cell.value)
+                val = re.sub(r"41\b", str(last_row), val)
+                val = re.sub(r"42\b", str(total_r), val)
+                cell.value = val
+
+        # 4. Clean up trailing merged cells and rows below signature block
         sig_row = total_r + 2
+        for m in list(ws.merged_cells.ranges):
+            if m.min_row > sig_row:
+                ws.unmerge_cells(range_string=str(m))
+
         if ws.max_row > sig_row:
             trailing_count = ws.max_row - sig_row
             ws.delete_rows(sig_row + 1, trailing_count)
+
 
 
 
