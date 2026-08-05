@@ -74,6 +74,14 @@ def populate_vehicle_from_template(
     ws["A4"] = f"Tháng {month_str} năm {year_str}\n{year_str} 年{month_str}月"
     ws["A6"] = f"Bảng kê số {month_str}{year_str} ngày 25/{month_str}/{year_str} kèm hóa đơn số:            kí hiệu:"
 
+    # Clear all sample data in rows 12..41 before writing dynamic range
+    for r in range(12, 42):
+        for c in range(1, 30):
+            cell = ws.cell(row=r, column=c)
+            val = str(cell.value or "")
+            if not val.startswith("="):
+                cell.value = None
+
     # Query dispatches for this vehicle in range
     dispatches = (
         db.query(VehicleDispatch)
@@ -93,7 +101,7 @@ def populate_vehicle_from_template(
     curr_dt = f_dt
     day_idx = 0
 
-    while curr_dt <= t_dt:
+    while curr_dt <= t_dt and (12 + day_idx) <= 41:
         r = 12 + day_idx
         d_str = curr_dt.strftime("%Y-%m-%d")
 
@@ -132,7 +140,9 @@ def populate_vehicle_from_template(
             if day_toll > 0:
                 ws.cell(row=r, column=27).value = day_toll
 
+        curr_dt += timedelta(days=1)
         day_idx += 1
+
         curr_dt += timedelta(days=1)
 
     # Update sheet ĐNTT if present
