@@ -143,7 +143,6 @@ def populate_vehicle_from_template(
         curr_dt += timedelta(days=1)
         day_idx += 1
 
-        curr_dt += timedelta(days=1)
 
     # Update sheet ĐNTT if present
     if "ĐNTT" in wb.sheetnames:
