@@ -143,6 +143,22 @@ def populate_vehicle_from_template(
         curr_dt += timedelta(days=1)
         day_idx += 1
 
+    # Delete excess rows if date range is less than template's 30 sample rows (rows 12..41)
+    if day_idx > 0 and day_idx < 30:
+        start_del = 12 + day_idx
+        del_count = 42 - start_del
+        last_row = 11 + day_idx
+        ws.delete_rows(start_del, del_count)
+        total_r = start_del
+
+        # Update Total row formulas to sum only rows 12..last_row
+        for c in range(1, 30):
+            cell = ws.cell(row=total_r, column=c)
+            if cell.value and str(cell.value).startswith("="):
+                new_val = str(cell.value).replace("41)", f"{last_row})").replace("42", f"{total_r}")
+                cell.value = new_val
+
+
 
     # Update sheet ĐNTT if present
     if "ĐNTT" in wb.sheetnames:
