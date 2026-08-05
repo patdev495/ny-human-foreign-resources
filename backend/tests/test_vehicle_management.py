@@ -430,11 +430,17 @@ def test_export_vehicle_excel(client: TestClient) -> None:
         assert len(wb.sheetnames) >= 1
 
     # 2. Export Excel for OUTSOURCED (Bình An)
-    res_outsourced = client.get("/api/vehicle-management/export-excel?provider_type=OUTSOURCED&from_date=2026-05-01&to_date=2026-05-31")
+    res_outsourced = client.get("/api/vehicle-management/export-excel?provider_type=OUTSOURCED&from_date=2026-06-26&to_date=2026-07-25")
     assert res_outsourced.status_code == 200
     assert "spreadsheetml" in res_outsourced.headers["content-type"]
     assert "Bang_Ke_Chuyen_Xe_Binh_An" in res_outsourced.headers["content-disposition"]
     assert len(res_outsourced.content) > 1000
+
+    wb_ba = openpyxl.load_workbook(io.BytesIO(res_outsourced.content), data_only=True)
+    assert len(wb_ba.sheetnames) >= 2
+    assert "BINH AN 08" in wb_ba.sheetnames or "BẢNG KÊ BÌNH AN" in wb_ba.sheetnames
+    assert "HỮU NGHỊ BÌNH AN" in wb_ba.sheetnames
+
 
 
 def test_vehicle_dispatch_extra_expense_fields(client: TestClient) -> None:

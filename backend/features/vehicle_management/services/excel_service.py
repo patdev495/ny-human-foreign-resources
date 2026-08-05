@@ -62,9 +62,12 @@ def auto_fit_columns(ws):
 
 
 from features.vehicle_management.services.template_excel_service import (
+    find_binh_an_template,
     find_sample_template,
+    populate_binh_an_from_template,
     populate_vehicle_from_template,
 )
+
 
 
 def generate_single_vehicle_excel_file(
@@ -270,7 +273,12 @@ def generate_duc_anh_excel_report(db: Session, from_date: str, to_date: str) -> 
 
 
 def generate_binh_an_excel_report(db: Session, from_date: str, to_date: str) -> BytesIO:
+    template_path = find_binh_an_template()
+    if template_path and template_path.exists():
+        return populate_binh_an_from_template(template_path, db, from_date, to_date)
+
     wb = Workbook()
+
     ws = wb.active
     ws.title = "BẢNG KÊ BÌNH AN"
     ws.views.sheetView[0].showGridLines = True

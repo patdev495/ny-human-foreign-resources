@@ -38,47 +38,64 @@ def seed_default_providers_and_routes(db: Session) -> None:
 
     db.flush()
 
-    if db.query(VendorRoute).filter(VendorRoute.provider_id == p_binh_an.id).count() > 0:
-        db.commit()
-        return
+    # Re-seed or update routes to ensure exact bilingual text matching HD_BinhAn.pdf contract
+    db.query(VendorRoute).filter(VendorRoute.provider_id == p_binh_an.id).delete()
 
     binh_an_routes_data = [
-        ("CNV đi làm và tan làm", "Ký Túc", "NienYi CN09_CN15", "4 chỗ", 100000.0),
-        ("CNV đi làm và tan làm", "Ký Túc", "NienYi CN09_CN15", "7 chỗ", 130000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "Ký Túc", "4 chỗ", 100000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "Ký Túc", "7 chỗ", 130000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Đình Trám", "4 chỗ", 100000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Đình Trám", "7 chỗ", 120000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Vân Trung", "4 chỗ", 100000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Vân Trung", "7 chỗ", 120000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Quang Châu", "4 chỗ", 120000.0),
-        ("CNV đi làm và tan làm", "NienYi", "KCN Quang Châu", "7 chỗ", 150000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "TP Bắc Giang", "4 chỗ", 180000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "TP Bắc Giang", "7 chỗ", 220000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "TP Bắc Ninh", "4 chỗ", 250000.0),
-        ("CNV đi làm và tan làm", "NienYi CN09_CN15", "TP Bắc Ninh", "7 chỗ", 300000.0),
-        ("Đi tiếp khách", "Ký Túc", "TP Bắc Giang", "4 chỗ", 180000.0),
-        ("Đi tiếp khách", "Ký Túc", "TP Bắc Giang", "7 chỗ", 220000.0),
-        ("Đi tiếp khách", "Ký Túc", "TP Bắc Ninh", "4 chỗ", 180000.0),
-        ("Đi tiếp khách", "Ký Túc", "TP Bắc Ninh", "7 chỗ", 220000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HẠP LĨNHSLP", "4 chỗ", 300000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HẠP LĨNHSLP", "7 chỗ", 350000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "TIÊN DU BN", "4 chỗ", 380000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HÒA PHÚ BN", "4 chỗ", 380000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "QUANG CHÂU", "4 chỗ", 200000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "VÂN TRUNG", "4 chỗ", 150000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "ĐÌNH TRÁM", "4 chỗ", 150000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "SONG KHÊ NỘI HOÀNG", "4 chỗ", 200000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HÀ NỘI", "4 chỗ", 500000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09_CN15", "Sân bay Nội Bài", "4 chỗ", 500000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09_CN15", "Sân bay Nội Bài", "7 chỗ", 700000.0),
-        ("Gửi hàng / Phản cung", "NienYi CN09,CN15", "HẢI PHÒNG / CẢNG", "4 chỗ", 130000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Thuận Thành BN", "4 chỗ", 450000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Thuận Thành BN", "7 chỗ", 550000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Quế Võ BN", "4 chỗ", 350000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Quế Võ BN", "7 chỗ", 400000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Yên Phong BN", "4 chỗ", 350000.0),
-        ("Chuyên gia đi công tác", "NienYi CN09_CN15", "KCN Yên Phong BN", "7 chỗ", 400000.0),
+        # CNV đi làm và tan làm / 員工上下班車
+        ("CNV đi làm và tan làm (員工上下班車)", "Ký Túc (宿舍)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "4 chỗ", 100000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "Ký Túc (宿舍)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "7 chỗ", 130000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "Ký Túc (宿舍)", "4 chỗ", 100000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "Ký Túc (宿舍)", "7 chỗ", 130000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Đình Trám (DINH TRAM 工业区)", "4 chỗ", 100000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Đình Trám (DINH TRAM 工业区)", "7 chỗ", 120000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Vân Trung (VAN TRUNG 工业区)", "4 chỗ", 100000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Vân Trung (VAN TRUNG 工业区)", "7 chỗ", 120000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Quang Châu (QUANG CHAU 工业区)", "4 chỗ", 120000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi (NienYi 公司)", "KCN Quang Châu (QUANG CHAU 工业区)", "7 chỗ", 150000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "TP Bắc Giang (北江市)", "4 chỗ", 180000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "TP Bắc Giang (北江市)", "7 chỗ", 220000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "TP Bắc Ninh (北宁市)", "4 chỗ", 250000.0),
+        ("CNV đi làm và tan làm (員工上下班車)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "TP Bắc Ninh (北宁市)", "7 chỗ", 300000.0),
+
+        # Đi tiếp khách / 去客人
+        ("Đi tiếp khách (去客人)", "Ký Túc (宿舍)", "TP Bắc Giang (北江市区)", "4 chỗ", 180000.0),
+        ("Đi tiếp khách (去客人)", "Ký Túc (宿舍)", "TP Bắc Giang (北江市区)", "7 chỗ", 220000.0),
+        ("Đi tiếp khách (去客人)", "Ký Túc (宿舍)", "TP Bắc Ninh (北宁市区)", "4 chỗ", 180000.0),
+        ("Đi tiếp khách (去客人)", "Ký Túc (宿舍)", "TP Bắc Ninh (北宁市区)", "7 chỗ", 220000.0),
+
+        # Gửi hàng / Phản cung / 发送样品/返空
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "HẠP LĨNH SLP (SLP)", "4 chỗ", 300000.0),
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "HẠP LĨNH SLP (SLP)", "7 chỗ", 350000.0),
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "TIÊN DU BN (仙游北宁)", "4 chỗ", 380000.0),
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "HÒA PHÚ BN (华富北宁)", "4 chỗ", 380000.0),
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "QUẾ VÕ 1,3 (北宁桂武)", "4 chỗ", 270000.0),
+        ("Gửi hàng / Phản cung (发送样品/返空)", "NienYi CN09,CN15 (NienYi 公司 CN09_CN15)", "QUẾ VÕ 1,3 (北宁桂武)", "7 chỗ", 300000.0),
+
+        # Xe đi HNQ (Hữu Nghị Quan) / 繞關車
+        ("Xe đi HNQ (繞關車)", "NienYi (NienYi 公司)", "Hữu Nghị Quan (友谊关)", "4 chỗ", 1300000.0),
+        ("Xe đi HNQ (繞關車)", "NienYi (NienYi 公司)", "Hữu Nghị Quan (友谊关)", "7 chỗ", 1500000.0),
+        ("Xe đi HNQ (繞關車)", "Ký túc (宿舍)", "Hữu Nghị Quan (友谊关)", "4 chỗ", 1300000.0),
+        ("Xe đi HNQ (繞關車)", "Ký túc (宿舍)", "Hữu Nghị Quan (友谊关)", "7 chỗ", 1500000.0),
+        ("Xe đi HNQ (繞關車)", "TP Bắc Ninh (北宁市区)", "Hữu Nghị Quan (友谊关)", "4 chỗ", 1300000.0),
+        ("Xe đi HNQ (繞關車)", "TP Bắc Ninh (北宁市区)", "Hữu Nghị Quan (友谊关)", "7 chỗ", 1600000.0),
+
+        # Đưa đón sân bay / Hà Nội / 接送機/河内
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "Ký túc (宿舍)", "Sân bay Nội Bài (内排机场)", "4 chỗ", 650000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "Ký túc (宿舍)", "Sân bay Nội Bài (内排机场)", "7 chỗ", 700000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "Sân bay Nội Bài (内排机场)", "4 chỗ", 650000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "NienYi CN09_CN15 (NienYi 公司 CN09_CN15)", "Sân bay Nội Bài (内排机场)", "7 chỗ", 700000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "Sân bay Nội Bài (内排机场)", "Trung tâm Hà Nội (河内中心)", "4 chỗ", 500000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "Sân bay Nội Bài (内排机场)", "Trung tâm Hà Nội (河内中心)", "7 chỗ", 550000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "TP Bắc Ninh (北宁市区)", "Sân bay Nội Bài (内排机场)", "4 chỗ", 550000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "TP Bắc Ninh (北宁市区)", "Sân bay Nội Bài (内排机场)", "7 chỗ", 650000.0),
+        ("Đưa đón sân bay / Hà Nội (接送機/河内)", "NienYi (NienYi 公司)", "Hồ Hoàn Kiếm Hà Nội (还剑湖河内)", "4 chỗ", 700000.0),
+
+        # Phản cung / 返空
+        ("Phản cung (返空)", "NienYi (NienYi 公司)", "KCN Đồng Văn 3 Hà Nam (河南省同文3工业区)", "4 chỗ", 1300000.0),
+        ("Phản cung (返空)", "NienYi (NienYi 公司)", "Đồng Văn 3 Hà Nam - NienYi (河南省同文3工业区 - NienYi)", "4 chỗ", 1800000.0),
+        ("Phản cung (返空)", "NienYi (NienYi 公司)", "Hải Phòng (海防)", "4 chỗ", 1500000.0),
+        ("Phản cung (返空)", "NienYi (NienYi 公司)", "VĨNH PHÚC (永福)", "4 chỗ", 1000000.0),
     ]
 
     for category, p_loc, d_loc, seat, price in binh_an_routes_data:
@@ -93,6 +110,7 @@ def seed_default_providers_and_routes(db: Session) -> None:
             is_two_way_same_price=True,
         )
         db.add(r)
+
     db.commit()
 
 

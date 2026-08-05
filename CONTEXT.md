@@ -167,6 +167,12 @@ Báo cáo Excel chấm công và tính lương cho toàn bộ nhân sự Lao cô
 **Báo cáo Excel Xe Đức Anh Khoán tháng** (Đức Anh Leased Vehicles Excel Report):
 Báo cáo cước thuê xe khoán tháng cho 3 xe công ty (Đức Anh), được xuất riêng từ Trung tâm Xuất Báo cáo Excel trên Sidebar theo khoảng thời gian tùy chọn. Kết quả trả về dạng **Tệp nén ZIP** chứa 3 file Excel riêng biệt tương ứng với từng xe (`98A-819.88`, `98A-369.00`, `99H-103.78`). Mỗi file được trình bày theo đúng mẫu bảng đối chiếu khối lượng & giá trị sử dụng xe thực tế (gồm tiêu đề công ty, chi tiết từng ngày trong kỳ, số km công tơ mét, giờ bắt đầu/kết thúc, tăng ca, tiền ăn, lưu đêm, phí cầu đường và tổng thành tiền).
 
+**Báo cáo Excel Nhà xe Bình An** (Bình An Leased Vehicles Excel Report):
+Báo cáo cước thuê xe đối tác ngoài (Nhà xe Bình An) xuất dạng file Excel `.xlsx` gồm **2 Sheet chuẩn hóa** theo mẫu doanh nghiệp (`NIENYI-BÌNH AN 07.xlsx`):
+- **Sheet 1 (`BINH AN 08`)**: Bảng kê tổng hợp các chuyến xe trong khoảng ngày chốt cước, được tự động phân nhóm chi tiết theo từng Biển số xe (Block A, B, C, D, E...) và Block F (Tổng xe Cửa khẩu), có các dòng tổng tiền phụ `TỔNG XE <Biển Số>` và dòng `TỔNG PHẢI TRẢ (VNĐ)` ở cuối bảng kèm khối chữ ký Bên A / Bên B. Cột Ghi chú gộp dạng `7个人=>7:20` hoặc `1个人 =>14:30_17:30 JIAO YOU JUN`.
+- **Sheet 2 (`HỮU NGHỊ BÌNH AN`)**: Bảng kê liệt kê chi tiết các chuyến đi Cửa Khẩu Hữu Nghị (友谊关 - Lạng Sơn) với đơn giá chuyến cố định (1.300.000đ cho xe 4 chỗ và 1.500.000đ cho xe 7 chỗ), hiển thị chi tiết khung giờ chạy và danh sách hành khách đi cùng.
+
+
 
 **Ghi nhận Nghỉ Tạp vụ** (Janitor Daily Attendance Record):
 Bản ghi điểm danh hàng ngày dành riêng cho Khối Tạp vụ (`JANITORIAL`). Mặc định tất cả Tạp vụ đi làm đủ (1.0 công). HR sử dụng giao diện Điểm danh hàng ngày (truy cập qua mục menu sổ xuống **"Nhân sự Tạp vụ"** $\rightarrow$ **"Điểm danh hàng ngày"** trên Sidebar; mục còn lại là **"Hồ sơ & Thông tin"**) để ghi nhận các trường hợp vắng/nghỉ: **Nghỉ cả ngày** (1 ngày vắng, ký hiệu `X`), hoặc **Nghỉ nửa ngày** (0.5 công, ký hiệu `0.5`), kèm theo **Lý do nghỉ** (ví dụ: nghỉ phép, nghỉ ốm, việc riêng...). Hỗ trợ ghi nhận nhanh cho một ngày đơn lẻ hoặc đăng ký nghỉ theo khoảng ngày (`start_date` đến `end_date`), cho phép xem/sửa quá khứ cũng như đăng ký trước trong tương lai. Dữ liệu này được tổng hợp trực tiếp vào Báo cáo Chấm công & Lương Tạp vụ và Báo cáo Suất ăn KTX (nếu tạp vụ KTX nghỉ trưa).
