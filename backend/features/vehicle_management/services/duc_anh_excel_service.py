@@ -314,7 +314,6 @@ def _write_main_sheet(
     ws.write_formula(tr0, 18, f"=SUM(S{fd1}:S{tr0})", f_total_num)
     ws.write_formula(tr0, 20, f"=SUM(U{fd1}:U{tr0})", f_total_num)
     ws.write_formula(tr0, 21, f"=SUM(V{fd1}:V{tr0})", f_total_num)
-    ws.write_formula(tr0, 23, f"=SUM(X{fd1}:X{tr0})", f_total_num)
     ws.write_formula(tr0, 24, f"=SUM(Y{fd1}:Y{tr0})", f_total_num)
     ws.write_formula(tr0, 25, f"=SUM(Z{fd1}:Z{tr0})", f_total_num)
     ws.write_formula(tr0, 26, f"=SUM(AA{fd1}:AA{tr0})", f_total_num)
@@ -326,8 +325,6 @@ def _write_main_sheet(
         "CÔNG TY TNHH KINH DOANH DỊCH VỤ VẬN TẢI ĐỨC ANH", f_sig_l)
     ws.merge_range(sig_r0, 14, sig_r0, 27,
         "                    CÔNG TY TNHH CÔNG NGHIỆP NIENYI VIỆT NAM", f_sig_r)
-
-    ws.freeze_panes(11, 0)
 
 
 # ---------------------------------------------------------------------------
@@ -361,21 +358,17 @@ def _write_dntt_sheet(
 
     f_title      = fmt(bold=True, font_size=14, align="center", text_wrap=True)
     f_company_l  = fmt(bold=True, font_size=12, align="left")
-    f_company_r  = fmt(bold=True, font_size=12, align="right")
     f_sub        = fmt(font_size=11, align="left")
-    f_sub_r      = fmt(font_size=11, align="right")
     f_bên        = fmt(bold=True, font_size=11, align="left")
     f_label_vi   = fmt(font_size=11, align="left")
     f_label_cn   = fmt(font_size=11, align="left")
     f_qty        = fmt(font_size=11, align="center", border=1)
     f_amount     = fmt(font_size=11, num_format="#,##0", align="right", border=1)
     f_hdr        = fmt(bold=True, font_size=11, align="center", border=1, bg_color=YELLOW_HEADER)
-    f_total_l    = fmt(bold=True, font_size=12, align="left")
     f_total_amt  = fmt(bold=True, font_size=12, num_format="#,##0", align="right")
     f_sig        = fmt(bold=True, font_size=11, align="center")
     f_date_sig   = fmt(font_size=11, align="right")
     f_sig_title  = fmt(bold=True, font_size=11, align="center")
-    f_center     = fmt(align="center")
 
     # Column widths
     ws.set_column(0, 0, 36)   # A: Vietnamese label
@@ -384,13 +377,11 @@ def _write_dntt_sheet(
     ws.set_column(3, 3, 23)   # D: Amount
 
     plate_display = getattr(v, "license_plate", "") or ""
-    km_allowance  = contract.km_allowance or 3000
     base_cost     = contract.base_monthly_cost or 0
     excess_rate   = contract.excess_km_rate or 0
-    meal_fee      = contract.meal_allowance_fee or 50000
     ot_rate_wd    = contract.overtime_rate_weekday or 100000
 
-    # ── ROW 1-2: Company headers ──────────────────────────────────────────
+    # ── ROW 1-4: Company headers ──────────────────────────────────────────
     ws.set_row(0, 22)
     ws.merge_range(0, 0, 0, 3, "CÔNG TY TNHH KINH DOANH DỊCH VỤ VẬN TẢI ĐỨC ANH", f_company_l)
     ws.set_row(1, 16)
@@ -404,16 +395,16 @@ def _write_dntt_sheet(
         "Số tài khoản: __________ tại ngân hàng __________ - Chi nhánh __________",
         f_sub)
 
-    # ── ROW 4-5: Document title ───────────────────────────────────────────
+    # ── ROW 5: Document title ─────────────────────────────────────────────
     ws.set_row(4, 35)
     ws.merge_range(4, 0, 4, 3,
         f"ĐỐI NỢ THANH TOÁN THÁNG {month_str}/{year_str}\n{year_str} 年{month_str}月 对账单",
         f_title)
 
-    # ── ROW 6: BÊN THUÊ / BÊN VẬN CHUYỂN ────────────────────────────────
+    # ── ROW 6-9: Parties & Info ───────────────────────────────────────────
     ws.set_row(5, 18)
     ws.merge_range(5, 0, 5, 3,
-        f"BÊN VẬN CHUYỂN: CÔNG TY TNHH KINH DOANH DỊCH VỤ VẬN TẢI ĐỨC ANH",
+        "BÊN VẬN CHUYỂN: CÔNG TY TNHH KINH DOANH DỊCH VỤ VẬN TẢI ĐỨC ANH",
         f_bên)
     ws.set_row(6, 18)
     ws.merge_range(6, 0, 6, 3,
@@ -428,17 +419,14 @@ def _write_dntt_sheet(
         f"Phí vận chuyển người bằng xe 7 chỗ: {plate_display}",
         fmt(bold=True, font_size=11, align="left"))
 
-    # ── ROW 9: table header ───────────────────────────────────────────────
+    # ── ROW 10: Table header (0-indexed row 9) ───────────────────────────
     ws.set_row(9, 30)
     ws.write(9, 0, "内容 Nội dung",          f_hdr)
     ws.write(9, 1, "",                        f_hdr)
     ws.write(9, 2, "数量               Số lượng", f_hdr)
     ws.write(9, 3, " 金额                        Số tiền", f_hdr)
 
-    # ── DATA ROWS ─────────────────────────────────────────────────────────
-    # Each row: (Vietnamese label, Chinese label, qty formula/value, amount formula/value)
-    R = 10  # 0-indexed starting row
-
+    # ── DATA ROWS (0-indexed rows 10..22 -> 1-indexed Rows 11..23) ────────
     def row(r0: int, vi: str, cn: str, qty, amt, h: int = 25) -> None:
         ws.set_row(r0, h)
         ws.write(r0, 0, " " + vi, f_label_vi)
@@ -454,114 +442,87 @@ def _write_dntt_sheet(
             else:
                 ws.write(r0, 3, amt, f_amount)
 
-    # Row 10: Số km thực tế (KM thực tế = SUM D col in main sheet)
-    row(R+0, "Số Km thực tế", "实际公里数",
-        f"={MAIN}!D{total_row}",
-        None)
-
-    # Row 11: Số ngày thực tế = km_allowance / km_per_day (contract)
-    # In template it shows actual working days count
     day_count = len([d for d in days if daily_map.get(d)])
-    row(R+1, "Số ngày thực tế", "实际天数",
-        day_count,
-        base_cost,
-        25)
 
-    # Row 12: Số giờ phát sinh tăng ca
-    row(R+2, "Số giờ phát sinh", "生成的小时数",
-        f"={MAIN}!M{total_row}",
-        f"=C{R+3}*{ot_rate_wd}")
+    # Row 11 (r0=10): Số Km thực tế
+    row(10, "Số Km thực tế", "实际公里数", f"={MAIN}!D{total_row}", None)
 
-    # Row 13: Làm từ 18h đến trước 22h (giờ phụ trội)
-    row(R+3, "Làm từ 18h đến trước 22h", "从18h到晚上22h",
-        f"={MAIN}!O{total_row}",
-        f"=C{R+4}*{ot_rate_wd}")
+    # Row 12 (r0=11): Số ngày thực tế
+    row(11, "Số ngày thực tế", "实际天数", day_count, base_cost, 25)
 
-    # Row 14: Số giờ ngày Chủ nhật/Lễ
-    row(R+4, "Số giờ ngày Chủ nhật, Ngày lễ", "礼拜天的数量时间",
-        f"={MAIN}!S{total_row}",
-        f"={MAIN}!U{total_row}")
+    # Row 13 (r0=12): Số giờ phát sinh
+    row(12, "Số giờ phát sinh", "生成的小时数", f"={MAIN}!M{total_row}", f"=C13*{ot_rate_wd}")
 
-    # Row 15: Số KM phát sinh
-    row(R+5, "Số KM phát sinh", "出现的KM号码",
-        f"={MAIN}!G{total_row}",
-        f"=C{R+6}*{excess_rate}")
+    # Row 14 (r0=13): Làm từ 18h đến trước 22h
+    row(13, "Làm từ 18h đến trước 22h", "从18h到晚上22h", f"={MAIN}!O{total_row}", f"=C14*{ot_rate_wd}")
 
-    # Row 16: Số KM phát sinh CN (để trống nếu không có)
-    row(R+6, "Số KM phát sinh CN", "产生的公里数",
-        None, None)
+    # Row 15 (r0=14): Số giờ ngày Chủ nhật, Ngày lễ
+    row(14, "Số giờ ngày Chủ nhật, Ngày lễ", "礼拜天的数量时间", f"={MAIN}!S{total_row}", f"={MAIN}!U{total_row}")
 
-    # Row 17: Ngày chủ nhật đi làm
-    row(R+7, "Ngày chủ nhật đi làm", "产生的公里数",
-        None, None)
+    # Row 16 (r0=15): Số KM phát sinh
+    row(15, "Số KM phát sinh", "出现的KM号码", f"={MAIN}!G{total_row}", f"=C16*{excess_rate}")
 
-    # Row 18: Lưu đêm
-    row(R+8, "Lưu đêm", "一夜之间",
-        None,
-        f"={MAIN}!R{total_row}")
+    # Row 17 (r0=16): Số KM phát sinh CN
+    row(16, "Số KM phát sinh CN", "产生的公里数", None, None)
 
-    # Row 19: Nội bài (ngày nghỉ)
-    row(R+9, "Nội bài (ngày nghỉ) / 1 lần", "机场（假日）/ 1次",
-        None, None)
+    # Row 18 (r0=17): Ngày chủ nhật đi làm
+    row(17, "Ngày chủ nhật đi làm", "产生的公里数", None, None)
 
-    # Row 20: Vé cầu đường, phí gửi xe
-    row(R+10, "Vé cầu đường, phí gửi xe", "路票，停车费",
-        None,
-        f"={MAIN}!AA{total_row}")
+    # Row 19 (r0=18): Lưu đêm
+    row(18, "Lưu đêm", "一夜之间", None, f"={MAIN}!R{total_row}")
 
-    # Row 21: Khác (Ăn trưa)
-    row(R+11, "Khác ( Ăn trưa)", "其他（午餐）",
-        f"={MAIN}!Y{total_row}",
-        f"={MAIN}!Z{total_row}")
+    # Row 20 (r0=19): Nội bài (ngày nghỉ) / 1 lần
+    row(19, "Nội bài (ngày nghỉ) / 1 lần", "机场（假日）/ 1次", None, None)
 
-    # Row 22: Giờ phụ trội ngày CN/lễ
-    row(R+12, "Giờ phụ trội ngày chủ nhật / lễ", "礼拜天或节日超过时间",
-        None,
-        f"={MAIN}!X{total_row}")
+    # Row 21 (r0=20): Vé cầu đường, phí gửi xe
+    row(20, "Vé cầu đường, phí gửi xe", "路票，停车费", None, f"={MAIN}!AA{total_row}")
 
-    # ── Subtotal ──────────────────────────────────────────────────────────
-    sub_r0 = R + 13
+    # Row 22 (r0=21): Khác (Ăn trưa)
+    row(21, "Khác ( Ăn trưa)", "其他（午餐）", f"={MAIN}!Y{total_row}", f"={MAIN}!Z{total_row}")
+
+    # Row 23 (r0=22): Giờ phụ trội ngày chủ nhật / lễ
+    row(22, "Giờ phụ trội ngày chủ nhật / lễ", "礼拜天或节日超过时间", None, f"={MAIN}!X{total_row}")
+
+    # ── Row 24 (r0=23): Subtotal (Cộng tiền hàng) ────────────────────────
+    sub_r0 = 23
     ws.set_row(sub_r0, 25)
     ws.write(sub_r0, 0, " Cộng tiền hàng", fmt(bold=True, font_size=11, align="left"))
     ws.write(sub_r0, 1, "金额",             fmt(bold=True, font_size=11, align="left"))
-    # SUM of amount column D rows 11..23 (1-indexed)
-    ws.write_formula(sub_r0, 3,
-        f"=SUM(D{R+2}:D{R+14})",
-        f_total_amt)
+    ws.write_formula(sub_r0, 3, "=SUM(D11:D23)", f_total_amt)
 
-    # ── Tax row ───────────────────────────────────────────────────────────
-    tax_r0 = sub_r0 + 1
+    # ── Row 25 (r0=24): Tax (Thuế GTGT 0%) ──────────────────────────────
+    tax_r0 = 24
     ws.set_row(tax_r0, 22)
     ws.write(tax_r0, 0, " Thuế GTGT 0%", f_label_vi)
     ws.write(tax_r0, 1, "0％增值税",       f_label_cn)
     ws.write(tax_r0, 3, 0,               f_amount)
 
-    # ── Grand total ───────────────────────────────────────────────────────
-    grand_r0 = tax_r0 + 1
+    # ── Row 26 (r0=25): Grand total (Tổng tiền thanh toán) ──────────────
+    grand_r0 = 25
     ws.set_row(grand_r0, 28)
     ws.write(grand_r0, 0, "Tổng tiền thanh toán",
              fmt(bold=True, font_size=13, align="left"))
     ws.write(grand_r0, 1, "合计",
              fmt(bold=True, font_size=13, align="left"))
-    ws.write_formula(grand_r0, 3,
-        f"=D{sub_r0+1}+D{tax_r0+1}",
-        fmt(bold=True, font_size=13, num_format="#,##0", align="right"))
+    ws.write_formula(grand_r0, 3, "=D24+D25",
+                     fmt(bold=True, font_size=13, num_format="#,##0", align="right"))
 
-    # Bằng chữ placeholder
-    bchu_r0 = grand_r0 + 1
+    # ── Row 27 (r0=26): Bằng chữ placeholder ──────────────────────────────
+    bchu_r0 = 26
     ws.set_row(bchu_r0, 22)
     ws.merge_range(bchu_r0, 0, bchu_r0, 3,
         "Bằng chữ: ",
         fmt(font_size=11, italic=True, align="left"))
 
-    # ── Date + Signatures ─────────────────────────────────────────────────
-    date_r0 = bchu_r0 + 1
+    # ── Row 28 (r0=27): Date line ─────────────────────────────────────────
+    date_r0 = 27
     ws.set_row(date_r0, 22)
     ws.merge_range(date_r0, 1, date_r0, 3,
         f"Bắc Ninh, ngày 25 tháng {month_str} năm {year_str}",
         f_date_sig)
 
-    sig_r0 = date_r0 + 1
+    # ── Rows 29-30 (r0=28..29): Signatures ────────────────────────────────
+    sig_r0 = 28
     ws.set_row(sig_r0, 22)
     ws.write(sig_r0, 0, "承租人Người mua hàng", f_sig_title)
     ws.write(sig_r0, 1, "出租人 Người bán hàng", f_sig_title)
@@ -569,4 +530,5 @@ def _write_dntt_sheet(
     ws.set_row(sig_r0 + 1, 22)
     ws.write(sig_r0 + 1, 0, "签名(Ký, ghi rõ họ tên)", f_sig)
     ws.write(sig_r0 + 1, 1, "签名(Ký, ghi rõ họ tên)", f_sig)
+
 
