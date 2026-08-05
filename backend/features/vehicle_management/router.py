@@ -255,29 +255,42 @@ def get_contract_pdf(doc_key: str):
     files = os.listdir(hd_dir)
     target_filename = None
 
-    key_keywords = {
-        "7_seater": ["7seat", "7_seat", "7 chỗ", "7_seater", "innova"],
-        "truck": ["xetai", "truck", "xe tải", "tải"],
-        "binh_an": ["binhan", "binh_an", "hđbinhan"],
-    }
+    def clean_name(s: str) -> str:
+        return s.lower().replace(".pdf", "").replace("-", "").replace("_", "").replace(" ", "")
 
-    # 1. Direct filename match
+    clean_key = clean_name(doc_key)
+
+    # 1. Exact or cleaned filename match
     for f in files:
-        if f.lower() == doc_key.lower() or f.lower() == f"{doc_key.lower()}.pdf":
+        if clean_name(f) == clean_key or f.lower() == doc_key.lower() or f.lower() == f"{doc_key.lower()}.pdf":
             target_filename = f
             break
 
     # 2. Key keywords match
     if not target_filename:
-        keywords = key_keywords.get(doc_key, [doc_key.lower()])
+        key_keywords = {
+            "7_seater": ["7seat", "7_seat", "7chỗ", "7_seater", "innova"],
+            "truck": ["xetai", "truck", "xetải", "tải"],
+            "binh_an": ["binhan", "binh_an", "hđbinhan"],
+        }
+        keywords = key_keywords.get(doc_key, [clean_key])
         for f in files:
-            f_lower = f.lower()
-            if any(kw in f_lower for kw in keywords):
+            f_clean = clean_name(f)
+            if any(kw in f_clean or kw in f.lower() for kw in keywords):
+                target_filename = f
+                break
+
+    # 3. Fallback: partial substring match
+    if not target_filename:
+        for f in files:
+            f_clean = clean_name(f)
+            if clean_key in f_clean or f_clean in clean_key:
                 target_filename = f
                 break
 
     if not target_filename:
         raise HTTPException(status_code=404, detail=f"Không tìm thấy file hợp đồng trong hệ thống ({doc_key})")
+
 
     file_path = os.path.join(hd_dir, target_filename)
 
