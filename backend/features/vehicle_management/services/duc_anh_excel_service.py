@@ -228,6 +228,8 @@ def _write_main_sheet(
     evening_bonus = contract.evening_fixed_bonus_amount or 0
     overnight_fee = contract.overnight_fee or 300000
     ot_rate_wd    = contract.overtime_rate_weekday or 50000
+    std_start     = contract.standard_start_time or "07:00"
+    std_end       = contract.standard_end_time or "18:00"
 
     # Format all 28 cells in row 11 uniformly with yellow background & borders
     for col_c in range(28):
@@ -237,6 +239,8 @@ def _write_main_sheet(
     ws.write(10, 5, base_cost, y_fn)
     ws.write(10, 7, excess_rate, y_fn)
     ws.write_formula(10, 8, "=G11*H11", y_fn)
+    ws.write(10, 10, std_start, y_ftm)  # K11: 07:00
+    ws.write(10, 11, std_end, y_ftm)    # L11: 18:00
     ws.write_formula(10, 27, "=F11+I11+Q11+R11+T11+X11+Z11+AA11", y_fn)
 
     # --- DATA ROWS ---
@@ -277,9 +281,9 @@ def _write_main_sheet(
             if lt.return_time or lt.pickup_time:
                 ws.write(r0, 11, lt.return_time or lt.pickup_time, ftm)  # L
 
-            # O: IF(OR(K<$K$10,L>$L$10),1,0)
+            # O: IF(OR(AND(K<>"", K<$K$11), AND(L<>"", L>$L$11)), 1, 0)
             ws.write_formula(r0, 14,
-                f"=IF(OR(K{r0+1}<$K$10,L{r0+1}>$L$10),1,0)", fn)  # O
+                f'=IF(OR(AND(K{r0+1}<>"",K{r0+1}<$K$11),AND(L{r0+1}<>"",L{r0+1}>$L$11)),1,0)', fn)  # O
             ws.write(r0, 15, evening_bonus or ot_rate_wd, fn)       # P
             ws.write_formula(r0, 16, f"=O{r0+1}*P{r0+1}", fn)      # Q
 
@@ -301,7 +305,7 @@ def _write_main_sheet(
         else:
             ws.write_formula(r0, 3, f"=+C{r0+1}-B{r0+1}", fn)
             ws.write_formula(r0, 14,
-                f"=IF(OR(K{r0+1}<$K$10,L{r0+1}>$L$10),1,0)", fn)
+                f'=IF(OR(AND(K{r0+1}<>"",K{r0+1}<$K$11),AND(L{r0+1}<>"",L{r0+1}>$L$11)),1,0)', fn)
             ws.write_formula(r0, 16, f"=O{r0+1}*P{r0+1}", fn)
             ws.write_formula(r0, 27,
                 f"=SUM(I{r0+1}+N{r0+1}+Q{r0+1}+R{r0+1}+X{r0+1}+Z{r0+1}+AA{r0+1}+U{r0+1})",
