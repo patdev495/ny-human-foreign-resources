@@ -1,7 +1,9 @@
 import React from "react";
 import { useReportHub } from "../hooks/useReportHub";
 import { UnclosedMealLocksModal } from "./report-hub/UnclosedMealLocksModal";
+import { VehicleReportCard } from "./reports/VehicleReportCard";
 import type { NavTab } from "../../../components/Sidebar";
+
 
 interface ReportHubProps {
   activeTab?: NavTab;
@@ -18,6 +20,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     loadingPresence,
     loadingMeal,
     loadingJanitor,
+    loadingVehicle,
     mealStartDate,
     setMealStartDate,
     mealEndDate,
@@ -26,6 +29,12 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     setJanitorStartDate,
     janitorEndDate,
     setJanitorEndDate,
+    vehicleStartDate,
+    setVehicleStartDate,
+    vehicleEndDate,
+    setVehicleEndDate,
+    vehicleSubTab,
+    setVehicleSubTab,
     errorMessage,
     setErrorMessage,
     missingLocks,
@@ -35,7 +44,10 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     handleDownloadPresence,
     handleDownloadMeal,
     handleDownloadJanitor,
+    handleDownloadVehicleReport,
   } = useReportHub();
+
+
 
   const currentTab = activeTab || "EXPORT_LEGAL";
 
@@ -290,6 +302,23 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           </div>
         </div>
       )}
+
+      {/* VIEW 5: VEHICLE RENTAL EXPENSE REPORT */}
+      {currentTab === "EXPORT_VEHICLES" && (
+        <VehicleReportCard
+          vehicleSubTab={vehicleSubTab}
+          setVehicleSubTab={setVehicleSubTab}
+          vehicleStartDate={vehicleStartDate}
+          setVehicleStartDate={setVehicleStartDate}
+          vehicleEndDate={vehicleEndDate}
+          setVehicleEndDate={setVehicleEndDate}
+          loadingVehicle={loadingVehicle}
+          handleDownloadVehicleReport={handleDownloadVehicleReport}
+        />
+      )}
+
+
+
 
       <UnclosedMealLocksModal
         isOpen={showLocksModal}

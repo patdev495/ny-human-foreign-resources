@@ -97,9 +97,13 @@ export interface VehicleDispatch {
   waiting_hours?: number;
   calculated_cost?: number;
   cost: number;
+  toll_fee?: number;
+  meal_count?: number;
+  overnight_count?: number;
   notes?: string | null;
   created_at: string;
 }
+
 
 export interface VehicleDispatchCreatePayload {
   dispatch_date: string;
@@ -128,8 +132,12 @@ export interface VehicleDispatchCreatePayload {
   waiting_hours?: number;
   calculated_cost?: number;
   cost: number;
+  toll_fee?: number;
+  meal_count?: number;
+  overnight_count?: number;
   notes?: string | null;
 }
+
 
 export interface MonthlyVehicleContract {
   id: number;

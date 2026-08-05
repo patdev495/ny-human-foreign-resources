@@ -126,7 +126,11 @@ class VehicleDispatchBase(BaseModel):
     waiting_hours: float = 0.0
     calculated_cost: float = 0.0
     cost: float = 0.0
+    toll_fee: float = 0.0
+    meal_count: int = 0
+    overnight_count: int = 0
     notes: Optional[str] = None
+
 
 
 class VehicleDispatchCreate(VehicleDispatchBase):

@@ -407,12 +407,27 @@ def test_get_contract_pdf(client: TestClient) -> None:
 
 
 def test_export_vehicle_excel(client: TestClient) -> None:
-    # 1. Export Excel for COMPANY_OWNED (Đức Anh - 3 vehicles with separate sheets)
+    # 1. Export Excel for COMPANY_OWNED (Đức Anh - 3 vehicles packaged in ZIP file)
     res_company = client.get("/api/vehicle-management/export-excel?provider_type=COMPANY_OWNED&from_date=2026-05-01&to_date=2026-05-31")
     assert res_company.status_code == 200
-    assert "spreadsheetml" in res_company.headers["content-type"]
-    assert "Bao_Cao_Chi_Phi_Xe_Duc_Anh" in res_company.headers["content-disposition"]
+    assert "zip" in res_company.headers["content-type"]
+    assert "Bao_Cao_3_Xe_Duc_Anh" in res_company.headers["content-disposition"]
+    assert res_company.headers["content-disposition"].endswith('.zip"') or "zip" in res_company.headers["content-disposition"]
     assert len(res_company.content) > 1000
+
+    import zipfile, io, openpyxl
+    z = zipfile.ZipFile(io.BytesIO(res_company.content))
+    namelist = z.namelist()
+    assert len(namelist) == 3
+    assert any("98A819.88" in name or "98A-819.88" in name for name in namelist)
+    assert any("98A8369.00" in name or "98A-369.00" in name for name in namelist)
+    assert any("99H103.78" in name or "99H-103.78" in name for name in namelist)
+
+    # Check each file inside zip
+    for fname in namelist:
+        data = z.read(fname)
+        wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True)
+        assert len(wb.sheetnames) >= 1
 
     # 2. Export Excel for OUTSOURCED (Bình An)
     res_outsourced = client.get("/api/vehicle-management/export-excel?provider_type=OUTSOURCED&from_date=2026-05-01&to_date=2026-05-31")
@@ -420,6 +435,29 @@ def test_export_vehicle_excel(client: TestClient) -> None:
     assert "spreadsheetml" in res_outsourced.headers["content-type"]
     assert "Bang_Ke_Chuyen_Xe_Binh_An" in res_outsourced.headers["content-disposition"]
     assert len(res_outsourced.content) > 1000
+
+
+def test_vehicle_dispatch_extra_expense_fields(client: TestClient) -> None:
+    # Test creating dispatch with toll_fee, meal_count, overnight_count
+    payload = {
+        "dispatch_date": "2026-07-15",
+        "vehicle_name": "Xe tải 8 tấn",
+        "ownership_group": "COMPANY_OWNED",
+        "pickup_location": "Kho Vân Trung",
+        "dropoff_location": "Nienyi",
+        "pickup_time": "08:00",
+        "return_time": "21:00",
+        "toll_fee": 70000.0,
+        "meal_count": 1,
+        "overnight_count": 1,
+    }
+    res = client.post("/api/vehicle-management/dispatches", json=payload)
+    assert res.status_code == 201, res.json()
+    d = res.json()
+    assert d["toll_fee"] == 70000.0
+    assert d["meal_count"] == 1
+    assert d["overnight_count"] == 1
+
 
 
 

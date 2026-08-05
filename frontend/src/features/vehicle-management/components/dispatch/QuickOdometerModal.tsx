@@ -17,6 +17,9 @@ export const QuickOdometerModal: React.FC<QuickOdometerModalProps> = ({
 }) => {
   const [odometerKm, setOdometerKm] = useState<string>("");
   const [returnTime, setReturnTime] = useState<string>("");
+  const [tollFee, setTollFee] = useState<string>("");
+  const [mealCount, setMealCount] = useState<string>("");
+  const [overnightCount, setOvernightCount] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
 
   useEffect(() => {
@@ -24,6 +27,9 @@ export const QuickOdometerModal: React.FC<QuickOdometerModalProps> = ({
       const odo = dispatch.odometer_km ?? dispatch.start_km ?? dispatch.end_km;
       setOdometerKm(odo !== undefined && odo !== null ? odo.toString() : "");
       setReturnTime(dispatch.return_time || "");
+      setTollFee(dispatch.toll_fee ? dispatch.toll_fee.toString() : "0");
+      setMealCount(dispatch.meal_count ? dispatch.meal_count.toString() : "0");
+      setOvernightCount(dispatch.overnight_count ? dispatch.overnight_count.toString() : "0");
     }
   }, [dispatch]);
 
@@ -60,8 +66,12 @@ export const QuickOdometerModal: React.FC<QuickOdometerModalProps> = ({
         waiting_hours: dispatch.waiting_hours || 0,
         calculated_cost: dispatch.calculated_cost || 0,
         cost: dispatch.cost || 0,
+        toll_fee: tollFee !== "" ? parseFloat(tollFee) : 0,
+        meal_count: mealCount !== "" ? parseInt(mealCount, 10) : 0,
+        overnight_count: overnightCount !== "" ? parseInt(overnightCount, 10) : 0,
         notes: dispatch.notes || "",
       });
+
 
       onSuccess();
       onClose();
@@ -125,6 +135,52 @@ export const QuickOdometerModal: React.FC<QuickOdometerModalProps> = ({
               />
             </div>
           </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Vé xe / Cầu đường (đ)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="5000"
+                value={tollFee}
+                onChange={(e) => setTollFee(e.target.value)}
+                placeholder="0"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Số bữa ăn ngoài
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={mealCount}
+                onChange={(e) => setMealCount(e.target.value)}
+                placeholder="0"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                Số đêm qua đêm
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={overnightCount}
+                onChange={(e) => setOvernightCount(e.target.value)}
+                placeholder="0"
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-slate-800"
+              />
+            </div>
+          </div>
+
 
           <div className="bg-amber-50/90 p-3 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
             💡 <strong>Quy tắc tính tăng ca hợp đồng Đức Anh:</strong><br />

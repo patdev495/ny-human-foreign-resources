@@ -8,6 +8,8 @@ import {
 } from "../api";
 import type { UnclosedMealLockItem } from "../types";
 
+import { exportVehicleExcel } from "../../vehicle-management/api";
+
 export function useReportHub() {
   const today = new Date();
   const year = today.getFullYear();
@@ -24,10 +26,16 @@ export function useReportHub() {
   const [loadingPresence, setLoadingPresence] = useState(false);
   const [loadingMeal, setLoadingMeal] = useState(false);
   const [loadingJanitor, setLoadingJanitor] = useState(false);
+  const [loadingVehicle, setLoadingVehicle] = useState(false);
+
   const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
   const [mealEndDate, setMealEndDate] = useState(todayStr);
   const [janitorStartDate, setJanitorStartDate] = useState(firstDayOfMonth);
   const [janitorEndDate, setJanitorEndDate] = useState(lastDayOfMonth);
+  const [vehicleStartDate, setVehicleStartDate] = useState(firstDayOfMonth);
+  const [vehicleEndDate, setVehicleEndDate] = useState(todayStr);
+  const [vehicleSubTab, setVehicleSubTab] = useState<"DUC_ANH" | "OUTSOURCED">("DUC_ANH");
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Missing meal locks state for warning modal
@@ -91,6 +99,18 @@ export function useReportHub() {
     }
   };
 
+  const handleDownloadVehicleReport = async (providerType: "COMPANY_OWNED" | "OUTSOURCED") => {
+    try {
+      setLoadingVehicle(true);
+      setErrorMessage(null);
+      await exportVehicleExcel(providerType, vehicleStartDate, vehicleEndDate);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Không thể tải báo cáo chi phí thuê xe");
+    } finally {
+      setLoadingVehicle(false);
+    }
+  };
+
   return {
     includeAttachments,
     setIncludeAttachments,
@@ -98,6 +118,7 @@ export function useReportHub() {
     loadingPresence,
     loadingMeal,
     loadingJanitor,
+    loadingVehicle,
     mealStartDate,
     setMealStartDate,
     mealEndDate,
@@ -106,6 +127,12 @@ export function useReportHub() {
     setJanitorStartDate,
     janitorEndDate,
     setJanitorEndDate,
+    vehicleStartDate,
+    setVehicleStartDate,
+    vehicleEndDate,
+    setVehicleEndDate,
+    vehicleSubTab,
+    setVehicleSubTab,
     errorMessage,
     setErrorMessage,
     missingLocks,
@@ -115,5 +142,8 @@ export function useReportHub() {
     handleDownloadPresence,
     handleDownloadMeal,
     handleDownloadJanitor,
+    handleDownloadVehicleReport,
   };
 }
+
+

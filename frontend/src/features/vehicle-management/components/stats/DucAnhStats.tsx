@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { exportVehicleExcel, fetchDispatches } from "../../api";
+import { fetchDispatches } from "../../api";
 import type { VehicleDispatch } from "../../types";
 import { OdometerLogList } from "../OdometerLogList";
-import { MonthlyReconciliationModal } from "../MonthlyReconciliationModal";
 import { QuickOdometerModal } from "../dispatch/QuickOdometerModal";
 import { analyzeDailyDispatches } from "../../utils/odometerUtils";
 
@@ -20,10 +19,10 @@ export const DucAnhStats: React.FC = () => {
   const [showUnclosedList, setShowUnclosedList] = useState<boolean>(false);
   const [filterOnlyUnclosed, setFilterOnlyUnclosed] = useState<boolean>(false);
 
-  const [isReconcileModalOpen, setIsReconcileModalOpen] = useState<boolean>(false);
   const [quickOdoDispatch, setQuickOdoDispatch] = useState<VehicleDispatch | null>(null);
   const [isQuickOdoOpen, setIsQuickOdoOpen] = useState<boolean>(false);
   const [refreshKey, setRefreshKey] = useState<number>(0);
+
 
   const loadDispatches = async () => {
     setLoading(true);
@@ -61,18 +60,7 @@ export const DucAnhStats: React.FC = () => {
 
   const displayedDispatches = filterOnlyUnclosed ? unclosedDispatches : dispatches;
 
-  const [exporting, setExporting] = useState<boolean>(false);
 
-  const handleExportExcel = async () => {
-    setExporting(true);
-    try {
-      await exportVehicleExcel("COMPANY_OWNED", fromDate, toDate);
-    } catch (err: any) {
-      alert("Lỗi khi xuất Excel Đức Anh: " + err.message);
-    } finally {
-      setExporting(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -102,14 +90,9 @@ export const DucAnhStats: React.FC = () => {
               <button type="button" onClick={() => { setFromDate(""); setToDate(""); }} className="px-2 py-1 text-[11px] font-bold bg-white hover:bg-sky-100 text-sky-900 border border-sky-300 rounded-md cursor-pointer">Tất cả</button>
             </div>
           </div>
-          <button type="button" onClick={handleExportExcel} disabled={exporting} className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0 disabled:opacity-50">
-            <span>📥</span> {exporting ? "Đang xuất..." : "Xuất Excel 3 Xe Đức Anh"}
-          </button>
-          <button type="button" onClick={() => setIsReconcileModalOpen(true)} className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer flex items-center gap-1.5 shrink-0">
-            <span>📑</span> Báo cáo Cước tháng Đức Anh
-          </button>
         </div>
       </div>
+
 
       {/* Smart Interactive Warning Banner */}
       {unclosedDispatches.length > 0 && (
@@ -312,8 +295,8 @@ export const DucAnhStats: React.FC = () => {
         <OdometerLogList refreshTrigger={refreshKey} />
       </div>
 
-      <MonthlyReconciliationModal isOpen={isReconcileModalOpen} onClose={() => setIsReconcileModalOpen(false)} />
       <QuickOdometerModal isOpen={isQuickOdoOpen} dispatch={quickOdoDispatch} onClose={() => setIsQuickOdoOpen(false)} onSuccess={loadDispatches} />
     </div>
+
   );
 };

@@ -44,7 +44,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     activeTab === "EXPORT_LEGAL" ||
     activeTab === "EXPORT_PRESENCE" ||
     activeTab === "EXPORT_MEAL" ||
-    activeTab === "EXPORT_JANITOR";
+    activeTab === "EXPORT_JANITOR" ||
+    activeTab === "EXPORT_VEHICLES";
+
+
 
   const [isHrForeignOpen, setIsHrForeignOpen] = useState(isHrForeignActive);
   const [isJanitorOpen, setIsJanitorOpen] = useState(isJanitorActive);

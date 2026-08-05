@@ -234,12 +234,13 @@ export async function exportVehicleExcel(
   const a = document.createElement("a");
   a.href = url;
   a.download = providerType === "COMPANY_OWNED"
-    ? `Bao_Cao_Chi_Phi_3_Xe_Duc_Anh_${fromDate || ""}_den_${toDate || ""}.xlsx`
+    ? `Bao_Cao_3_Xe_Duc_Anh_${fromDate || ""}_den_${toDate || ""}.zip`
     : `Bang_Ke_Chuyen_Xe_Binh_An_${fromDate || ""}_den_${toDate || ""}.xlsx`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   window.URL.revokeObjectURL(url);
+
 }
 
 

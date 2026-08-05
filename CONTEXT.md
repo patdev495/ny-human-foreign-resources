@@ -121,10 +121,12 @@ Cấu hình bảng giá khoán tháng cho nhóm xe Đức Anh thuộc Đội xe 
   - *Chủ nhật & Ngày Lễ/Tết*: Mức ngày **1.000.000 VNĐ/ngày** (Chủ nhật) / **1.200.000 VNĐ/ngày** (Lễ Tết); Tăng ca trước 8h00 AM và sau 18h00 PM tính **100.000 VNĐ/giờ**. Chi phí ăn ngoài: **50.000 VNĐ/bữa**. Qua đêm: **300.000 VNĐ/đêm**.
 
 **Nhật ký Quãng đường di chuyển** (Daily Vehicle Distance Log):
-Giao diện quản lý riêng dưới dạng Tab **"Nhật ký Quãng đường di chuyển"** trong phân hệ Quản lý xe, cho phép HR ghi nhận chỉ số công tơ mét đầu ngày (`start_km`) và cuối ngày (`end_km`) của từng xe Đức Anh (hỗ trợ tải tệp ảnh bằng chứng odometer tài xế gửi) để tính tự động tổng KM thực tế chạy trong ngày và lũy kế KM trong chu kỳ 26 tháng trước -> 25 tháng này. Các chuyến điều xe lẻ trong ngày ghi nhận hành trình (điểm đi, điểm đến) và thời điểm bắt đầu/kết thúc mà không bắt buộc nhập số KM từng chuyến.
+Giao diện quản lý riêng dưới dạng Tab **"Nhật ký Quãng đường di chuyển"** trong phân hệ Quản lý xe, cho phép HR ghi nhận chỉ số công tơ mét đầu ngày (`start_km`) và cuối ngày (`end_km`) của từng xe Đức Anh (hỗ trợ tải tệp ảnh bằng chứng odometer tài xế gửi) để tính tự động tổng KM thực tế chạy trong ngày và lũy kế KM trong chu kỳ 26 tháng trước -> 25 tháng này. Các chuyến điều xe lẻ trong ngày ghi nhận hành trình (điểm đi, điểm đến) và thời điểm bắt đầu/kết thúc mà không bắt buộc nhập số KM từng chuyến. **Giờ Bắt đầu** (`Giờ B.Đầu`) và **Giờ Kết thúc** (`Giờ K.Thúc`) của xe trong ngày được hệ thống tự động tổng hợp từ giờ đón chuyến đầu tiên và giờ về chuyến cuối cùng trong ngày.
+
 
 **Điều xe** (Vehicle Dispatch):
-Bản ghi tạo và quản lý chuyến đi đưa đón nhân sự trực tiếp. HR có thể chọn Nhà xe, Tuyến đường HĐ hoặc nhập số KM, hệ thống tự động gợi ý giá và lưu lại thông tin tài xế, biển số, hành khách và chi phí.
+Bản ghi tạo và quản lý chuyến đi đưa đón nhân sự trực tiếp. HR có thể chọn Nhà xe, Tuyến đường HĐ hoặc nhập số KM, hệ thống tự động gợi ý giá và lưu lại thông tin tài xế, biển số, hành khách và chi phí. Bản ghi hỗ trợ lưu trữ các chi phí phát sinh theo chuyến bao gồm: **Tiền vé xe / Phí cầu đường** (`toll_fee`), **Số bữa ăn ngoài tài xế** (`meal_count`), và **Số đêm qua đêm** (`overnight_count`) để tổng hợp tự động vào Báo cáo cước tháng xe Đức Anh.
+
 
 
 
@@ -161,6 +163,10 @@ Báo cáo Excel 1 Sheet duy nhất (`dd.MM - dd.MM`) tính toán chi phí ăn u�
 
 **Báo cáo Excel Chấm công & Lương Tạp vụ** (Janitor Attendance & Payroll Excel Report):
 Báo cáo Excel chấm công và tính lương cho toàn bộ nhân sự Lao công / Tạp vụ (`employee_type = 'JANITORIAL'`) trong khoảng thời gian (chu kỳ tháng). File chứa các cột thông tin nhân sự (Mã NV, Họ và tên, Bộ phận, Nơi làm việc...), chuỗi các ngày trong tháng với ký tự chấm công ('N': ngày làm việc, 'X': nghỉ phép/vắng cả ngày, '0.5': nghỉ nửa ngày, Chủ nhật để trống), cột tổng hợp Số công (`COUNTIFS`), Mức lương (tháng hoặc ngày), và Thành tiền.
+
+**Báo cáo Excel Xe Đức Anh Khoán tháng** (Đức Anh Leased Vehicles Excel Report):
+Báo cáo cước thuê xe khoán tháng cho 3 xe công ty (Đức Anh), được xuất riêng từ Trung tâm Xuất Báo cáo Excel trên Sidebar theo khoảng thời gian tùy chọn. Kết quả trả về dạng **Tệp nén ZIP** chứa 3 file Excel riêng biệt tương ứng với từng xe (`98A-819.88`, `98A-369.00`, `99H-103.78`). Mỗi file được trình bày theo đúng mẫu bảng đối chiếu khối lượng & giá trị sử dụng xe thực tế (gồm tiêu đề công ty, chi tiết từng ngày trong kỳ, số km công tơ mét, giờ bắt đầu/kết thúc, tăng ca, tiền ăn, lưu đêm, phí cầu đường và tổng thành tiền).
+
 
 **Ghi nhận Nghỉ Tạp vụ** (Janitor Daily Attendance Record):
 Bản ghi điểm danh hàng ngày dành riêng cho Khối Tạp vụ (`JANITORIAL`). Mặc định tất cả Tạp vụ đi làm đủ (1.0 công). HR sử dụng giao diện Điểm danh hàng ngày (truy cập qua mục menu sổ xuống **"Nhân sự Tạp vụ"** $\rightarrow$ **"Điểm danh hàng ngày"** trên Sidebar; mục còn lại là **"Hồ sơ & Thông tin"**) để ghi nhận các trường hợp vắng/nghỉ: **Nghỉ cả ngày** (1 ngày vắng, ký hiệu `X`), hoặc **Nghỉ nửa ngày** (0.5 công, ký hiệu `0.5`), kèm theo **Lý do nghỉ** (ví dụ: nghỉ phép, nghỉ ốm, việc riêng...). Hỗ trợ ghi nhận nhanh cho một ngày đơn lẻ hoặc đăng ký nghỉ theo khoảng ngày (`start_date` đến `end_date`), cho phép xem/sửa quá khứ cũng như đăng ký trước trong tương lai. Dữ liệu này được tổng hợp trực tiếp vào Báo cáo Chấm công & Lương Tạp vụ và Báo cáo Suất ăn KTX (nếu tạp vụ KTX nghỉ trưa).

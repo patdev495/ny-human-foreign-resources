@@ -214,17 +214,23 @@ def export_vehicle_excel(
 
     if provider_type == "COMPANY_OWNED":
         excel_io = generate_duc_anh_excel_report(db, f_date, t_date)
-        filename = f"Bao_Cao_Chi_Phi_Xe_Duc_Anh_{f_date}_den_{t_date}.xlsx"
+        filename = f"Bao_Cao_3_Xe_Duc_Anh_{f_date}_den_{t_date}.zip"
+        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+        return StreamingResponse(
+            excel_io,
+            media_type="application/zip",
+            headers=headers,
+        )
     else:
         excel_io = generate_binh_an_excel_report(db, f_date, t_date)
         filename = f"Bang_Ke_Chuyen_Xe_Binh_An_{f_date}_den_{t_date}.xlsx"
+        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+        return StreamingResponse(
+            excel_io,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers=headers,
+        )
 
-    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-    return StreamingResponse(
-        excel_io,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers=headers,
-    )
 
 
 @router.get("/contracts/pdf/{doc_key}")

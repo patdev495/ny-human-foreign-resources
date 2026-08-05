@@ -181,8 +181,12 @@ class VehicleDispatch(Base):
     waiting_hours: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     calculated_cost: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     cost: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)  # final cost
+    toll_fee: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    meal_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    overnight_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     notes: Mapped[Optional[str]] = mapped_column(UnicodeText, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
 
     provider: Mapped[Optional[VehicleProvider]] = relationship("VehicleProvider")
     vehicle: Mapped[Optional[Vehicle]] = relationship("Vehicle", back_populates="dispatches")

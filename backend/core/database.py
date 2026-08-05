@@ -109,6 +109,25 @@ def init_db() -> None:
                     "ALTER TABLE vehicle_dispatches ADD end_km FLOAT NULL;"
                 )
             )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'toll_fee') "
+                    "ALTER TABLE vehicle_dispatches ADD toll_fee FLOAT NOT NULL DEFAULT 0.0;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'meal_count') "
+                    "ALTER TABLE vehicle_dispatches ADD meal_count INT NOT NULL DEFAULT 0;"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'vehicle_dispatches') AND name = N'overnight_count') "
+                    "ALTER TABLE vehicle_dispatches ADD overnight_count INT NOT NULL DEFAULT 0;"
+                )
+            )
+
             # Ensure vehicle_management tables use NVARCHAR in SQL Server
             if engine.name == "mssql":
                 conn.execute(text("IF EXISTS (SELECT * FROM sys.tables WHERE name = N'vehicles') ALTER TABLE vehicles ALTER COLUMN name NVARCHAR(200) NOT NULL;"))
