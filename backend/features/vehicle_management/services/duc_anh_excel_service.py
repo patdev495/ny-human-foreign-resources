@@ -138,25 +138,25 @@ def _write_main_sheet(
     f_dvt      = fmt(font_size=11, align="right")
     f_col_hdr  = fmt(bold=True, align="center", text_wrap=True,
                      bg_color=YELLOW_HEADER, border=1, font_size=11)
-    f_param_n  = fmt(num_format="#,##0", align="right", border=1,
-                     bg_color=YELLOW_HEADER, bold=True, font_size=11)
     f_sig_l    = fmt(bold=True, align="left")
     f_sig_r    = fmt(bold=True, align="right")
 
-    # yellow / white row formats
-    def make_row_fmts(bg: str) -> tuple:
-        fc  = fmt(align="center", bg_color=bg, border=1)
-        fn  = fmt(num_format="#,##0", align="right", bg_color=bg, border=1)
-        fdt = fmt(num_format="yyyy-mm-dd", align="center", bg_color=bg, border=1)
-        ftm = fmt(num_format="hh:mm", align="center", bg_color=bg, border=1)
+
+    # Row format factory (ensures uniform fill and border across all 28 cols)
+    def make_cell_fmts(bg: str | None = None, is_bold: bool = False):
+        kw = {"border": 1, "bold": is_bold}
+        if bg:
+            kw["bg_color"] = bg
+        fc  = fmt(align="center", **kw)
+        fn  = fmt(num_format="#,##0", align="right", **kw)
+        fdt = fmt(num_format="yyyy-mm-dd", align="center", **kw)
+        ftm = fmt(num_format="hh:mm", align="center", **kw)
         return fc, fn, fdt, ftm
 
-    yfc, yfn, yfdt, yftm = make_row_fmts(YELLOW_ROW)
-    wfc, wfn, wfdt, wftm = make_row_fmts(WHITE_ROW)
-
-    f_total_lbl = fmt(bold=True, align="center", bg_color=ORANGE_TOTAL, border=1)
-    f_total_num = fmt(bold=True, num_format="#,##0", align="right",
-                      bg_color=ORANGE_TOTAL, border=1)
+    # Standard formats
+    w_fc, w_fn, w_fdt, w_ftm = make_cell_fmts(None, False)            # Weekday (white)
+    y_fc, y_fn, y_fdt, y_ftm = make_cell_fmts(YELLOW_HEADER, False)   # Sunday / Params (yellow)
+    t_fc, t_fn, _, _         = make_cell_fmts(None, True)             # Total row (white, bold)
 
     plate_display = getattr(v, "license_plate", "") or ""
 
@@ -200,7 +200,7 @@ def _write_main_sheet(
     hdr(9, 8, 9, 8, "THÀNH TIỀN\n金额")
     hdr(8, 10, 9, 10, "Giờ B.Đầu\n开始时间")
     hdr(8, 11, 9, 11, "Giờ K.Thúc\n结束时间")
-    hdr(8, 12, 9, 12, "Số giờ tăng ca\n时间加班")          # M: merged rows 9-10
+    hdr(8, 12, 9, 12, "Số giờ tăng ca\n时间加班")
     hdr(8, 13, 9, 13, "THÀNH TIỀN\ntăng ca 金额")
     hdr(8, 14, 8, 16, " GIỜ PHỤ TRỘI NGÀY THƯỜNG\n平日超过时间")
     hdr(9, 14, 9, 14, "GIỜ\n工时")
@@ -229,19 +229,31 @@ def _write_main_sheet(
     overnight_fee = contract.overnight_fee or 300000
     ot_rate_wd    = contract.overtime_rate_weekday or 50000
 
-    ws.write(10, 4, km_allowance, f_param_n)
-    ws.write(10, 5, base_cost, f_param_n)
-    ws.write(10, 7, excess_rate, f_param_n)
-    ws.write_formula(10, 8, "=G11*H11", f_param_n)
-    ws.write_formula(10, 27, "=F11+I11+Q11+R11+T11+X11+Z11+AA11", f_param_n)
+    # Format all 28 cells in row 11 uniformly with yellow background & borders
+    for col_c in range(28):
+        ws.write_blank(10, col_c, "", y_fn)
+
+    ws.write(10, 4, km_allowance, y_fn)
+    ws.write(10, 5, base_cost, y_fn)
+    ws.write(10, 7, excess_rate, y_fn)
+    ws.write_formula(10, 8, "=G11*H11", y_fn)
+    ws.write_formula(10, 27, "=F11+I11+Q11+R11+T11+X11+Z11+AA11", y_fn)
 
     # --- DATA ROWS ---
     DR = 11  # 0-indexed first data row
 
     for idx, d_str in enumerate(days):
         r0 = DR + idx
-        is_yellow = (idx % 2 == 0)
-        fc, fn, fdt, ftm = (yfc, yfn, yfdt, yftm) if is_yellow else (wfc, wfn, wfdt, wftm)
+        try:
+            is_sunday = (datetime.strptime(d_str, "%Y-%m-%d").weekday() == 6)
+        except ValueError:
+            is_sunday = False
+
+        fc, fn, fdt, ftm = (y_fc, y_fn, y_fdt, y_ftm) if is_sunday else (w_fc, w_fn, w_fdt, w_ftm)
+
+        # Pre-format all 28 cells in row r0 with thin border so no unbordered cells exist
+        for col_c in range(28):
+            ws.write_blank(r0, col_c, "", fn)
 
         ws.write(r0, 0, d_str, fdt)  # A: NGÀY
 
@@ -299,25 +311,29 @@ def _write_main_sheet(
     tr0 = DR + len(days)   # 0-indexed
     fd1 = DR + 1           # 1-indexed first data row
 
-    ws.write(tr0, 0, "TỔNG", f_total_lbl)
-    ws.write_formula(tr0, 3, f"=+SUM(D{fd1}:D{tr0})", f_total_num)
-    ws.write_formula(tr0, 4, f"=SUM(E{fd1}:E{tr0})", f_total_num)
-    ws.write_formula(tr0, 5, f"=SUM(F{fd1}:F{tr0})", f_total_num)
-    ws.write(tr0, 6, 0, f_total_num)
-    ws.write_formula(tr0, 7, f"=SUM(H{fd1}:H{tr0})", f_total_num)
-    ws.write_formula(tr0, 8, f"=+G{tr0+1}*H{tr0+1}", f_total_num)
-    ws.write_formula(tr0, 12, f"=SUM(M{fd1}:M{tr0})", f_total_num)
-    ws.write_formula(tr0, 13, f"=SUM(N{fd1}:N{tr0})", f_total_num)
-    ws.write_formula(tr0, 14, f"=SUM(O{fd1}:O{tr0})", f_total_num)
-    ws.write_formula(tr0, 16, f"=SUM(Q{fd1}:Q{tr0})", f_total_num)
-    ws.write_formula(tr0, 17, f"=SUM(R{fd1}:R{tr0})", f_total_num)
-    ws.write_formula(tr0, 18, f"=SUM(S{fd1}:S{tr0})", f_total_num)
-    ws.write_formula(tr0, 20, f"=SUM(U{fd1}:U{tr0})", f_total_num)
-    ws.write_formula(tr0, 21, f"=SUM(V{fd1}:V{tr0})", f_total_num)
-    ws.write_formula(tr0, 24, f"=SUM(Y{fd1}:Y{tr0})", f_total_num)
-    ws.write_formula(tr0, 25, f"=SUM(Z{fd1}:Z{tr0})", f_total_num)
-    ws.write_formula(tr0, 26, f"=SUM(AA{fd1}:AA{tr0})", f_total_num)
-    ws.write_formula(tr0, 27, f"=SUM(AB{fd1}:AB{tr0})", f_total_num)
+    # Format all 28 cells in TỔNG row with thin border and bold font (plain white background)
+    for col_c in range(28):
+        ws.write_blank(tr0, col_c, "", t_fn)
+
+    ws.write(tr0, 0, "TỔNG", t_fc)
+    ws.write_formula(tr0, 3, f"=+SUM(D{fd1}:D{tr0})", t_fn)
+    ws.write_formula(tr0, 4, f"=SUM(E{fd1}:E{tr0})", t_fn)
+    ws.write_formula(tr0, 5, f"=SUM(F{fd1}:F{tr0})", t_fn)
+    ws.write(tr0, 6, 0, t_fn)
+    ws.write_formula(tr0, 7, f"=SUM(H{fd1}:H{tr0})", t_fn)
+    ws.write_formula(tr0, 8, f"=+G{tr0+1}*H{tr0+1}", t_fn)
+    ws.write_formula(tr0, 12, f"=SUM(M{fd1}:M{tr0})", t_fn)
+    ws.write_formula(tr0, 13, f"=SUM(N{fd1}:N{tr0})", t_fn)
+    ws.write_formula(tr0, 14, f"=SUM(O{fd1}:O{tr0})", t_fn)
+    ws.write_formula(tr0, 16, f"=SUM(Q{fd1}:Q{tr0})", t_fn)
+    ws.write_formula(tr0, 17, f"=SUM(R{fd1}:R{tr0})", t_fn)
+    ws.write_formula(tr0, 18, f"=SUM(S{fd1}:S{tr0})", t_fn)
+    ws.write_formula(tr0, 20, f"=SUM(U{fd1}:U{tr0})", t_fn)
+    ws.write_formula(tr0, 21, f"=SUM(V{fd1}:V{tr0})", t_fn)
+    ws.write_formula(tr0, 24, f"=SUM(Y{fd1}:Y{tr0})", t_fn)
+    ws.write_formula(tr0, 25, f"=SUM(Z{fd1}:Z{tr0})", t_fn)
+    ws.write_formula(tr0, 26, f"=SUM(AA{fd1}:AA{tr0})", t_fn)
+    ws.write_formula(tr0, 27, f"=SUM(AB{fd1}:AB{tr0})", t_fn)
 
     # --- SIGNATURE ---
     sig_r0 = tr0 + 2
@@ -325,6 +341,7 @@ def _write_main_sheet(
         "CÔNG TY TNHH KINH DOANH DỊCH VỤ VẬN TẢI ĐỨC ANH", f_sig_l)
     ws.merge_range(sig_r0, 14, sig_r0, 27,
         "                    CÔNG TY TNHH CÔNG NGHIỆP NIENYI VIỆT NAM", f_sig_r)
+
 
 
 # ---------------------------------------------------------------------------
