@@ -9,7 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from main import app
 from core.database import Base, get_db
-from features.hr_foreign.services.meal_engine_service import (
+from features.hr_foreign.service import (
     get_daily_meal_forecast,
     lock_meal_session,
     calculate_meal_expenses,

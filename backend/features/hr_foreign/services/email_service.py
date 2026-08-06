@@ -7,13 +7,88 @@ from email.mime.text import MIMEText
 from sqlalchemy.orm import Session
 
 from core.config import settings
-from features.hr_foreign.models import EmailDeliveryLog
-from features.hr_foreign.services.email_config_service import (
-    create_email_delivery_log,
-    get_email_notification_config,
-)
+from features.hr_foreign.models import EmailDeliveryLog, EmailNotificationConfig
+from features.hr_foreign.services.email_template_builder import build_doc_warning_email_html
 from features.hr_foreign.services.legal_doc_service import get_expiring_documents
 
+
+# --- EMAIL NOTIFICATION CONFIG & LOGS ---
+
+def get_email_notification_config(
+    db: Session, config_key: str = "DOC_WARNING"
+) -> EmailNotificationConfig:
+    cfg = (
+        db.query(EmailNotificationConfig)
+        .filter(EmailNotificationConfig.config_key == config_key)
+        .first()
+    )
+    if not cfg:
+        cfg = EmailNotificationConfig(
+            config_key=config_key,
+            recipient_emails="",
+            is_enabled=True,
+            scheduled_time="08:00",
+        )
+        db.add(cfg)
+        db.flush()
+        db.commit()
+        db.refresh(cfg)
+    return cfg
+
+
+def update_email_notification_config(
+    db: Session,
+    recipient_emails: str | None = None,
+    is_enabled: bool | None = None,
+    scheduled_time: str | None = None,
+    config_key: str = "DOC_WARNING",
+) -> EmailNotificationConfig:
+    cfg = get_email_notification_config(db, config_key=config_key)
+    if recipient_emails is not None:
+        cfg.recipient_emails = recipient_emails
+    if is_enabled is not None:
+        cfg.is_enabled = is_enabled
+    if scheduled_time is not None:
+        cfg.scheduled_time = scheduled_time
+    db.commit()
+    db.refresh(cfg)
+    return cfg
+
+
+def create_email_delivery_log(
+    db: Session,
+    trigger_type: str = "AUTO",
+    recipients: str | None = None,
+    total_expired_docs: int = 0,
+    total_expiring_docs: int = 0,
+    status: str = "SUCCESS",
+    error_message: str | None = None,
+) -> EmailDeliveryLog:
+    log_entry = EmailDeliveryLog(
+        sent_at=datetime.datetime.now(),
+        trigger_type=trigger_type,
+        recipients=recipients,
+        total_expired_docs=total_expired_docs,
+        total_expiring_docs=total_expiring_docs,
+        status=status,
+        error_message=error_message,
+    )
+    db.add(log_entry)
+    db.commit()
+    db.refresh(log_entry)
+    return log_entry
+
+
+def get_email_delivery_logs(db: Session, limit: int = 20) -> list[EmailDeliveryLog]:
+    return (
+        db.query(EmailDeliveryLog)
+        .order_by(EmailDeliveryLog.sent_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+# --- SMTP DISPATCH & DIGEST ---
 
 def send_smtp_email(
     to_emails: list[str], subject: str, html_content: str
@@ -55,205 +130,6 @@ def send_smtp_email(
         return False, str(e)
 
 
-def build_doc_warning_email_html(
-    expired_docs: list[dict],
-    expiring_docs: list[dict],
-    missing_docs: list[dict] | None = None,
-    system_url: str = "",
-) -> str:
-    now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-
-    expired_table_rows = ""
-    for idx, item in enumerate(expired_docs, 1):
-        days_overdue = abs(item.get("days_diff", 0))
-        expired_table_rows += f"""
-        <tr style="border-bottom: 1px solid #fee2e2; background-color: #fff5f5;">
-            <td style="padding: 10px; text-align: center; color: #991b1b; font-weight: bold;">{idx}</td>
-            <td style="padding: 10px; color: #1e293b; font-weight: bold;">{item.get("employee_code") or "-"}</td>
-            <td style="padding: 10px; color: #0f172a; font-weight: bold;">{item.get("name_latin", "")}</td>
-            <td style="padding: 10px; color: #475569;">{item.get("nationality") or "-"}</td>
-            <td style="padding: 10px; color: #991b1b; font-weight: bold;">{item.get("doc_type", "")}</td>
-            <td style="padding: 10px; color: #334155; font-family: monospace;">{item.get("doc_number") or "-"}</td>
-            <td style="padding: 10px; color: #991b1b; font-weight: bold;">{item.get("expiry_date", "")}</td>
-            <td style="padding: 10px; text-align: center; color: #dc2626; font-weight: bold;">Quá {days_overdue} ngày</td>
-        </tr>
-        """
-
-    expiring_table_rows = ""
-    for idx, item in enumerate(expiring_docs, 1):
-        days_left = item.get("days_diff", 0)
-        expiring_table_rows += f"""
-        <tr style="border-bottom: 1px solid #fef3c7; background-color: #fffbeb;">
-            <td style="padding: 10px; text-align: center; color: #92400e; font-weight: bold;">{idx}</td>
-            <td style="padding: 10px; color: #1e293b; font-weight: bold;">{item.get("employee_code") or "-"}</td>
-            <td style="padding: 10px; color: #0f172a; font-weight: bold;">{item.get("name_latin", "")}</td>
-            <td style="padding: 10px; color: #475569;">{item.get("nationality") or "-"}</td>
-            <td style="padding: 10px; color: #b45309; font-weight: bold;">{item.get("doc_type", "")}</td>
-            <td style="padding: 10px; color: #334155; font-family: monospace;">{item.get("doc_number") or "-"}</td>
-            <td style="padding: 10px; color: #b45309; font-weight: bold;">{item.get("expiry_date", "")}</td>
-            <td style="padding: 10px; text-align: center; color: #d97706; font-weight: bold;">Còn {days_left} ngày</td>
-        </tr>
-        """
-
-    # --- Missing info section rows ---
-    missing_docs = missing_docs or []
-    missing_table_rows = ""
-    for idx, item in enumerate(missing_docs, 1):
-        missing_table_rows += f"""
-        <tr style="border-bottom: 1px solid #e0e7ff; background-color: #f5f7ff;">
-            <td style="padding: 10px; text-align: center; color: #3730a3; font-weight: bold;">{idx}</td>
-            <td style="padding: 10px; color: #1e293b; font-weight: bold;">{item.get("employee_code") or "-"}</td>
-            <td style="padding: 10px; color: #0f172a; font-weight: bold;">{item.get("name_latin", "")}</td>
-            <td style="padding: 10px; color: #475569;">{item.get("nationality") or "-"}</td>
-            <td style="padding: 10px; color: #4338ca; font-weight: bold;">{item.get("doc_type", "")}</td>
-            <td style="padding: 10px; color: #64748b; font-style: italic;">{item.get("missing_reason", "Thiếu thông tin")}</td>
-        </tr>
-        """
-
-    expired_section = ""
-    if expired_docs:
-        expired_section = f"""
-        <div style="margin-bottom: 24px;">
-            <h3 style="color: #dc2626; margin-bottom: 12px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                🔴 DANH SÁCH GIẤY TỜ ĐÃ HẾT HẠN ({len(expired_docs)} giấy tờ)
-            </h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; border: 1px solid #fca5a5;">
-                <thead>
-                    <tr style="background-color: #fee2e2; color: #991b1b;">
-                        <th style="padding: 10px; text-align: center;">STT</th>
-                        <th style="padding: 10px;">Mã NV</th>
-                        <th style="padding: 10px;">Họ và tên</th>
-                        <th style="padding: 10px;">Quốc tịch</th>
-                        <th style="padding: 10px;">Loại giấy tờ</th>
-                        <th style="padding: 10px;">Số giấy tờ</th>
-                        <th style="padding: 10px;">Ngày hết hạn</th>
-                        <th style="padding: 10px; text-align: center;">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {expired_table_rows}
-                </tbody>
-            </table>
-        </div>
-        """
-
-    expiring_section = ""
-    if expiring_docs:
-        expiring_section = f"""
-        <div style="margin-bottom: 24px;">
-            <h3 style="color: #d97706; margin-bottom: 12px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                🟡 DANH SÁCH GIẤY TỜ SẮP HẾT HẠN ({len(expiring_docs)} giấy tờ)
-            </h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; border: 1px solid #fde68a;">
-                <thead>
-                    <tr style="background-color: #fef3c7; color: #92400e;">
-                        <th style="padding: 10px; text-align: center;">STT</th>
-                        <th style="padding: 10px;">Mã NV</th>
-                        <th style="padding: 10px;">Họ và tên</th>
-                        <th style="padding: 10px;">Quốc tịch</th>
-                        <th style="padding: 10px;">Loại giấy tờ</th>
-                        <th style="padding: 10px;">Số giấy tờ</th>
-                        <th style="padding: 10px;">Ngày hết hạn</th>
-                        <th style="padding: 10px; text-align: center;">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {expiring_table_rows}
-                </tbody>
-            </table>
-        </div>
-        """
-
-    missing_section = ""
-    if missing_docs:
-        missing_section = f"""
-        <div style="margin-bottom: 24px;">
-            <h3 style="color: #4338ca; margin-bottom: 12px; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                ⚠️ DANH SÁCH GIẤY TỜ THIẾU THÔNG TIN ({len(missing_docs)} mục)
-            </h3>
-            <p style="font-size: 12px; color: #64748b; margin: 0 0 10px 0; font-style: italic;">
-                * Các nhân viên dưới đây đang thiếu thông tin giấy tờ trong hệ thống. Vui lòng bổ sung để theo dõi hạn hiệu lực.
-            </p>
-            <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; border: 1px solid #c7d2fe;">
-                <thead>
-                    <tr style="background-color: #e0e7ff; color: #3730a3;">
-                        <th style="padding: 10px; text-align: center;">STT</th>
-                        <th style="padding: 10px;">Mã NV</th>
-                        <th style="padding: 10px;">Họ và tên</th>
-                        <th style="padding: 10px;">Quốc tịch</th>
-                        <th style="padding: 10px;">Loại giấy tờ</th>
-                        <th style="padding: 10px;">Lý do thiếu</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {missing_table_rows}
-                </tbody>
-            </table>
-        </div>
-        """
-
-    no_docs_notice = ""
-    if not expired_docs and not expiring_docs and not missing_docs:
-        no_docs_notice = """
-        <div style="padding: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; color: #166534; font-size: 14px; text-align: center;">
-            ✅ Tất cả giấy tờ pháp lý của Nhân viên nước ngoài hiện tại đều nằm trong thời hạn an toàn. Không có giấy tờ nào quá hạn hoặc sắp hết hạn.
-        </div>
-        """
-
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>Cảnh báo giấy tờ pháp lý - NY HR System</title>
-    </head>
-    <body style="font-family: Arial, Helvetica, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b;">
-        <div style="max-width: 850px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-            
-            <!-- Header -->
-            <div style="background-color: #0f172a; padding: 24px; text-align: center; color: #ffffff;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 0.5px;">
-                    📋 BẢN TIN CẢNH BÁO GIẤY TỜ PHÁP LÝ NHÂN VIÊN NƯỚC NGOÀI
-                </h2>
-                <p style="margin: 8px 0 0 0; font-size: 13px; color: #94a3b8;">
-                    Hệ thống NY Human Resources System • Thời gian phát hành: {now_str}
-                </p>
-            </div>
-
-            <!-- Content -->
-            <div style="padding: 24px;">
-                <p style="font-size: 14px; color: #334155; margin-top: 0; margin-bottom: 20px;">
-                    Kính gửi <strong>Bộ phận Nhân sự (HR)</strong>,<br>
-                    Hệ thống gửi đến Anh/Chị bản tin tổng hợp tình trạng giấy tờ pháp lý (Visa, Tạm trú, GPLĐ, HĐLĐ, Hộ chiếu) của Nhân viên nước ngoài cần xử lý gia hạn:
-                </p>
-
-                {expired_section}
-                {expiring_section}
-                {missing_section}
-                {no_docs_notice}
-
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center;">
-                    <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
-                        Anh/Chị vui lòng truy cập phần mềm để cập nhật hồ sơ giấy tờ mới nhất:
-                    </p>
-                    <a href="{system_url or '#'}" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; font-weight: bold; font-size: 13px; padding: 10px 20px; border-radius: 6px;">
-                        🔗 Mở Phần Mềm Quản Lý HR
-                    </a>
-                </div>
-            </div>
-
-            <!-- Footer -->
-            <div style="background-color: #f1f5f9; padding: 16px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0;">
-                Email này được tự động gửi từ hệ thống <strong>NY Human Resources System</strong>.<br>
-                Vui lòng không trả lời trực tiếp email này.
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-    return html
-
-
 def send_daily_doc_warning_digest(
     db: Session, trigger_type: str = "AUTO"
 ) -> tuple[bool, str, EmailDeliveryLog | None]:
@@ -279,7 +155,6 @@ def send_daily_doc_warning_digest(
 
     expiring_resp = get_expiring_documents(db)
 
-    # Flatten all doc lists from response
     all_doc_items = (
         expiring_resp.expiring_visas
         + expiring_resp.expiring_tam_trus

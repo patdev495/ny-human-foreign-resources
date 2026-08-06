@@ -10,7 +10,7 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from core.database import Base, get_db
 from features.hr_foreign.models import MealPriceConfig
-from features.hr_foreign.services.meal_price_service import seed_default_meal_prices
+from features.hr_foreign.service import seed_default_meal_prices
 
 
 @pytest.fixture

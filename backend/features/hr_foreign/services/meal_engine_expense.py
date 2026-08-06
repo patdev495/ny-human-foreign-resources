@@ -16,7 +16,7 @@ from features.hr_foreign.schemas import (
     MealExpenseReportItem,
     MealExpenseReportResponse,
 )
-from .meal_price_service import seed_default_meal_prices
+from .meal_engine_forecast import seed_default_meal_prices
 
 
 def calculate_meal_expenses(

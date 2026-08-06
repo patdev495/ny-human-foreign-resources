@@ -1,16 +1,91 @@
 from __future__ import annotations
 import datetime
+from collections import defaultdict
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import Hotel, Room, Stay, TravelRecord
 from features.hr_foreign.schemas import (
+    HotelCreate,
+    HotelUpdate,
     ResidentInfo,
+    RoomCreate,
     RoomOccupancyRead,
+    RoomUpdate,
     StayCreate,
     StayUpdate,
 )
 
+
+# --- ROOMS ---
+
+def get_rooms(db: Session) -> list[Room]:
+    return db.query(Room).all()
+
+
+def get_room_by_id(db: Session, room_id: int) -> Room | None:
+    return db.query(Room).filter(Room.id == room_id).first()
+
+
+def get_room_by_number(db: Session, room_number: str) -> Room | None:
+    return db.query(Room).filter(Room.room_number == room_number).first()
+
+
+def create_room(db: Session, payload: RoomCreate) -> Room:
+    room = Room(**payload.model_dump())
+    db.add(room)
+    db.flush()
+    db.commit()
+    db.refresh(room)
+    return room
+
+
+def update_room(db: Session, room: Room, payload: RoomUpdate) -> Room:
+    for key, value in payload.model_dump().items():
+        setattr(room, key, value)
+    db.commit()
+    db.refresh(room)
+    return room
+
+
+def delete_room(db: Session, room: Room) -> None:
+    db.delete(room)
+    db.commit()
+
+
+# --- HOTELS ---
+
+def get_hotels(db: Session) -> list[Hotel]:
+    return db.query(Hotel).all()
+
+
+def get_hotel_by_id(db: Session, hotel_id: int) -> Hotel | None:
+    return db.query(Hotel).filter(Hotel.id == hotel_id).first()
+
+
+def create_hotel(db: Session, payload: HotelCreate) -> Hotel:
+    hotel = Hotel(**payload.model_dump())
+    db.add(hotel)
+    db.flush()
+    db.commit()
+    db.refresh(hotel)
+    return hotel
+
+
+def update_hotel(db: Session, hotel: Hotel, payload: HotelUpdate) -> Hotel:
+    for key, value in payload.model_dump().items():
+        setattr(hotel, key, value)
+    db.commit()
+    db.refresh(hotel)
+    return hotel
+
+
+def delete_hotel(db: Session, hotel: Hotel) -> None:
+    db.delete(hotel)
+    db.commit()
+
+
+# --- STAYS ---
 
 def get_active_stay_for_employee(
     db: Session, employee_id: int, target_date: datetime.date, exclude_stay_id: int | None = None
@@ -95,18 +170,26 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     today = datetime.date.today()
     result: list[RoomOccupancyRead] = []
 
+    # Single bulk query for all active stays to eliminate N+1 queries
+    all_active_stays = (
+        db.query(Stay)
+        .filter(or_(Stay.end_date.is_(None), Stay.end_date > today))
+        .all()
+    )
+
+    ktx_stays_by_room: dict[int, list[Stay]] = defaultdict(list)
+    hotel_stays_by_hotel: dict[int, list[Stay]] = defaultdict(list)
+
+    for stay in all_active_stays:
+        if stay.accommodation_type == "KTX" and stay.room_id:
+            ktx_stays_by_room[stay.room_id].append(stay)
+        elif stay.accommodation_type == "HOTEL" and stay.hotel_id:
+            hotel_stays_by_hotel[stay.hotel_id].append(stay)
+
     # 1. KTX Rooms
     rooms = db.query(Room).all()
     for room in rooms:
-        active_stays = (
-            db.query(Stay)
-            .filter(
-                Stay.room_id == room.id,
-                Stay.accommodation_type == "KTX",
-                or_(Stay.end_date.is_(None), Stay.end_date > today),
-            )
-            .all()
-        )
+        active_stays = ktx_stays_by_room.get(room.id, [])
         residents: list[ResidentInfo] = []
         for stay in active_stays:
             emp = stay.employee
@@ -142,15 +225,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     # 2. Hotels
     hotels = db.query(Hotel).all()
     for hotel in hotels:
-        active_stays = (
-            db.query(Stay)
-            .filter(
-                Stay.hotel_id == hotel.id,
-                Stay.accommodation_type == "HOTEL",
-                or_(Stay.end_date.is_(None), Stay.end_date > today),
-            )
-            .all()
-        )
+        active_stays = hotel_stays_by_hotel.get(hotel.id, [])
         hotel_residents: list[ResidentInfo] = []
         for stay in active_stays:
             emp = stay.employee
@@ -188,3 +263,4 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
         )
 
     return result
+

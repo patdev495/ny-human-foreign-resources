@@ -4,8 +4,10 @@ import asyncio
 import datetime
 import logging
 from core.database import SessionLocal
-from features.hr_foreign.services.email_config_service import get_email_notification_config
-from features.hr_foreign.services.email_service import send_daily_doc_warning_digest
+from features.hr_foreign.services.email_service import (
+    get_email_notification_config,
+    send_daily_doc_warning_digest,
+)
 
 logger = logging.getLogger("email_scheduler")
 

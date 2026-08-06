@@ -180,7 +180,7 @@ def test_janitor_attendance_api_endpoints(client, db_session) -> None:
 
 
 def test_janitor_absence_impacts_meal_forecast(db_session) -> None:
-    from features.hr_foreign.services.meal_engine_service import get_daily_meal_forecast
+    from features.hr_foreign.service import get_daily_meal_forecast
 
     j1 = ForeignEmployee(
         name_latin="Janitor KTX 1",
@@ -220,9 +220,10 @@ def test_janitor_absence_impacts_meal_forecast(db_session) -> None:
 
 
 def test_janitor_resignation_filtering_and_excel_export(db_session) -> None:
-    from features.hr_foreign.services.meal_engine_service import get_daily_meal_forecast
+    from features.hr_foreign.service import get_daily_meal_forecast
     from features.hr_foreign.exporters.janitor_payroll_exporter import generate_janitor_payroll_excel
     from openpyxl import load_workbook
+
 
     j_resigned = ForeignEmployee(
         name_latin="Hoang Van Resigned",
