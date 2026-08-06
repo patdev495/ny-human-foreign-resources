@@ -16,6 +16,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   initialData,
 }) => {
   const [formData, setFormData] = useState<ForeignEmployeeCreate>({
+    employee_code: "",
     name_latin: "",
     name_chinese: "",
     gender: "Nam",
@@ -35,6 +36,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   useEffect(() => {
     if (initialData) {
       setFormData({
+        employee_code: initialData.employee_code || "",
         name_latin: initialData.name_latin || "",
         name_chinese: initialData.name_chinese || "",
         gender: initialData.gender || "Nam",
@@ -50,6 +52,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       });
     } else {
       setFormData({
+        employee_code: "",
         name_latin: "",
         name_chinese: "",
         gender: "Nam",
@@ -81,6 +84,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       setSubmitting(true);
       await onSubmit({
         ...formData,
+        employee_code: formData.employee_code?.trim() || null,
         name_chinese: formData.name_chinese?.trim() || null,
         nationality: formData.nationality?.trim() || null,
         passport_number: formData.passport_number?.trim() || null,
@@ -129,6 +133,17 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Mã nhân viên</label>
+              <input
+                type="text"
+                value={formData.employee_code || ""}
+                onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
+                placeholder="VD: NV001"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 font-mono"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
                 Tên Latin <span className="text-red-500">*</span>

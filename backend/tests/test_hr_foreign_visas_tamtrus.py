@@ -111,3 +111,39 @@ def test_visa_tamtru_and_expiring_alerts(client: TestClient) -> None:
 
     del_tt = client.delete(f"/api/hr-foreign/tam-trus/{tt1.json()['id']}")
     assert del_tt.status_code == 204
+
+
+def test_contract_crud_with_contract_number(client: TestClient) -> None:
+    emp = client.post(
+        "/api/hr-foreign/employees",
+        json={"name_latin": "LI WEI", "gender": "Nam", "passport_number": "P12345678"},
+    ).json()
+
+    # Create contract with contract_number
+    res = client.post(
+        f"/api/hr-foreign/employees/{emp['id']}/contracts",
+        json={
+            "contract_number": "HD-2026-001",
+            "contract_type": "CẤP MỚI",
+            "start_date": "2026-01-01",
+            "end_date": "2027-01-01",
+            "notes": "Hợp đồng thử nghiệm",
+        },
+    )
+    assert res.status_code == 201, res.json()
+    c_data = res.json()
+    assert c_data["contract_number"] == "HD-2026-001"
+
+    # Update contract number
+    res_up = client.put(
+        f"/api/hr-foreign/contracts/{c_data['id']}",
+        json={
+            "contract_number": "HD-2026-001-REV1",
+            "contract_type": "GIA HẠN",
+            "start_date": "2026-01-01",
+            "end_date": "2028-01-01",
+        },
+    )
+    assert res_up.status_code == 200, res_up.json()
+    assert res_up.json()["contract_number"] == "HD-2026-001-REV1"
+

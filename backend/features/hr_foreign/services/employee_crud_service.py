@@ -125,7 +125,7 @@ def update_employee(
         existing_entry=emp.entry_date,
         existing_actual_exit=emp.actual_exit_date,
     )
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(emp, key, value)
     db.commit()
     db.refresh(emp)

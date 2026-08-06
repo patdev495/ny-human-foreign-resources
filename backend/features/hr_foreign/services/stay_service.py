@@ -41,7 +41,7 @@ def create_room(db: Session, payload: RoomCreate) -> Room:
 
 
 def update_room(db: Session, room: Room, payload: RoomUpdate) -> Room:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(room, key, value)
     db.commit()
     db.refresh(room)
@@ -73,7 +73,7 @@ def create_hotel(db: Session, payload: HotelCreate) -> Hotel:
 
 
 def update_hotel(db: Session, hotel: Hotel, payload: HotelUpdate) -> Hotel:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(hotel, key, value)
     db.commit()
     db.refresh(hotel)
@@ -149,7 +149,7 @@ def _sync_stay_checkout_with_travel_record(db: Session, stay: Stay, end_date: da
 
 def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
     previous_end_date = stay.end_date
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(stay, key, value)
     if stay.end_date and stay.end_date != previous_end_date:
         _sync_stay_checkout_with_travel_record(db, stay, stay.end_date)

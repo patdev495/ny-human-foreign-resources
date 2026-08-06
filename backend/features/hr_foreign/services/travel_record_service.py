@@ -133,7 +133,7 @@ def update_travel_record(
         expected_exit=payload.expected_exit_date,
         actual_exit=payload.actual_exit_date,
     )
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(record, key, value)
     
     emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == record.employee_id).first()

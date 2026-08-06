@@ -46,7 +46,7 @@ def create_contract(db: Session, employee_id: int, payload: ContractCreate) -> C
 
 
 def update_contract(db: Session, contract: Contract, payload: ContractUpdate) -> Contract:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(contract, key, value)
     db.commit()
     db.refresh(contract)
@@ -83,7 +83,7 @@ def create_work_permit(db: Session, employee_id: int, payload: WorkPermitCreate)
 
 
 def update_work_permit(db: Session, permit: WorkPermit, payload: WorkPermitUpdate) -> WorkPermit:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(permit, key, value)
     db.commit()
     db.refresh(permit)
@@ -120,7 +120,7 @@ def delete_visa(db: Session, visa: Visa) -> None:
 
 
 def update_visa(db: Session, visa: Visa, payload: VisaUpdate) -> Visa:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(visa, key, value)
     db.commit()
     db.refresh(visa)
@@ -152,7 +152,7 @@ def delete_tam_tru(db: Session, tam_tru: TamTru) -> None:
 
 
 def update_tam_tru(db: Session, tam_tru: TamTru, payload: TamTruUpdate) -> TamTru:
-    for key, value in payload.model_dump().items():
+    for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(tam_tru, key, value)
     db.commit()
     db.refresh(tam_tru)

@@ -201,6 +201,7 @@ export const ContractSection: React.FC<ContractSectionProps> = ({
     setSaving(true);
     try {
       const payload = {
+        contract_number: form.contract_number || null,
         contract_type: form.contract_type || null,
         start_date: form.start_date || null,
         end_date: form.end_date || null,
