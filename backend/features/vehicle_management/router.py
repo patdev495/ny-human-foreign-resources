@@ -203,33 +203,20 @@ def export_vehicle_excel(
     db: Session = Depends(get_db),
 ):
     from fastapi.responses import StreamingResponse
-    from features.vehicle_management.services.excel_service import (
-        generate_duc_anh_excel_report,
-        generate_binh_an_excel_report,
-    )
+    from features.vehicle_management.services.excel_service import export_vehicle_excel_report
 
     today = datetime.now().strftime("%Y-%m-%d")
     f_date = from_date or f"{today[:7]}-01"
     t_date = to_date or today
 
-    if provider_type == "COMPANY_OWNED":
-        excel_io = generate_duc_anh_excel_report(db, f_date, t_date)
-        filename = f"Bao_Cao_3_Xe_Duc_Anh_{f_date}_den_{t_date}.zip"
-        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-        return StreamingResponse(
-            excel_io,
-            media_type="application/zip",
-            headers=headers,
-        )
-    else:
-        excel_io = generate_binh_an_excel_report(db, f_date, t_date)
-        filename = f"Bang_Ke_Chuyen_Xe_Binh_An_{f_date}_den_{t_date}.xlsx"
-        headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
-        return StreamingResponse(
-            excel_io,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers=headers,
-        )
+    excel_io, filename, media_type = export_vehicle_excel_report(db, provider_type, f_date, t_date)
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(
+        excel_io,
+        media_type=media_type,
+        headers=headers,
+    )
+
 
 
 

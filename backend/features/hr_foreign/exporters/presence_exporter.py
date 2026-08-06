@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 import io
 from openpyxl import Workbook
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import ForeignEmployee
@@ -14,7 +15,15 @@ def generate_presence_accommodation_excel(db: Session, today: datetime.date | No
     if today is None:
         today = datetime.date.today()
 
-    employees_db = db.query(ForeignEmployee).order_by(ForeignEmployee.name_latin).all()
+    employees_db = (
+        db.query(ForeignEmployee)
+        .filter(
+            ForeignEmployee.employee_type != "JANITORIAL",
+            or_(ForeignEmployee.role.is_(None), ~ForeignEmployee.role.ilike("%tạp vụ%")),
+        )
+        .order_by(ForeignEmployee.name_latin)
+        .all()
+    )
     evaluated = evaluate_employee_statuses(db, employees_db, today=today)
 
     wb = Workbook()

@@ -365,6 +365,24 @@ def test_legal_profile_report_excludes_janitors(client):
     assert "JANITOR 1" not in names_in_excel
 
 
+def test_presence_accommodation_report_excludes_janitors(client):
+    from openpyxl import load_workbook
+    # Create 1 foreign employee and 1 janitor
+    client.post("/api/hr-foreign/employees", json={"name_latin": "EXPAT ACC 1", "gender": "Nam", "employee_type": "FOREIGN"})
+    client.post("/api/hr-foreign/employees", json={"name_latin": "JANITOR ACC 1", "gender": "Nữ", "employee_type": "JANITORIAL"})
+
+    res = client.get("/api/hr-foreign/exports/presence-accommodation")
+    assert res.status_code == 200
+
+    excel_bytes = io.BytesIO(res.content)
+    wb = load_workbook(excel_bytes)
+    ws_exited = wb["Đã về nước"]
+
+    names_in_exited = [ws_exited.cell(row=r, column=3).value for r in range(2, ws_exited.max_row + 1)]
+    assert "EXPAT ACC 1" in names_in_exited
+    assert "JANITOR ACC 1" not in names_in_exited
+
+
 def test_generate_meal_expense_excel(db_session):
     from features.hr_foreign.excel_exporter import generate_meal_expense_excel
     excel_bytes = generate_meal_expense_excel(db_session, start_date=datetime.date(2026, 8, 1), end_date=datetime.date(2026, 8, 5))

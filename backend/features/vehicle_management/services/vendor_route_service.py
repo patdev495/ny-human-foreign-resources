@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from features.vehicle_management.models import RouteType, VendorRoute
+from features.vehicle_management.models import VendorRoute
 from features.vehicle_management.schemas import (
     CalculateCostRequest,
     CalculateCostResponse,
     VendorRouteCreate,
     VendorRouteUpdate,
 )
+from features.vehicle_management.services.pricing import calculate_dispatch_cost
 
 
 def get_vendor_routes(db: Session, provider_id: Optional[int] = None) -> List[VendorRoute]:
@@ -51,24 +52,11 @@ def delete_vendor_route(db: Session, route_id: int) -> bool:
     return True
 
 
-def calculate_dispatch_cost(db: Session, req: CalculateCostRequest) -> CalculateCostResponse:
-    base_cost = 0.0
-    waiting_rate = 30000.0
-
-    if req.route_type == RouteType.FIXED_ROUTE:
-        if req.vendor_route_id:
-            route = db.query(VendorRoute).filter(VendorRoute.id == req.vendor_route_id).first()
-            if route:
-                base_cost = route.fixed_price
-                waiting_rate = route.waiting_fee_per_hour
-    elif req.route_type == RouteType.KM_BASED:
-        base_cost = req.distance_km * 14000.0
-
-    waiting_cost = req.waiting_hours * waiting_rate
-    total = base_cost + waiting_cost
-
-    return CalculateCostResponse(
-        base_cost=base_cost,
-        waiting_cost=waiting_cost,
-        total_calculated_cost=total,
-    )
+__all__ = [
+    "get_vendor_routes",
+    "get_vendor_route",
+    "create_vendor_route",
+    "update_vendor_route",
+    "delete_vendor_route",
+    "calculate_dispatch_cost",
+]
