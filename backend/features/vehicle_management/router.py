@@ -203,7 +203,7 @@ def export_vehicle_excel(
     db: Session = Depends(get_db),
 ):
     from fastapi.responses import StreamingResponse
-    from features.vehicle_management.services.excel_service import export_vehicle_excel_report
+    from features.vehicle_management.services.exporters import export_vehicle_excel_report
 
     today = datetime.now().strftime("%Y-%m-%d")
     f_date = from_date or f"{today[:7]}-01"
