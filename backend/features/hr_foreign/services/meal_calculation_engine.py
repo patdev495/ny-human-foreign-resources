@@ -12,7 +12,9 @@ from .meal_engine.meal_forecast_calculator import (
     seed_default_meal_prices,
 )
 from .meal_engine.meal_expense_calculator import (
+    DailyExpenseRow,
     calculate_expense_report,
+    get_daily_expense_breakdown_items,
 )
 
 
@@ -40,3 +42,10 @@ class MealCalculationEngine:
         cls, db: Session, start_date: datetime.date, end_date: datetime.date
     ) -> MealExpenseReportResponse:
         return calculate_expense_report(db, start_date, end_date)
+
+    @classmethod
+    def get_daily_expense_breakdown_items(
+        cls, db: Session, start_date: datetime.date, end_date: datetime.date
+    ) -> list[DailyExpenseRow]:
+        return get_daily_expense_breakdown_items(db, start_date, end_date)
+

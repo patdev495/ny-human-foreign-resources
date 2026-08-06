@@ -18,6 +18,8 @@ from features.hr_foreign.schemas import (
     DailyMealForecastResponse,
     DailyMealSessionSummary,
 )
+from features.hr_foreign.services.janitor_service import get_dormitory_janitor_count_for_date
+
 
 
 def seed_default_meal_prices(db: Session) -> None:
@@ -161,41 +163,8 @@ def calculate_daily_forecast(
     lc_lock = locks_map.get("LUNCH")
     dn_lock = locks_map.get("DINNER")
 
-    total_janitor_ktx = (
-        db.query(ForeignEmployee)
-        .filter(
-            ForeignEmployee.employee_type == "JANITORIAL",
-            or_(
-                ForeignEmployee.workplace_location == "DORMITORY",
-                ForeignEmployee.workplace_location.is_(None),
-            ),
-            or_(
-                ForeignEmployee.salary_unit != "DAY",
-                ForeignEmployee.salary_unit.is_(None),
-            ),
-            or_(
-                ForeignEmployee.status != "RESIGNED",
-                ForeignEmployee.resignation_date.is_(None),
-                ForeignEmployee.resignation_date > target_date,
-            ),
-        )
-        .count()
-    )
+    janitor_ktx_count = get_dormitory_janitor_count_for_date(db, target_date)
 
-    absent_ktx_janitors_cnt = (
-        db.query(JanitorAttendanceRecord)
-        .join(ForeignEmployee, ForeignEmployee.id == JanitorAttendanceRecord.employee_id)
-        .filter(
-            JanitorAttendanceRecord.attendance_date == target_date,
-            ForeignEmployee.employee_type == "JANITORIAL",
-            or_(
-                ForeignEmployee.workplace_location == "DORMITORY",
-                ForeignEmployee.workplace_location.is_(None),
-            ),
-        )
-        .count()
-    )
-    janitor_ktx_count = max(0, total_janitor_ktx - absent_ktx_janitors_cnt)
 
     breakfast_summary = DailyMealSessionSummary(
         meal_session="BREAKFAST",
