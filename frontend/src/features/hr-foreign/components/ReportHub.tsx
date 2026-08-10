@@ -2,7 +2,9 @@ import React from "react";
 import { useReportHub } from "../hooks/useReportHub";
 import { UnclosedMealLocksModal } from "./report-hub/UnclosedMealLocksModal";
 import { VehicleReportCard } from "./reports/VehicleReportCard";
+import { TripDurationReportCard } from "./reports/TripDurationReportCard";
 import type { NavTab } from "../../../components/Sidebar";
+
 
 
 interface ReportHubProps {
@@ -21,6 +23,7 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     loadingMeal,
     loadingJanitor,
     loadingVehicle,
+    loadingTripDuration,
     mealStartDate,
     setMealStartDate,
     mealEndDate,
@@ -35,6 +38,13 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     setVehicleEndDate,
     vehicleSubTab,
     setVehicleSubTab,
+    tripStartDate,
+    setTripStartDate,
+    tripEndDate,
+    setTripEndDate,
+    selectedEmployeeId,
+    setSelectedEmployeeId,
+    employees,
     errorMessage,
     setErrorMessage,
     missingLocks,
@@ -45,7 +55,9 @@ export const ReportHub: React.FC<ReportHubProps> = ({
     handleDownloadMeal,
     handleDownloadJanitor,
     handleDownloadVehicleReport,
+    handleDownloadTripDuration,
   } = useReportHub();
+
 
 
 
@@ -316,6 +328,23 @@ export const ReportHub: React.FC<ReportHubProps> = ({
           handleDownloadVehicleReport={handleDownloadVehicleReport}
         />
       )}
+
+      {/* VIEW 6: TRIP DURATION & VISITS REPORT */}
+      {currentTab === "EXPORT_TRIP_DURATION" && (
+        <TripDurationReportCard
+          tripStartDate={tripStartDate}
+          setTripStartDate={setTripStartDate}
+          tripEndDate={tripEndDate}
+          setTripEndDate={setTripEndDate}
+          selectedEmployeeId={selectedEmployeeId}
+          setSelectedEmployeeId={setSelectedEmployeeId}
+          employees={employees}
+          loadingTripDuration={loadingTripDuration}
+          handleDownloadTripDuration={handleDownloadTripDuration}
+        />
+      )}
+
+
 
 
 

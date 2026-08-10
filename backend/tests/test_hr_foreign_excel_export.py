@@ -398,3 +398,67 @@ def test_export_meal_expense_endpoint(client):
     assert res.status_code == 200
     assert res.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
+
+def test_generate_trip_duration_excel(db_session):
+    from features.hr_foreign.models import ForeignEmployee, TravelRecord
+    from features.hr_foreign.excel_exporter import generate_trip_duration_excel
+
+    emp1 = ForeignEmployee(
+        employee_code="NY001",
+        name_latin="JOHN DOE",
+        name_chinese="约翰",
+        gender="Nam",
+        passport_number="P123456",
+        department="Kỹ thuật",
+        employee_type="FOREIGN",
+    )
+    db_session.add(emp1)
+    db_session.commit()
+    db_session.refresh(emp1)
+
+    # Trip 1: 2026-01-01 to 2026-03-31 (90 days)
+    tr1 = TravelRecord(
+        employee_id=emp1.id,
+        entry_date=datetime.date(2026, 1, 1),
+        actual_exit_date=datetime.date(2026, 3, 31),
+    )
+    db_session.add(tr1)
+    db_session.commit()
+
+    # Query range for Feb 2026: 2026-02-01 to 2026-02-28 (28 days overlap)
+    excel_bytes = generate_trip_duration_excel(
+        db_session,
+        start_date=datetime.date(2026, 2, 1),
+        end_date=datetime.date(2026, 2, 28),
+    )
+    assert isinstance(excel_bytes, io.BytesIO)
+
+    wb = load_workbook(excel_bytes)
+    assert "Đợt Lưu Trú & Nhập Xuất Cảnh" in wb.sheetnames
+    ws = wb["Đợt Lưu Trú & Nhập Xuất Cảnh"]
+
+    # Header is row 1
+    headers = [ws.cell(row=1, column=c).value for c in range(1, 15)]
+    assert "Mã NV" in headers
+    assert "Loại hình" in headers
+    assert "Số ngày ở trong kỳ" in headers
+    assert "Tổng số ngày đợt di chuyển" in headers
+
+    # Data row 2
+    row2_code = ws.cell(row=2, column=2).value
+    assert row2_code == "NY001"
+    work_type_val = ws.cell(row=2, column=7).value
+    assert work_type_val == "Cố định"
+    days_in_period = ws.cell(row=2, column=12).value
+    assert days_in_period == 28
+    total_trip_days = ws.cell(row=2, column=13).value
+    assert total_trip_days == 90
+
+
+
+def test_export_trip_duration_endpoint(client):
+    res = client.get("/api/hr-foreign/exports/trip-duration?start_date=2026-02-01&end_date=2026-02-28")
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+

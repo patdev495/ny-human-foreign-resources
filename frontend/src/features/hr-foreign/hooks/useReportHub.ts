@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   downloadJanitorPayrollReport,
   downloadLegalProfileReport,
   downloadMealExpenseReport,
   downloadPresenceAccommodationReport,
+  downloadTripDurationReport,
+  fetchEmployees,
   validateMealLocks,
 } from "../api";
-import type { UnclosedMealLockItem } from "../types";
+import type { ForeignEmployee, UnclosedMealLockItem } from "../types";
 
 import { exportVehicleExcel } from "../../vehicle-management/api";
 
@@ -27,6 +29,7 @@ export function useReportHub() {
   const [loadingMeal, setLoadingMeal] = useState(false);
   const [loadingJanitor, setLoadingJanitor] = useState(false);
   const [loadingVehicle, setLoadingVehicle] = useState(false);
+  const [loadingTripDuration, setLoadingTripDuration] = useState(false);
 
   const [mealStartDate, setMealStartDate] = useState(firstDayOfMonth);
   const [mealEndDate, setMealEndDate] = useState(todayStr);
@@ -35,6 +38,17 @@ export function useReportHub() {
   const [vehicleStartDate, setVehicleStartDate] = useState(firstDayOfMonth);
   const [vehicleEndDate, setVehicleEndDate] = useState(todayStr);
   const [vehicleSubTab, setVehicleSubTab] = useState<"DUC_ANH" | "OUTSOURCED">("DUC_ANH");
+
+  const [tripStartDate, setTripStartDate] = useState(firstDayOfMonth);
+  const [tripEndDate, setTripEndDate] = useState(todayStr);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
+
+  useEffect(() => {
+    fetchEmployees()
+      .then((data) => setEmployees(data.filter((e) => e.employee_type !== "JANITORIAL")))
+      .catch(() => {});
+  }, []);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -111,6 +125,18 @@ export function useReportHub() {
     }
   };
 
+  const handleDownloadTripDuration = async () => {
+    try {
+      setLoadingTripDuration(true);
+      setErrorMessage(null);
+      await downloadTripDurationReport(tripStartDate, tripEndDate, selectedEmployeeId);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Không thể tải Báo cáo Đợt Lưu trú & Nhập xuất cảnh");
+    } finally {
+      setLoadingTripDuration(false);
+    }
+  };
+
   return {
     includeAttachments,
     setIncludeAttachments,
@@ -119,6 +145,7 @@ export function useReportHub() {
     loadingMeal,
     loadingJanitor,
     loadingVehicle,
+    loadingTripDuration,
     mealStartDate,
     setMealStartDate,
     mealEndDate,
@@ -133,6 +160,13 @@ export function useReportHub() {
     setVehicleEndDate,
     vehicleSubTab,
     setVehicleSubTab,
+    tripStartDate,
+    setTripStartDate,
+    tripEndDate,
+    setTripEndDate,
+    selectedEmployeeId,
+    setSelectedEmployeeId,
+    employees,
     errorMessage,
     setErrorMessage,
     missingLocks,
@@ -143,7 +177,9 @@ export function useReportHub() {
     handleDownloadMeal,
     handleDownloadJanitor,
     handleDownloadVehicleReport,
+    handleDownloadTripDuration,
   };
 }
+
 
 

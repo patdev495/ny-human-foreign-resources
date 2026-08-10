@@ -17,7 +17,9 @@ export type NavTab =
   | "EXPORT_PRESENCE"
   | "EXPORT_MEAL"
   | "EXPORT_JANITOR"
-  | "EXPORT_VEHICLES";
+  | "EXPORT_VEHICLES"
+  | "EXPORT_TRIP_DURATION";
+
 
 export interface NavItem {
   key: NavTab;
@@ -97,7 +99,9 @@ export const exportSubItems: NavItem[] = [
   { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <span className="text-xs">🍱</span> },
   { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <span className="text-xs">🧹</span> },
   { key: "EXPORT_VEHICLES", label: "Chi phí Thuê xe", icon: <span className="text-xs">🚘</span> },
+  { key: "EXPORT_TRIP_DURATION", label: "Đợt Lưu trú & Nhập xuất cảnh", icon: <span className="text-xs">✈️</span> },
 ];
+
 
 
 

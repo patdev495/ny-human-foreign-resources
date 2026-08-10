@@ -172,6 +172,9 @@ Báo cáo cước thuê xe đối tác ngoài (Nhà xe Bình An) xuất dạng f
 - **Sheet 1 (`BINH AN 08`)**: Bảng kê tổng hợp các chuyến xe trong khoảng ngày chốt cước, được tự động phân nhóm chi tiết theo từng Biển số xe (Block A, B, C, D, E...) và Block F (Tổng xe Cửa khẩu), có các dòng tổng tiền phụ `TỔNG XE <Biển Số>` và dòng `TỔNG PHẢI TRẢ (VNĐ)` ở cuối bảng kèm khối chữ ký Bên A / Bên B. Cột Ghi chú gộp dạng `7个人=>7:20` hoặc `1个人 =>14:30_17:30 JIAO YOU JUN`.
 - **Sheet 2 (`HỮU NGHỊ BÌNH AN`)**: Bảng kê liệt kê chi tiết các chuyến đi Cửa Khẩu Hữu Nghị (友谊关 - Lạng Sơn) với đơn giá chuyến cố định (1.300.000đ cho xe 4 chỗ và 1.500.000đ cho xe 7 chỗ), hiển thị chi tiết khung giờ chạy và danh sách hành khách đi cùng.
 
+**Báo cáo Excel Tổng hợp các đợt Lưu trú & Nhập xuất cảnh** (Trip & Stay Duration Excel Report):
+Báo cáo Excel tổng hợp lịch sử các đợt di chuyển/lưu trú tại Việt Nam của Nhân viên nước ngoài trong một khoảng thời gian chọn trước. Màn hình báo cáo cho phép lọc theo khoảng ngày (Từ ngày – Đến ngày) và lọc riêng từng Nhân viên hoặc toàn bộ nhân sự. Xuất file Excel bao gồm thông tin Master nhân sự, **Loại hình làm việc** (Cố định / Công tác), Ngày đến VN (`entry_date`), Ngày về nước thực tế (`actual_exit_date`), Ngày dự kiến về (`expected_exit_date`), **Số ngày lưu trú trong kỳ** (số ngày giao thoa thực tế trong khoảng ngày chọn), và **Tổng số ngày của toàn đợt**, kèm dòng Tổng cộng số ngày ở cuối bảng.
+
 
 
 **Ghi nhận Nghỉ Tạp vụ** (Janitor Daily Attendance Record):

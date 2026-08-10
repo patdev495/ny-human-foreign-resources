@@ -8,6 +8,7 @@ from features.hr_foreign.exporters import (
     generate_legal_profile_excel,
     generate_presence_accommodation_excel,
     generate_meal_expense_excel,
+    generate_trip_duration_excel,
 )
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     "generate_legal_profile_excel",
     "generate_presence_accommodation_excel",
     "generate_meal_expense_excel",
+    "generate_trip_duration_excel",
 ]
+
 
 

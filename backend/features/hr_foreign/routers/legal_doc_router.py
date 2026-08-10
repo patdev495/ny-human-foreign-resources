@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
+from datetime import date
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
+
 
 from core.database import get_db
 from features.hr_foreign import excel_exporter, models, service
@@ -233,3 +235,23 @@ def export_presence_accommodation(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": 'attachment; filename="Bao_Cao_Hien_Dien_Cho_O.xlsx"'},
     )
+
+
+@router.get("/exports/trip-duration")
+def export_trip_duration(
+    start_date: date = Query(...),
+    end_date: date = Query(...),
+    employee_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+) -> Response:
+    excel_buf = excel_exporter.generate_trip_duration_excel(
+        db, start_date=start_date, end_date=end_date, employee_id=employee_id
+    )
+    filename = f"Bao_Cao_Dot_Luu_Tru_{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}.xlsx"
+    return Response(
+        content=excel_buf.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+

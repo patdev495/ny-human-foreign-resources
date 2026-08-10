@@ -45,7 +45,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     activeTab === "EXPORT_PRESENCE" ||
     activeTab === "EXPORT_MEAL" ||
     activeTab === "EXPORT_JANITOR" ||
-    activeTab === "EXPORT_VEHICLES";
+    activeTab === "EXPORT_VEHICLES" ||
+    activeTab === "EXPORT_TRIP_DURATION";
+
 
 
 

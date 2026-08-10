@@ -143,3 +143,28 @@ export async function downloadPresenceAccommodationReport(): Promise<void> {
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 }
+
+export async function downloadTripDurationReport(
+  startDate: string,
+  endDate: string,
+  employeeId?: number | null
+): Promise<void> {
+  let url = `${BASE}/exports/trip-duration?start_date=${startDate}&end_date=${endDate}`;
+  if (employeeId) {
+    url += `&employee_id=${employeeId}`;
+  }
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Không thể tải Báo cáo Đợt Lưu trú & Nhập xuất cảnh");
+  }
+  const blob = await res.blob();
+  const filename = `Bao_Cao_Dot_Luu_Tru_${startDate.replace(/-/g, "")}_${endDate.replace(/-/g, "")}.xlsx`;
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+

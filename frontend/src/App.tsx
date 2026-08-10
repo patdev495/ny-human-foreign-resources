@@ -90,9 +90,11 @@ export const App: React.FC = () => {
             activeTab === "EXPORT_PRESENCE" ||
             activeTab === "EXPORT_MEAL" ||
             activeTab === "EXPORT_JANITOR" ||
-            activeTab === "EXPORT_VEHICLES") && (
+            activeTab === "EXPORT_VEHICLES" ||
+            activeTab === "EXPORT_TRIP_DURATION") && (
               <ReportHub activeTab={activeTab} />
             )}
+
 
         </main>
       </div>

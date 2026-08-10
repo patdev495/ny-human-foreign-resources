@@ -5,12 +5,15 @@ from openpyxl.utils import get_column_letter
 
 NAVY_FILL = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
 HEADER_FONT = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+BOLD_FONT = Font(name="Calibri", size=11, bold=True)
+TITLE_FONT = Font(name="Calibri", size=14, bold=True)
 RED_FILL = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
 RED_FONT = Font(name="Calibri", size=11, color="9C0006", bold=True)
 YELLOW_FILL = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
 YELLOW_FONT = Font(name="Calibri", size=11, color="9C6500", bold=True)
 HYPERLINK_FONT = Font(name="Calibri", size=11, color="0000FF", underline="single")
 REGULAR_FONT = Font(name="Calibri", size=11)
+
 BORDER_THIN = Border(
     left=Side(style="thin", color="D9D9D9"),
     right=Side(style="thin", color="D9D9D9"),
