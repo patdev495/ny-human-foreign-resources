@@ -4,11 +4,13 @@ import type { TravelRecord } from "../../types";
 interface Props {
   travelRecords: TravelRecord[];
   onOpenTravelModal: () => void;
+  onEditRecord?: (record: TravelRecord) => void;
 }
 
 export const ProfileTravelTab: React.FC<Props> = ({
   travelRecords,
   onOpenTravelModal,
+  onEditRecord,
 }) => {
   return (
     <div className="space-y-3">
@@ -30,13 +32,21 @@ export const ProfileTravelTab: React.FC<Props> = ({
       ) : (
         travelRecords.map((tr, index) => {
           const isOpenTrip = !tr.actual_exit_date;
+          const entryStr = tr.entry_date ? String(tr.entry_date).trim() : "";
+          const hasEntryDate = entryStr.length > 0 && entryStr !== "null" && entryStr !== "None";
+          const isMissingEntryDate = !hasEntryDate && (Boolean(tr.actual_exit_date) || Boolean(tr.expected_exit_date));
+
           return (
             <div
               key={tr.id || index}
-              className="p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-300 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+              className={`p-4 rounded-xl border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                isMissingEntryDate
+                  ? "border-amber-300 bg-amber-50/40 hover:border-amber-400"
+                  : "border-slate-200 bg-white hover:border-blue-300"
+              }`}
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-slate-900">
                     Đợt #{travelRecords.length - index}
                   </span>
@@ -49,11 +59,24 @@ export const ProfileTravelTab: React.FC<Props> = ({
                       Đã về nước
                     </span>
                   )}
+                  {isMissingEntryDate && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 rounded font-bold text-[10px] flex items-center gap-1">
+                      ⚠️ Thiếu ngày đến VN
+                    </span>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 font-mono text-[11px] pt-1">
                   <div>
-                    📅 Đến: <span className="font-bold">{tr.entry_date || "-"}</span>
+                    📅 Đến:{" "}
+                    {hasEntryDate ? (
+                      <span className="font-bold">{entryStr}</span>
+                    ) : (
+                      <span className="font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-300">
+                        ⚠️ Chưa nhập ngày sang
+                      </span>
+                    )}
                   </div>
+
                   <div>
                     ⏳ Dự kiến về:{" "}
                     <span className="font-medium text-amber-700">
@@ -69,6 +92,16 @@ export const ProfileTravelTab: React.FC<Props> = ({
                 </div>
                 {tr.notes && <div className="text-slate-400 italic text-[11px] pt-0.5">{tr.notes}</div>}
               </div>
+
+              {onEditRecord && (
+                <button
+                  type="button"
+                  onClick={() => onEditRecord(tr)}
+                  className="self-end sm:self-center px-2.5 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors shrink-0"
+                >
+                  ✏️ Sửa đợt
+                </button>
+              )}
             </div>
           );
         })
@@ -76,3 +109,4 @@ export const ProfileTravelTab: React.FC<Props> = ({
     </div>
   );
 };
+

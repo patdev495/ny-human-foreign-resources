@@ -9,6 +9,9 @@ import { TravelRecordModal } from "./TravelRecordModal";
 import { PassportSection } from "./PassportSection";
 import { ProfileStaysTab } from "./profile-modal/ProfileStaysTab";
 import { ProfileTravelTab } from "./profile-modal/ProfileTravelTab";
+import { EditSingleTravelRecordModal } from "./profile-modal/EditSingleTravelRecordModal";
+import type { TravelRecord } from "../types";
+
 
 export type { ProfileTab };
 
@@ -32,12 +35,21 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("HOP_DONG");
   const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
+  const [selectedTravelRecord, setSelectedTravelRecord] = useState<TravelRecord | null>(null);
+  const [isEditSingleTravelOpen, setIsEditSingleTravelOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && initialTab) {
       setActiveTab(initialTab);
     }
   }, [isOpen, initialTab]);
+
+  const hasMissingEntryDate = Boolean(
+    data?.travel_records?.some(
+      (tr: any) => !tr.entry_date && (Boolean(tr.actual_exit_date) || Boolean(tr.expected_exit_date))
+    )
+  );
+
 
 
 
@@ -204,14 +216,20 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               </button>
               <button
                 onClick={() => setActiveTab("TRAVEL_RECORDS")}
-                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap ${
+                className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors whitespace-nowrap flex items-center gap-1 ${
                   activeTab === "TRAVEL_RECORDS"
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-slate-500 hover:text-slate-800"
                 }`}
               >
-                Nhập xuất cảnh ({data.travel_records?.length || 0})
+                <span>Nhập xuất cảnh ({data.travel_records?.length || 0})</span>
+                {hasMissingEntryDate && (
+                  <span className="text-amber-500 font-bold" title="Có đợt lưu trú thiếu Ngày đến VN">
+                    ⚠️
+                  </span>
+                )}
               </button>
+
               <button
                 onClick={() => setActiveTab("STAYS")}
                 className={`pb-2.5 text-xs font-bold border-b-2 cursor-pointer transition-colors ${
@@ -272,6 +290,10 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               <ProfileTravelTab
                 travelRecords={data.travel_records}
                 onOpenTravelModal={() => setIsTravelModalOpen(true)}
+                onEditRecord={(tr) => {
+                  setSelectedTravelRecord(tr);
+                  setIsEditSingleTravelOpen(true);
+                }}
               />
             )}
 
@@ -298,14 +320,27 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
 
         {/* Travel Record Modal */}
         {data && (
-          <TravelRecordModal
-            isOpen={isTravelModalOpen}
-            onClose={() => setIsTravelModalOpen(false)}
-            employee={data.employee}
-            activeStay={data.stays.find((s) => !s.end_date)}
-            onSuccess={handleRefresh}
-          />
+          <>
+            <TravelRecordModal
+              isOpen={isTravelModalOpen}
+              onClose={() => setIsTravelModalOpen(false)}
+              employee={data.employee}
+              activeStay={data.stays.find((s) => !s.end_date)}
+              onSuccess={handleRefresh}
+            />
+            <EditSingleTravelRecordModal
+              isOpen={isEditSingleTravelOpen}
+              onClose={() => {
+                setIsEditSingleTravelOpen(false);
+                setSelectedTravelRecord(null);
+              }}
+              employeeId={data.employee.id}
+              travelRecord={selectedTravelRecord}
+              onSuccess={handleRefresh}
+            />
+          </>
         )}
+
 
 
         {/* Footer */}
