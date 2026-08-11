@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 from fastapi import HTTPException
 from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import ForeignEmployee
@@ -102,22 +103,52 @@ def get_employee_by_id(db: Session, emp_id: int) -> ForeignEmployee | None:
 
 
 def create_employee(db: Session, payload: ForeignEmployeeCreate) -> ForeignEmployee:
+    if payload.employee_code and payload.employee_code.strip():
+        code = payload.employee_code.strip()
+        existing = db.query(ForeignEmployee).filter(ForeignEmployee.employee_code == code).first()
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mã nhân viên '{code}' đã tồn tại trong hệ thống ({existing.name_latin}).",
+            )
     _validate_travel_dates(
         payload_entry=payload.entry_date,
         payload_expected_exit=payload.expected_exit_date,
         payload_actual_exit=payload.actual_exit_date,
     )
     emp = ForeignEmployee(**payload.model_dump())
-    db.add(emp)
-    db.flush()
-    db.commit()
-    db.refresh(emp)
-    return emp
+    try:
+        db.add(emp)
+        db.flush()
+        db.commit()
+        db.refresh(emp)
+        return emp
+    except IntegrityError as e:
+        db.rollback()
+        err_str = str(e)
+        if "employee_code" in err_str:
+            raise HTTPException(
+                status_code=400,
+                detail="Mã nhân viên bị trùng hoặc cơ sở dữ liệu đang có chỉ mục cũ chặn mã để trống. Hệ thống đang tự động xóa chỉ mục cũ khi khởi động lại backend.",
+            )
+        raise HTTPException(status_code=400, detail=f"Lỗi ràng buộc dữ liệu: {err_str}")
 
 
 def update_employee(
     db: Session, emp: ForeignEmployee, payload: ForeignEmployeeUpdate
 ) -> ForeignEmployee:
+    if payload.employee_code and payload.employee_code.strip():
+        code = payload.employee_code.strip()
+        existing = (
+            db.query(ForeignEmployee)
+            .filter(ForeignEmployee.employee_code == code, ForeignEmployee.id != emp.id)
+            .first()
+        )
+        if existing:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Mã nhân viên '{code}' đã thuộc về nhân viên khác ({existing.name_latin}).",
+            )
     _validate_travel_dates(
         payload_entry=payload.entry_date,
         payload_expected_exit=payload.expected_exit_date,
@@ -127,9 +158,13 @@ def update_employee(
     )
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(emp, key, value)
-    db.commit()
-    db.refresh(emp)
-    return emp
+    try:
+        db.commit()
+        db.refresh(emp)
+        return emp
+    except IntegrityError as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Lỗi ràng buộc dữ liệu: {e}")
 
 
 def delete_employee(db: Session, emp: ForeignEmployee) -> None:

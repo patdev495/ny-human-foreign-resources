@@ -32,6 +32,12 @@ def init_db() -> None:
         with engine.begin() as conn:
             conn.execute(
                 text(
+                    "IF EXISTS (SELECT * FROM sys.indexes WHERE name = N'ix_foreign_employees_employee_code' AND object_id = OBJECT_ID(N'foreign_employees')) "
+                    "DROP INDEX ix_foreign_employees_employee_code ON foreign_employees;"
+                )
+            )
+            conn.execute(
+                text(
                     "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'stays') AND name = N'hotel_id') "
                     "ALTER TABLE stays ADD hotel_id INT NULL FOREIGN KEY REFERENCES hotels(id);"
                 )

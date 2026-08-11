@@ -41,7 +41,7 @@ export async function createEmployee(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to create employee");
+    throw new Error(formatApiError(err, "Không thể tạo hồ sơ nhân viên"));
   }
   return res.json() as Promise<ForeignEmployee>;
 }
@@ -57,7 +57,7 @@ export async function updateEmployee(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to update employee");
+    throw new Error(formatApiError(err, "Không thể cập nhật hồ sơ nhân viên"));
   }
   return res.json() as Promise<ForeignEmployee>;
 }
@@ -66,7 +66,10 @@ export async function deleteEmployee(id: number): Promise<void> {
   const res = await fetch(`${BASE}/employees/${id}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error("Failed to delete employee");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Không thể xóa hồ sơ nhân viên"));
+  }
 }
 
 export async function fetchAttachments(
@@ -97,7 +100,7 @@ export async function uploadAttachment(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to upload document attachment");
+    throw new Error(formatApiError(err, "Không thể tải lên tệp đính kèm"));
   }
 
   return res.json() as Promise<DocumentAttachment>;
@@ -107,7 +110,10 @@ export async function deleteAttachment(attachmentId: number): Promise<void> {
   const res = await fetch(`${BASE}/attachments/${attachmentId}`, {
     method: "DELETE",
   });
-  if (!res.ok) throw new Error("Failed to delete document attachment");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Không thể xóa tệp đính kèm"));
+  }
 }
 
 export function getAttachmentPreviewUrl(attachmentId: number): string {
@@ -135,7 +141,7 @@ export async function createTravelRecord(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to create travel record");
+    throw new Error(formatApiError(err, "Không thể tạo nhật ký nhập xuất cảnh"));
   }
   return res.json() as Promise<TravelRecord>;
 }
@@ -152,7 +158,7 @@ export async function updateTravelRecord(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to update travel record");
+    throw new Error(formatApiError(err, "Không thể cập nhật nhật ký nhập xuất cảnh"));
   }
   return res.json() as Promise<TravelRecord>;
 }

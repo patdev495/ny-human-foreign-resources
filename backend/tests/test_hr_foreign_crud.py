@@ -36,6 +36,7 @@ def client():
 def test_employee_crud(client: TestClient) -> None:
     # 1. Create Employee
     payload = {
+        "employee_code": "NV888",
         "name_latin": "LI WEI",
         "name_chinese": "李伟",
         "gender": "Nam",
@@ -54,6 +55,17 @@ def test_employee_crud(client: TestClient) -> None:
     emp_id = emp_data["id"]
     assert emp_data["name_latin"] == "LI WEI"
     assert emp_data["passport_number"] == "EA9876543"
+
+    # 1b. Test Duplicate employee_code
+    res_dup = client.post("/api/hr-foreign/employees", json={**payload, "name_latin": "OTHER LI"})
+    assert res_dup.status_code == 400
+    assert "Mã nhân viên 'NV888' đã tồn tại" in res_dup.json()["detail"]
+
+    # 1c. Test creating multiple employees with NULL/empty employee_code
+    res_null1 = client.post("/api/hr-foreign/employees", json={"name_latin": "EMP NULL 1", "gender": "Nam", "employee_code": None})
+    assert res_null1.status_code == 201
+    res_null2 = client.post("/api/hr-foreign/employees", json={"name_latin": "EMP NULL 2", "gender": "Nữ", "employee_code": None})
+    assert res_null2.status_code == 201
 
     # 2. Get Employee Detail
     res = client.get(f"/api/hr-foreign/employees/{emp_id}")

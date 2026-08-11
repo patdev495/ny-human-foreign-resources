@@ -22,7 +22,7 @@ class ForeignEmployee(Base):
     __tablename__ = "foreign_employees"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    employee_code = Column(Unicode(50), nullable=True, unique=True, index=True)  # Mã nhân viên (NY...)
+    employee_code = Column(Unicode(50), nullable=True, index=True)  # Mã nhân viên (NY...)
     name_latin = Column(Unicode(255), nullable=False, index=True)
     name_chinese = Column(Unicode(255), nullable=True)
     gender = Column(Unicode(50), nullable=False)
