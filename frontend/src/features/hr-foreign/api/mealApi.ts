@@ -6,6 +6,8 @@ import type {
   EventDayCreateBatch,
   MealAbsence,
   MealAbsenceCreate,
+  MealExtra,
+  MealExtraCreate,
   MealExpenseReportResponse,
   MealPriceConfig,
   MealPriceConfigCreate,
@@ -36,6 +38,30 @@ export async function createMealAbsence(
 export async function deleteMealAbsence(id: number): Promise<void> {
   const res = await fetch(`${BASE}/meal-absences/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete meal absence");
+}
+
+export async function fetchMealExtras(stayId: number): Promise<MealExtra[]> {
+  const res = await fetch(`${BASE}/stays/${stayId}/meal-extras`);
+  if (!res.ok) throw new Error("Failed to fetch meal extras");
+  return res.json() as Promise<MealExtra[]>;
+}
+
+export async function createMealExtra(
+  stayId: number,
+  payload: MealExtraCreate
+): Promise<MealExtra> {
+  const res = await fetch(`${BASE}/stays/${stayId}/meal-extras`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Failed to create meal extra");
+  return res.json() as Promise<MealExtra>;
+}
+
+export async function deleteMealExtra(id: number): Promise<void> {
+  const res = await fetch(`${BASE}/meal-extras/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete meal extra");
 }
 
 export async function fetchEventDays(): Promise<EventDay[]> {

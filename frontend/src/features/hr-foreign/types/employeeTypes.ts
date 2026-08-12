@@ -58,7 +58,7 @@ export interface ForeignEmployeeCreate {
   notes?: string | null;
 }
 
-export interface ForeignEmployeeUpdate extends ForeignEmployeeCreate { }
+export interface ForeignEmployeeUpdate extends Partial<ForeignEmployeeCreate> {}
 
 export interface TravelRecord {
   id: number;

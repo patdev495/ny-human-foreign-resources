@@ -193,7 +193,11 @@ export const JanitorialHrManagement: React.FC = () => {
         </div>
       )}
 
-      <JanitorStatCards employees={employees} />
+      <JanitorStatCards
+        employees={employees}
+        locationFilter={locationFilter}
+        setLocationFilter={setLocationFilter}
+      />
 
       {/* Filter & Search Controls */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">

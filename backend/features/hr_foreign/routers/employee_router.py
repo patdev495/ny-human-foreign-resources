@@ -114,6 +114,23 @@ def update_travel_record(
     return service.update_travel_record(db, record, payload)
 
 
+@router.delete(
+    "/employees/{emp_id}/travel-records/{record_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_travel_record(
+    emp_id: int, record_id: int, db: Session = Depends(get_db)
+) -> None:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    record = service.get_travel_record_by_id(db, record_id)
+    if not record or record.employee_id != emp_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Travel record not found")
+    service.delete_travel_record(db, record)
+
+
+
 @router.post("/employees/{emp_id}/record-exit", response_model=TravelRecordRead)
 def record_employee_exit(
     emp_id: int, payload: ExitDateActionRequest, db: Session = Depends(get_db)

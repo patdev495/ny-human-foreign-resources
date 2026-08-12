@@ -144,51 +144,71 @@ def test_send_daily_doc_warning_digest_mock(db_session: Session, monkeypatch):
 
 def test_email_api_endpoints(monkeypatch):
     from fastapi.testclient import TestClient
+    from sqlalchemy.pool import StaticPool
     from main import app
     from features.hr_foreign.services import email_service
 
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=test_engine)
+    TestingSession = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+
+    def override_get_db():
+        db = TestingSession()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
     client = TestClient(app)
 
-    # 1. GET /api/hr-foreign/email-config
-    res = client.get("/api/hr-foreign/email-config")
-    assert res.status_code == 200
-    data = res.json()
-    assert "recipient_emails" in data
-    assert data["is_enabled"] is True
+    try:
+        # 1. GET /api/hr-foreign/email-config
+        res = client.get("/api/hr-foreign/email-config")
+        assert res.status_code == 200
+        data = res.json()
+        assert "recipient_emails" in data
+        assert data["is_enabled"] is True
 
-    # 2. PUT /api/hr-foreign/email-config
-    res = client.put(
-        "/api/hr-foreign/email-config",
-        json={
-            "recipient_emails": "test1@company.com, test2@company.com",
-            "is_enabled": True,
-            "scheduled_time": "08:00",
-        },
-    )
-    assert res.status_code == 200
-    assert res.json()["recipient_emails"] == "test1@company.com, test2@company.com"
+        # 2. PUT /api/hr-foreign/email-config
+        res = client.put(
+            "/api/hr-foreign/email-config",
+            json={
+                "recipient_emails": "test1@company.com, test2@company.com",
+                "is_enabled": True,
+                "scheduled_time": "08:00",
+            },
+        )
+        assert res.status_code == 200
+        assert res.json()["recipient_emails"] == "test1@company.com, test2@company.com"
 
-    # Mock send_smtp_email
-    monkeypatch.setattr(email_service, "send_smtp_email", lambda to, subj, body: (True, None))
+        # Mock send_smtp_email
+        monkeypatch.setattr(email_service, "send_smtp_email", lambda to, subj, body: (True, None))
 
-    # 3. POST /api/hr-foreign/email-config/send-test
-    res = client.post(
-        "/api/hr-foreign/email-config/send-test",
-        json={"to_email": "test1@company.com"},
-    )
-    assert res.status_code == 200
-    assert res.json()["success"] is True
+        # 3. POST /api/hr-foreign/email-config/send-test
+        res = client.post(
+            "/api/hr-foreign/email-config/send-test",
+            json={"to_email": "test1@company.com"},
+        )
+        assert res.status_code == 200
+        assert res.json()["success"] is True
 
-    # 4. POST /api/hr-foreign/email-config/trigger-now
-    res = client.post("/api/hr-foreign/email-config/trigger-now")
-    assert res.status_code == 200
-    assert res.json()["success"] is True
+        # 4. POST /api/hr-foreign/email-config/trigger-now
+        res = client.post("/api/hr-foreign/email-config/trigger-now")
+        assert res.status_code == 200
+        assert res.json()["success"] is True
 
-    # 5. GET /api/hr-foreign/email-delivery-logs
-    res = client.get("/api/hr-foreign/email-delivery-logs")
-    assert res.status_code == 200
-    logs = res.json()
-    assert isinstance(logs, list)
-    assert len(logs) >= 1
+        # 5. GET /api/hr-foreign/email-delivery-logs
+        res = client.get("/api/hr-foreign/email-delivery-logs")
+        assert res.status_code == 200
+        logs = res.json()
+        assert isinstance(logs, list)
+        assert len(logs) >= 1
+    finally:
+        app.dependency_overrides.clear()
 
 

@@ -50,6 +50,7 @@ def test_meal_calculation_engine(client: TestClient) -> None:
             "gender": "Nam",
             "nationality": "Han Quoc",
             "passport_number": "M1111111",
+            "entry_date": "2026-01-01",
         },
     ).json()
 
@@ -61,6 +62,7 @@ def test_meal_calculation_engine(client: TestClient) -> None:
             "gender": "Nam",
             "nationality": "Han Quoc",
             "passport_number": "M2222222",
+            "entry_date": "2026-01-01",
         },
     ).json()
 
@@ -72,6 +74,7 @@ def test_meal_calculation_engine(client: TestClient) -> None:
             "gender": "Nam",
             "nationality": "Han Quoc",
             "passport_number": "M3333333",
+            "entry_date": "2026-01-01",
         },
     ).json()
 
@@ -158,11 +161,11 @@ def test_daily_meal_forecast_and_lock(client: TestClient) -> None:
     # Create 2 employees: 1 KTX, 1 Hotel
     emp_ktx = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "WANG WEI", "gender": "Nam"},
+        json={"name_latin": "WANG WEI", "gender": "Nam", "entry_date": "2026-07-01"},
     ).json()
     emp_hotel = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "ZHANG SAN", "gender": "Nam"},
+        json={"name_latin": "ZHANG SAN", "gender": "Nam", "entry_date": "2026-07-01"},
     ).json()
 
     room = client.post("/api/hr-foreign/rooms", json={"room_number": "505"}).json()
@@ -254,7 +257,7 @@ def test_daily_meal_forecast_and_lock(client: TestClient) -> None:
 def test_monthly_meal_report_with_locked_snapshots(client: TestClient) -> None:
     emp = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "ZHAO LEI", "gender": "Nam"},
+        json={"name_latin": "ZHAO LEI", "gender": "Nam", "entry_date": "2026-08-01"},
     ).json()
 
     room = client.post("/api/hr-foreign/rooms", json={"room_number": "606"}).json()
@@ -268,7 +271,6 @@ def test_monthly_meal_report_with_locked_snapshots(client: TestClient) -> None:
             "stay_type": "CO_DINH",
             "has_meals": True,
             "start_date": "2026-08-01",
-            "end_date": "2026-08-05",
         },
     )
 
@@ -329,4 +331,104 @@ def test_meal_engine_service_direct_unit(client: TestClient) -> None:
     # Test validate_meal_session_locks_for_period and get_daily_meal_forecast via meal_engine_service
     res = client.get("/api/hr-foreign/reports/meal-expenses/validate-locks?start_date=2026-08-03&end_date=2026-08-04").json()
     assert "missing_dates" in res
+
+
+def test_extra_meal_forecast_and_toggle(client: TestClient) -> None:
+    # Create employee 1 with has_meals = True
+    emp1 = client.post(
+        "/api/hr-foreign/employees",
+        json={
+            "name_latin": "REGISTERED MEAL EMP",
+            "gender": "Nam",
+            "nationality": "China",
+            "entry_date": "2026-01-01",
+        },
+    ).json()
+
+    # Create employee 2 with has_meals = False
+    emp2 = client.post(
+        "/api/hr-foreign/employees",
+        json={
+            "name_latin": "NON REGISTERED MEAL EMP",
+            "gender": "Nam",
+            "nationality": "China",
+            "entry_date": "2026-01-01",
+        },
+    ).json()
+
+    room = client.post("/api/hr-foreign/rooms", json={"room_number": "501"}).json()
+
+    stay1 = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": emp1["id"],
+            "accommodation_type": "KTX",
+            "room_id": room["id"],
+            "stay_type": "CO_DINH",
+            "has_meals": True,
+            "start_date": "2026-01-01",
+        },
+    ).json()
+
+    stay2 = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": emp2["id"],
+            "accommodation_type": "KTX",
+            "room_id": room["id"],
+            "stay_type": "CO_DINH",
+            "has_meals": False,
+            "start_date": "2026-01-01",
+        },
+    ).json()
+
+    target_date = "2026-01-10"
+
+    # 1. Check initial forecast
+    res1 = client.get(f"/api/hr-foreign/meals/forecast?date={target_date}").json()
+    emp_map = {e["employee_id"]: e for e in res1["employees"]}
+
+    assert emp_map[emp1["id"]]["has_meals"] is True
+    assert emp_map[emp1["id"]]["is_breakfast_absent"] is False
+    assert emp_map[emp1["id"]].get("is_breakfast_extra") is False
+
+    assert emp_map[emp2["id"]]["has_meals"] is False
+    assert emp_map[emp2["id"]]["is_breakfast_absent"] is False
+    assert emp_map[emp2["id"]].get("is_breakfast_extra") is False
+
+    # Initially only emp1 is counted in forecast
+    assert res1["breakfast"]["calculated_meal_count"] == 1
+
+    # 2. Add extra meal for emp2 (has_meals = False)
+    extra_res = client.post(
+        f"/api/hr-foreign/stays/{stay2['id']}/meal-extras",
+        json={
+            "extra_date": target_date,
+            "meal_type": "BREAKFAST",
+            "reason": "Test extra meal",
+        },
+    )
+    assert extra_res.status_code == 210 or extra_res.status_code == 201
+    extra_data = extra_res.json()
+    assert extra_data["stay_id"] == stay2["id"]
+    assert extra_data["meal_type"] == "BREAKFAST"
+
+    # 3. Check forecast after extra meal added
+    res2 = client.get(f"/api/hr-foreign/meals/forecast?date={target_date}").json()
+    emp_map2 = {e["employee_id"]: e for e in res2["employees"]}
+
+    assert emp_map2[emp2["id"]]["is_breakfast_extra"] is True
+    # Now both emp1 and emp2 are counted in forecast
+    assert res2["breakfast"]["calculated_meal_count"] == 2
+
+    # 4. Delete extra meal
+    del_res = client.delete(f"/api/hr-foreign/meal-extras/{extra_data['id']}")
+    assert del_res.status_code == 204
+
+    # 5. Check forecast after deletion
+    res3 = client.get(f"/api/hr-foreign/meals/forecast?date={target_date}").json()
+    emp_map3 = {e["employee_id"]: e for e in res3["employees"]}
+    assert emp_map3[emp2["id"]]["is_breakfast_extra"] is False
+    assert res3["breakfast"]["calculated_meal_count"] == 1
+
 

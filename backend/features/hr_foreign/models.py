@@ -65,6 +65,7 @@ class TravelRecord(Base):
     notes = Column(UnicodeText, nullable=True)
 
     employee = relationship("ForeignEmployee", back_populates="travel_records")
+    stays = relationship("Stay", back_populates="travel_record", cascade="all, delete-orphan")
 
 
 class Room(Base):
@@ -94,6 +95,7 @@ class Stay(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
+    travel_record_id = Column(Integer, ForeignKey("travel_records.id"), nullable=True, index=True)
     accommodation_type = Column(Unicode(50), nullable=False, default="KTX")  # KTX, HOTEL
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True, index=True)
     hotel_id = Column(Integer, ForeignKey("hotels.id"), nullable=True, index=True)
@@ -108,11 +110,13 @@ class Stay(Base):
     notes = Column(UnicodeText, nullable=True)
 
     employee = relationship("ForeignEmployee", back_populates="stays")
+    travel_record = relationship("TravelRecord", back_populates="stays")
     room = relationship("Room", back_populates="stays")
     hotel = relationship("Hotel", back_populates="stays")
     visas = relationship("Visa", back_populates="stay", cascade="all, delete-orphan")
     tam_trus = relationship("TamTru", back_populates="stay", cascade="all, delete-orphan")
     meal_absences = relationship("MealAbsence", back_populates="stay", cascade="all, delete-orphan")
+    meal_extras = relationship("MealExtra", back_populates="stay", cascade="all, delete-orphan")
 
 
 class Visa(Base):
@@ -150,6 +154,18 @@ class MealAbsence(Base):
     reason = Column(UnicodeText, nullable=True)
 
     stay = relationship("Stay", back_populates="meal_absences")
+
+
+class MealExtra(Base):
+    __tablename__ = "meal_extras"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
+    extra_date = Column(Date, nullable=False)
+    meal_type = Column(Unicode(50), nullable=False, default="ALL_DAY")  # BREAKFAST, DINNER, ALL_DAY
+    reason = Column(UnicodeText, nullable=True)
+
+    stay = relationship("Stay", back_populates="meal_extras")
 
 
 class EventDay(Base):

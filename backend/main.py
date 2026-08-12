@@ -21,15 +21,18 @@ from features.hr_foreign.services.scheduler import run_email_scheduler_loop
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    scheduler_task = asyncio.create_task(run_email_scheduler_loop())
+    scheduler_task = None
+    if os.getenv("TESTING") != "1":
+        scheduler_task = asyncio.create_task(run_email_scheduler_loop())
     try:
         yield
     finally:
-        scheduler_task.cancel()
-        try:
-            await scheduler_task
-        except asyncio.CancelledError:
-            pass
+        if scheduler_task:
+            scheduler_task.cancel()
+            try:
+                await scheduler_task
+            except asyncio.CancelledError:
+                pass
 
 
 

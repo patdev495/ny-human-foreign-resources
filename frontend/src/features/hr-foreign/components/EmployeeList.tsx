@@ -6,6 +6,7 @@ import { EmployeeProfileModal } from "./EmployeeProfileModal";
 import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { getEmployeeDocStatuses } from "./employee-list/DocBadge";
 import { EmployeeTable } from "./employee-list/EmployeeTable";
+import { EmployeeStatCards } from "./employee-list/EmployeeStatCards";
 
 interface EmployeeListProps {
   onSelectEmployee?: (emp: ForeignEmployee) => void;
@@ -68,13 +69,15 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
     onSelectEmployee?.(emp);
   };
 
-  const inVnCount = employees.filter((e) => e.is_in_vietnam).length;
-  const returnedCount = employees.filter((e) => !e.is_in_vietnam).length;
+  // Filter out janitorial staff to get only foreign employees
+  const foreignEmployees = employees.filter(
+    (emp) => emp.employee_type !== "JANITORIAL" && !(emp.role && emp.role.toLowerCase().includes("tạp vụ"))
+  );
 
-  const filtered = employees.filter((emp) => {
-    // Exclude janitor staff from Foreign Employees tab
-    if (emp.employee_type === "JANITORIAL" || (emp.role && emp.role.toLowerCase().includes("tạp vụ"))) return false;
+  const inVnCount = foreignEmployees.filter((e) => e.is_in_vietnam).length;
+  const returnedCount = foreignEmployees.filter((e) => !e.is_in_vietnam).length;
 
+  const filtered = foreignEmployees.filter((emp) => {
     if (statusFilter === "IN_VN" && !emp.is_in_vietnam) return false;
     if (statusFilter === "RETURNED" && emp.is_in_vietnam) return false;
     if (workTypeFilter !== "ALL" && (emp.work_type || "CO_DINH") !== workTypeFilter) return false;
@@ -110,6 +113,16 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
           + Thêm Hồ sơ Nhân sự
         </button>
       </div>
+
+      {/* Interactive Stat Cards */}
+      <EmployeeStatCards
+        employees={foreignEmployees}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        docStatusFilter={docStatusFilter}
+        setDocStatusFilter={setDocStatusFilter}
+        thresholdDays={thresholdDays}
+      />
 
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
 
@@ -154,7 +167,7 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
             onClick={() => setStatusFilter("ALL")}
             className={`px-3 py-1.5 rounded-lg cursor-pointer transition-colors ${statusFilter === "ALL" ? "bg-white text-slate-900 shadow-xs" : "hover:text-slate-900"}`}
           >
-            Tất cả ({employees.length})
+            Tất cả ({foreignEmployees.length})
           </button>
           <button
             onClick={() => setStatusFilter("IN_VN")}

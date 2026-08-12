@@ -38,12 +38,12 @@ def test_daily_presence_report(client: TestClient) -> None:
     # 1. Create 2 employees
     emp1 = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "ZANG WEI", "gender": "Nam", "department": "Kỹ thuật"},
+        json={"name_latin": "ZANG WEI", "gender": "Nam", "department": "Kỹ thuật", "entry_date": "2026-05-01"},
     ).json()
 
     emp2 = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "CHEN MIN", "gender": "Nữ", "department": "Phiên dịch"},
+        json={"name_latin": "CHEN MIN", "gender": "Nữ", "department": "Phiên dịch", "entry_date": "2026-05-01"},
     ).json()
 
     # 2. Create Room & Hotel

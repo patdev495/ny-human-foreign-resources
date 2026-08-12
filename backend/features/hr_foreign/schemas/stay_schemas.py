@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 class StayBase(BaseModel):
     employee_id: int
+    travel_record_id: int | None = None
     accommodation_type: str  # "KTX" | "HOTEL"
     room_id: int | None = None
     hotel_id: int | None = None
@@ -25,8 +26,21 @@ class StayCreate(StayBase):
     pass
 
 
-class StayUpdate(StayBase):
-    pass
+class StayUpdate(BaseModel):
+    employee_id: int | None = None
+    travel_record_id: int | None = None
+    accommodation_type: str | None = None
+    room_id: int | None = None
+    hotel_id: int | None = None
+    hotel_room_number: str | None = None
+    bed_location: str | None = None
+    stay_type: str | None = None
+    has_meals: bool | None = None
+    invoice_amount: float | None = None
+    start_date: datetime.date | None = None
+    expected_end_date: datetime.date | None = None
+    end_date: datetime.date | None = None
+    notes: str | None = None
 
 
 class StayCheckout(BaseModel):

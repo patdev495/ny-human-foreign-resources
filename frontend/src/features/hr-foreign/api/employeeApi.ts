@@ -178,3 +178,14 @@ export async function recordEmployeeExit(
   }
   return res.json() as Promise<TravelRecord>;
 }
+
+export async function deleteTravelRecord(empId: number, recordId: number): Promise<void> {
+  const res = await fetch(`${BASE}/employees/${empId}/travel-records/${recordId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Không thể xóa đợt nhập xuất cảnh"));
+  }
+}
+

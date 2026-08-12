@@ -12,6 +12,20 @@ export interface MealAbsenceCreate {
   reason?: string | null;
 }
 
+export interface MealExtra {
+  id: number;
+  stay_id: number;
+  extra_date: string;
+  meal_type?: "BREAKFAST" | "DINNER" | "ALL_DAY";
+  reason?: string | null;
+}
+
+export interface MealExtraCreate {
+  extra_date: string;
+  meal_type?: "BREAKFAST" | "DINNER" | "ALL_DAY";
+  reason?: string | null;
+}
+
 export interface MealSessionLock {
   id: number;
   lock_date: string;
@@ -55,6 +69,8 @@ export interface DailyMealEmployeeItem {
   has_meals: boolean;
   is_breakfast_absent: boolean;
   is_dinner_absent: boolean;
+  is_breakfast_extra?: boolean;
+  is_dinner_extra?: boolean;
 }
 
 export interface DailyMealForecastResponse {

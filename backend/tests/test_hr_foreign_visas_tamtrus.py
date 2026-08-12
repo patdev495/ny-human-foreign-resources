@@ -43,6 +43,7 @@ def test_visa_tamtru_and_expiring_alerts(client: TestClient) -> None:
             "gender": "Nam",
             "nationality": "Trung Quoc",
             "passport_number": "Z99887766",
+            "entry_date": "2026-01-01",
         },
     ).json()
 

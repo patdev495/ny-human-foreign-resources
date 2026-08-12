@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from features.hr_foreign.models import (
     EventDay,
     MealAbsence,
+    MealExtra,
     MealPriceConfig,
     MealSessionLock,
     Stay,
@@ -247,6 +248,15 @@ def get_daily_expense_breakdown_items(
         .all()
     )
 
+    all_stays = (
+        db.query(Stay)
+        .filter(
+            Stay.start_date <= end_date,
+            or_(Stay.end_date.is_(None), Stay.end_date >= start_date),
+        )
+        .all()
+    )
+
     stay_ids = [s.id for s in eligible_stays]
     absences = (
         db.query(MealAbsence)
@@ -258,9 +268,24 @@ def get_daily_expense_breakdown_items(
         .all()
     ) if stay_ids else []
 
+    all_stay_ids = [s.id for s in all_stays]
+    extras = (
+        db.query(MealExtra)
+        .filter(
+            MealExtra.stay_id.in_(all_stay_ids),
+            MealExtra.extra_date >= start_date,
+            MealExtra.extra_date <= end_date,
+        )
+        .all()
+    ) if all_stay_ids else []
+
     absences_by_date: dict[datetime.date, dict[int, set[str]]] = {}
     for ma in absences:
         absences_by_date.setdefault(ma.absence_date, {}).setdefault(ma.stay_id, set()).add(ma.meal_type)
+
+    extras_by_date: dict[datetime.date, dict[int, set[str]]] = {}
+    for me in extras:
+        extras_by_date.setdefault(me.extra_date, {}).setdefault(me.stay_id, set()).add(me.meal_type)
 
     rows: list[DailyExpenseRow] = []
     curr_d = start_date
@@ -314,6 +339,11 @@ def get_daily_expense_breakdown_items(
                         day_abs = absences_by_date.get(curr_d, {}).get(stay.id, set())
                         if "BREAKFAST" not in day_abs and "ALL_DAY" not in day_abs:
                             bf_count += 1
+                for stay in all_stays:
+                    if not stay.has_meals and stay.start_date <= curr_d and (stay.end_date is None or stay.end_date >= curr_d):
+                        day_ext = extras_by_date.get(curr_d, {}).get(stay.id, set())
+                        if "BREAKFAST" in day_ext or "ALL_DAY" in day_ext:
+                            bf_count += 1
 
             # Tối
             if dn_lock:
@@ -326,6 +356,11 @@ def get_daily_expense_breakdown_items(
                     if stay.start_date <= curr_d and (stay.end_date is None or stay.end_date >= curr_d):
                         day_abs = absences_by_date.get(curr_d, {}).get(stay.id, set())
                         if "DINNER" not in day_abs and "ALL_DAY" not in day_abs:
+                            dn_count += 1
+                for stay in all_stays:
+                    if not stay.has_meals and stay.start_date <= curr_d and (stay.end_date is None or stay.end_date >= curr_d):
+                        day_ext = extras_by_date.get(curr_d, {}).get(stay.id, set())
+                        if "DINNER" in day_ext or "ALL_DAY" in day_ext:
                             dn_count += 1
 
             # Lao công (Trưa)

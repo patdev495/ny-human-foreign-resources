@@ -3,9 +3,10 @@ import type { Stay } from "../../types";
 
 interface Props {
   stays: Stay[];
+  onDeleteStay?: (stayId: number) => void;
 }
 
-export const ProfileStaysTab: React.FC<Props> = ({ stays }) => {
+export const ProfileStaysTab: React.FC<Props> = ({ stays, onDeleteStay }) => {
   return (
     <div className="space-y-3">
       {stays.length === 0 ? (
@@ -46,7 +47,7 @@ export const ProfileStaysTab: React.FC<Props> = ({ stays }) => {
                 </div>
                 {stay.notes && <div className="text-slate-400 mt-0.5 italic">{stay.notes}</div>}
               </div>
-              <div className="text-right">
+              <div className="flex items-center gap-3 shrink-0">
                 <span
                   className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                     isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
@@ -54,6 +55,23 @@ export const ProfileStaysTab: React.FC<Props> = ({ stays }) => {
                 >
                   {isActive ? "Đang lưu trú" : "Đã kết thúc"}
                 </span>
+                {onDeleteStay && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Bạn có chắc chắn muốn xóa Đợt lưu trú này?\nĐợt nhập xuất cảnh tương ứng sẽ KHÔNG bị ảnh hưởng."
+                        )
+                      ) {
+                        onDeleteStay(stay.id);
+                      }
+                    }}
+                    className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                  >
+                    🗑️ Xóa
+                  </button>
+                )}
               </div>
             </div>
           );

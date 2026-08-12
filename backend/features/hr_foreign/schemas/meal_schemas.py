@@ -22,6 +22,26 @@ class MealAbsenceRead(MealAbsenceBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# --- MEAL EXTRA SCHEMAS ---
+
+class MealExtraBase(BaseModel):
+    extra_date: datetime.date
+    meal_type: str = "ALL_DAY"  # "BREAKFAST" | "DINNER" | "ALL_DAY"
+    reason: str | None = None
+
+
+class MealExtraCreate(MealExtraBase):
+    pass
+
+
+class MealExtraRead(MealExtraBase):
+    id: int
+    stay_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+
 # --- EVENT DAY SCHEMAS ---
 
 class EventDayBase(BaseModel):
@@ -223,6 +243,8 @@ class DailyMealEmployeeItem(BaseModel):
     has_meals: bool
     is_breakfast_absent: bool = False
     is_dinner_absent: bool = False
+    is_breakfast_extra: bool = False
+    is_dinner_extra: bool = False
 
 
 class DailyMealForecastResponse(BaseModel):

@@ -21,11 +21,20 @@ class Base(DeclarativeBase):
 
 
 def init_db() -> None:
+    import os
+    if os.getenv("TESTING") == "1":
+        return
+
     from sqlalchemy import text
     from features.hr_foreign import models  # noqa: F401
     from features.vehicle_management import models as vehicle_models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
+
 
 
     try:

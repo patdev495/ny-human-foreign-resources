@@ -9,6 +9,7 @@ from features.hr_foreign.models import (
     ForeignEmployee,
     JanitorAttendanceRecord,
     MealAbsence,
+    MealExtra,
     MealPriceConfig,
     MealSessionLock,
     Stay,
@@ -18,6 +19,7 @@ from features.hr_foreign.schemas import (
     DailyMealForecastResponse,
     DailyMealSessionSummary,
     MealAbsenceCreate,
+    MealExtraCreate,
     MealPriceConfigCreate,
     MealPriceConfigUpdate,
     MealSessionLockCreate,
@@ -101,6 +103,30 @@ def create_meal_absence(db: Session, stay_id: int, payload: MealAbsenceCreate) -
 
 def delete_meal_absence(db: Session, absence: MealAbsence) -> None:
     db.delete(absence)
+    db.commit()
+
+
+# --- MEAL EXTRA CRUD ---
+
+def get_meal_extras_by_stay(db: Session, stay_id: int) -> list[MealExtra]:
+    return db.query(MealExtra).filter(MealExtra.stay_id == stay_id).all()
+
+
+def get_meal_extra_by_id(db: Session, extra_id: int) -> MealExtra | None:
+    return db.query(MealExtra).filter(MealExtra.id == extra_id).first()
+
+
+def create_meal_extra(db: Session, stay_id: int, payload: MealExtraCreate) -> MealExtra:
+    extra = MealExtra(stay_id=stay_id, **payload.model_dump())
+    db.add(extra)
+    db.flush()
+    db.commit()
+    db.refresh(extra)
+    return extra
+
+
+def delete_meal_extra(db: Session, extra: MealExtra) -> None:
+    db.delete(extra)
     db.commit()
 
 

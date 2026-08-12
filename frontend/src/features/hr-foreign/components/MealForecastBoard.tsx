@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from "react";
 import {
   createMealAbsence,
+  createMealExtra,
   deleteMealAbsence,
+  deleteMealExtra,
   fetchDailyMealForecast,
   fetchMealAbsences,
+  fetchMealExtras,
   lockMealSession,
+  updateStay,
 } from "../api";
 import type {
   DailyMealEmployeeItem,
   DailyMealForecastResponse,
   DailyMealSessionSummary,
   MealAbsence,
+  MealExtra,
 } from "../types";
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
@@ -30,51 +35,83 @@ export const MealForecastBoard: React.FC = () => {
   const [lockSessionTarget, setLockSessionTarget] =
     useState<DailyMealSessionSummary | null>(null);
 
-  const loadForecast = async (date: string) => {
+  const loadForecast = async (date: string, showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       setErrorMsg(null);
       const data = await fetchDailyMealForecast(date);
       setForecast(data);
     } catch (err: any) {
       setErrorMsg(err.message || "Không thể tải dữ liệu dự báo suất ăn");
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadForecast(selectedDate);
+    loadForecast(selectedDate, true);
   }, [selectedDate]);
+
+  const handleToggleHasMeals = async (emp: DailyMealEmployeeItem) => {
+    try {
+      await updateStay(emp.stay_id, { has_meals: !emp.has_meals });
+      await loadForecast(selectedDate, false);
+    } catch (err: any) {
+      alert(`Không thể thay đổi cài đặt đăng ký ăn KTX: ${err.message}`);
+    }
+  };
 
   const handleToggleAbsence = async (
     emp: DailyMealEmployeeItem,
     sessionType: "BREAKFAST" | "DINNER"
   ) => {
-    const isCurrentAbsent =
-      sessionType === "BREAKFAST" ? emp.is_breakfast_absent : emp.is_dinner_absent;
-
     try {
-      if (isCurrentAbsent) {
-        const absences: MealAbsence[] = await fetchMealAbsences(emp.stay_id);
-        const targetAbs = absences.find(
-          (a) =>
-            a.absence_date === selectedDate &&
-            (a.meal_type === sessionType || a.meal_type === "ALL_DAY" || !a.meal_type)
-        );
-        if (targetAbs) {
-          await deleteMealAbsence(targetAbs.id);
+      if (emp.has_meals) {
+        const isCurrentAbsent =
+          sessionType === "BREAKFAST" ? emp.is_breakfast_absent : emp.is_dinner_absent;
+
+        if (isCurrentAbsent) {
+          const absences: MealAbsence[] = await fetchMealAbsences(emp.stay_id);
+          const targetAbs = absences.find(
+            (a) =>
+              a.absence_date === selectedDate &&
+              (a.meal_type === sessionType || a.meal_type === "ALL_DAY" || !a.meal_type)
+          );
+          if (targetAbs) {
+            await deleteMealAbsence(targetAbs.id);
+          }
+        } else {
+          await createMealAbsence(emp.stay_id, {
+            absence_date: selectedDate,
+            meal_type: sessionType,
+            reason: "Bật/tắt vắng ăn từ bảng Thống kê hằng ngày",
+          });
         }
       } else {
-        await createMealAbsence(emp.stay_id, {
-          absence_date: selectedDate,
-          meal_type: sessionType,
-          reason: "Bật/tắt vắng ăn từ bảng Thống kê hằng ngày",
-        });
+        const isCurrentExtra =
+          sessionType === "BREAKFAST" ? emp.is_breakfast_extra : emp.is_dinner_extra;
+
+        if (isCurrentExtra) {
+          const extras: MealExtra[] = await fetchMealExtras(emp.stay_id);
+          const targetExtra = extras.find(
+            (e) =>
+              e.extra_date === selectedDate &&
+              (e.meal_type === sessionType || e.meal_type === "ALL_DAY" || !e.meal_type)
+          );
+          if (targetExtra) {
+            await deleteMealExtra(targetExtra.id);
+          }
+        } else {
+          await createMealExtra(emp.stay_id, {
+            extra_date: selectedDate,
+            meal_type: sessionType,
+            reason: "Đăng ký ăn thêm từ bảng Thống kê hằng ngày",
+          });
+        }
       }
-      await loadForecast(selectedDate);
+      await loadForecast(selectedDate, false);
     } catch (err: any) {
-      alert(`Không thể thay đổi trạng thái vắng ăn: ${err.message}`);
+      alert(`Không thể thay đổi trạng thái suất ăn: ${err.message}`);
     }
   };
 
@@ -87,7 +124,7 @@ export const MealForecastBoard: React.FC = () => {
     notes?: string;
   }) => {
     await lockMealSession(payload);
-    await loadForecast(selectedDate);
+    await loadForecast(selectedDate, false);
   };
 
   const filteredEmployees =
@@ -167,7 +204,7 @@ export const MealForecastBoard: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => loadForecast(selectedDate)}
+            onClick={() => loadForecast(selectedDate, true)}
             className="px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
           >
             🔄 Làm mới
@@ -193,6 +230,7 @@ export const MealForecastBoard: React.FC = () => {
             lodgingFilter={lodgingFilter}
             setLodgingFilter={setLodgingFilter}
             onToggleAbsence={handleToggleAbsence}
+            onToggleHasMeals={handleToggleHasMeals}
           />
         </>
       ) : null}

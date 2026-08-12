@@ -9,6 +9,7 @@ from features.hr_foreign.models import (
     ForeignEmployee,
     JanitorAttendanceRecord,
     MealAbsence,
+    MealExtra,
     MealPriceConfig,
     MealSessionLock,
     Stay,
@@ -110,14 +111,26 @@ def calculate_daily_forecast(
         .all()
     ) if stay_ids else []
 
+    meal_extras = (
+        db.query(MealExtra)
+        .filter(MealExtra.stay_id.in_(stay_ids), MealExtra.extra_date == target_date)
+        .all()
+    ) if stay_ids else []
+
     absences_by_stay: dict[int, set[str]] = {}
     for ma in meal_absences:
         absences_by_stay.setdefault(ma.stay_id, set()).add(ma.meal_type)
+
+    extras_by_stay: dict[int, set[str]] = {}
+    for me in meal_extras:
+        extras_by_stay.setdefault(me.stay_id, set()).add(me.meal_type)
 
     employees_list: list[DailyMealEmployeeItem] = []
     active_ktx_residents_count = 0
     breakfast_absent_count = 0
     dinner_absent_count = 0
+    breakfast_extra_count = 0
+    dinner_extra_count = 0
 
     for stay in stays:
         emp = stay.employee
@@ -134,12 +147,21 @@ def calculate_daily_forecast(
         is_bf_absent = ("ALL_DAY" in stay_absences) or ("BREAKFAST" in stay_absences)
         is_dn_absent = ("ALL_DAY" in stay_absences) or ("DINNER" in stay_absences)
 
+        stay_extras = extras_by_stay.get(stay.id, set())
+        is_bf_extra = ("ALL_DAY" in stay_extras) or ("BREAKFAST" in stay_extras)
+        is_dn_extra = ("ALL_DAY" in stay_extras) or ("DINNER" in stay_extras)
+
         if stay.accommodation_type == "KTX" and stay.has_meals:
             active_ktx_residents_count += 1
             if is_bf_absent:
                 breakfast_absent_count += 1
             if is_dn_absent:
                 dinner_absent_count += 1
+        else:
+            if is_bf_extra:
+                breakfast_extra_count += 1
+            if is_dn_extra:
+                dinner_extra_count += 1
 
         employees_list.append(
             DailyMealEmployeeItem(
@@ -153,11 +175,13 @@ def calculate_daily_forecast(
                 has_meals=stay.has_meals,
                 is_breakfast_absent=is_bf_absent,
                 is_dinner_absent=is_dn_absent,
+                is_breakfast_extra=is_bf_extra,
+                is_dinner_extra=is_dn_extra,
             )
         )
 
-    bf_calculated = max(0, active_ktx_residents_count - breakfast_absent_count)
-    dn_calculated = max(0, active_ktx_residents_count - dinner_absent_count)
+    bf_calculated = max(0, active_ktx_residents_count - breakfast_absent_count + breakfast_extra_count)
+    dn_calculated = max(0, active_ktx_residents_count - dinner_absent_count + dinner_extra_count)
 
     bf_lock = locks_map.get("BREAKFAST")
     lc_lock = locks_map.get("LUNCH")

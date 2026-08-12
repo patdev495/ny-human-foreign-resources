@@ -43,6 +43,7 @@ def test_stay_crud_and_single_active_constraint(client: TestClient) -> None:
             "gender": "Nữ",
             "nationality": "Trung Quoc",
             "passport_number": "W11223344",
+            "entry_date": "2026-01-01",
         },
     )
     emp_id = emp_res.json()["id"]
@@ -103,6 +104,7 @@ def test_stay_with_expected_end_date(client: TestClient) -> None:
             "name_latin": "LI WEI",
             "gender": "Nam",
             "nationality": "Trung Quoc",
+            "entry_date": "2026-05-01",
         },
     )
     emp_id = emp_res.json()["id"]
@@ -128,6 +130,7 @@ def test_hotel_stay_invoice_amount_and_checkout(client: TestClient) -> None:
             "name_latin": "ZHANG SAN",
             "gender": "Nam",
             "nationality": "Trung Quoc",
+            "entry_date": "2026-07-01",
         },
     )
     emp_id = emp_res.json()["id"]
@@ -212,10 +215,16 @@ def test_checkout_stay_syncs_travel_record_and_employee_actual_exit(client: Test
     )
     assert checkout_res.status_code == 200
 
-    # 4. Check employee profile history -> travel_records must have actual_exit_date = 2026-07-31
+    # 4. Record actual exit date on travel record
     hist_res = client.get(f"/api/hr-foreign/employees/{emp_id}/history")
-    assert hist_res.status_code == 200
-    hist_data = hist_res.json()
+    tr_id = hist_res.json()["travel_records"][0]["id"]
+    client.put(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records/{tr_id}",
+        json={"entry_date": "2026-05-01", "actual_exit_date": "2026-07-31"},
+    )
+    hist_res2 = client.get(f"/api/hr-foreign/employees/{emp_id}/history")
+    assert hist_res2.status_code == 200
+    hist_data = hist_res2.json()
     
     assert len(hist_data["travel_records"]) == 1
     assert hist_data["travel_records"][0]["actual_exit_date"] == "2026-07-31"
@@ -227,6 +236,47 @@ def test_checkout_stay_syncs_travel_record_and_employee_actual_exit(client: Test
     room_505 = next((r for r in occ_res.json() if r["room_number"] == "505"), None)
     assert room_505 is not None
     assert len(room_505["active_residents"]) == 0
+
+
+def test_delete_stay_does_not_affect_travel_record(client: TestClient) -> None:
+    # 1. Create employee with open travel record & stay
+    emp_res = client.post(
+        "/api/hr-foreign/employees",
+        json={"name_latin": "LIU WEI", "gender": "Nam", "entry_date": "2026-04-01"},
+    )
+    emp_id = emp_res.json()["id"]
+
+    room_res = client.post("/api/hr-foreign/rooms", json={"room_number": "808"})
+    room_id = room_res.json()["id"]
+
+    stay_res = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": emp_id,
+            "accommodation_type": "KTX",
+            "room_id": room_id,
+            "stay_type": "CO_DINH",
+            "start_date": "2026-04-01",
+        },
+    )
+    assert stay_res.status_code == 201
+    stay_id = stay_res.json()["id"]
+
+    # Verify 1 travel record & 1 stay exist
+    hist1 = client.get(f"/api/hr-foreign/employees/{emp_id}/history").json()
+    assert len(hist1["travel_records"]) == 1
+    assert len(hist1["stays"]) == 1
+
+    # 2. Delete stay
+    del_stay_res = client.delete(f"/api/hr-foreign/stays/{stay_id}")
+    assert del_stay_res.status_code == 204
+
+    # 3. Verify stay is deleted, BUT travel record remains intact
+    hist2 = client.get(f"/api/hr-foreign/employees/{emp_id}/history").json()
+    assert len(hist2["stays"]) == 0
+    assert len(hist2["travel_records"]) == 1
+    assert hist2["travel_records"][0]["entry_date"] == "2026-04-01"
+
 
 
 

@@ -1,6 +1,7 @@
 export interface Stay {
   id: number;
   employee_id: number;
+  travel_record_id?: number | null;
   accommodation_type: "KTX" | "HOTEL";
   room_id?: number | null;
   room_number?: string | null;
@@ -19,6 +20,7 @@ export interface Stay {
 
 export interface StayCreate {
   employee_id: number;
+  travel_record_id?: number | null;
   accommodation_type: "KTX" | "HOTEL";
   room_id?: number | null;
   hotel_id?: number | null;
@@ -33,7 +35,7 @@ export interface StayCreate {
   notes?: string | null;
 }
 
-export interface StayUpdate extends StayCreate {}
+export interface StayUpdate extends Partial<StayCreate> {}
 
 export interface StayCheckout {
   end_date: string;

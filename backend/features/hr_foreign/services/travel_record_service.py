@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 from fastapi import HTTPException
-from sqlalchemy import case
+from sqlalchemy import case, or_
 from sqlalchemy.orm import Session
 
 from features.hr_foreign.models import (
@@ -123,6 +123,22 @@ def create_travel_record(
     return record
 
 
+def _sync_travel_record_exit_with_stays(db: Session, record: TravelRecord) -> None:
+    if not record.actual_exit_date:
+        return
+    active_stays = (
+        db.query(Stay)
+        .filter(
+            Stay.employee_id == record.employee_id,
+            or_(Stay.travel_record_id == record.id, Stay.travel_record_id.is_(None)),
+            or_(Stay.end_date.is_(None), Stay.end_date > record.actual_exit_date),
+        )
+        .all()
+    )
+    for stay in active_stays:
+        stay.end_date = record.actual_exit_date
+
+
 def update_travel_record(
     db: Session,
     record: TravelRecord,
@@ -153,6 +169,8 @@ def update_travel_record(
             emp.expected_entry_date = record.expected_entry_date
             emp.expected_exit_date = record.expected_exit_date
             emp.actual_exit_date = record.actual_exit_date
+
+    _sync_travel_record_exit_with_stays(db, record)
 
     db.commit()
     db.refresh(record)
@@ -223,6 +241,38 @@ def record_employee_exit(
     db.commit()
     db.refresh(latest_tr)
     return latest_tr
+
+
+def delete_travel_record(db: Session, record: TravelRecord) -> None:
+    emp_id = record.employee_id
+    db.delete(record)
+    db.flush()
+
+    emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == emp_id).first()
+    if emp:
+        latest = (
+            db.query(TravelRecord)
+            .filter(TravelRecord.employee_id == emp.id)
+            .order_by(
+                case((TravelRecord.entry_date.is_(None), 1), else_=0),
+                TravelRecord.entry_date.desc(),
+                TravelRecord.id.desc(),
+            )
+            .first()
+        )
+        if latest:
+            emp.entry_date = latest.entry_date
+            emp.expected_entry_date = latest.expected_entry_date
+            emp.expected_exit_date = latest.expected_exit_date
+            emp.actual_exit_date = latest.actual_exit_date
+        else:
+            emp.entry_date = None
+            emp.expected_entry_date = None
+            emp.expected_exit_date = None
+            emp.actual_exit_date = None
+
+    db.commit()
+
 
 
 def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | None:

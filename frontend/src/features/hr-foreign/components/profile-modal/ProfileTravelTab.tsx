@@ -5,12 +5,14 @@ interface Props {
   travelRecords: TravelRecord[];
   onOpenTravelModal: () => void;
   onEditRecord?: (record: TravelRecord) => void;
+  onDeleteRecord?: (recordId: number) => void;
 }
 
 export const ProfileTravelTab: React.FC<Props> = ({
   travelRecords,
   onOpenTravelModal,
   onEditRecord,
+  onDeleteRecord,
 }) => {
   return (
     <div className="space-y-3">
@@ -93,15 +95,34 @@ export const ProfileTravelTab: React.FC<Props> = ({
                 {tr.notes && <div className="text-slate-400 italic text-[11px] pt-0.5">{tr.notes}</div>}
               </div>
 
-              {onEditRecord && (
-                <button
-                  type="button"
-                  onClick={() => onEditRecord(tr)}
-                  className="self-end sm:self-center px-2.5 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors shrink-0"
-                >
-                  ✏️ Sửa đợt
-                </button>
-              )}
+              <div className="flex items-center gap-1.5 self-end sm:self-center shrink-0">
+                {onEditRecord && (
+                  <button
+                    type="button"
+                    onClick={() => onEditRecord(tr)}
+                    className="px-2.5 py-1 bg-slate-100 hover:bg-blue-100 text-slate-700 hover:text-blue-700 border border-slate-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                  >
+                    ✏️ Sửa đợt
+                  </button>
+                )}
+                {onDeleteRecord && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Bạn có chắc chắn muốn xóa Đợt nhập xuất cảnh này?\nTất cả lịch sử lưu trú (ở KTX / Khách sạn) tương ứng với đợt này sẽ bị xóa theo."
+                        )
+                      ) {
+                        onDeleteRecord(tr.id);
+                      }
+                    }}
+                    className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 rounded-lg text-[11px] font-semibold cursor-pointer transition-colors"
+                  >
+                    🗑️ Xóa đợt
+                  </button>
+                )}
+              </div>
             </div>
           );
         })

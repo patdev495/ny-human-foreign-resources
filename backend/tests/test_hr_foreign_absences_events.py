@@ -46,6 +46,8 @@ def test_absences_events_price_configs(client: TestClient) -> None:
         },
     ).json()
 
+    client.post(f"/api/hr-foreign/employees/{emp['id']}/travel-records", json={"entry_date": "2026-01-01"})
+
     room = client.post("/api/hr-foreign/rooms", json={"room_number": "303"}).json()
 
     stay = client.post(
@@ -116,7 +118,7 @@ def test_absences_events_price_configs(client: TestClient) -> None:
 def test_meal_absence_with_session_type(client: TestClient) -> None:
     emp = client.post(
         "/api/hr-foreign/employees",
-        json={"name_latin": "LI WEI", "gender": "Nam"},
+        json={"name_latin": "LI WEI", "gender": "Nam", "entry_date": "2026-01-01"},
     ).json()
 
     stay = client.post(

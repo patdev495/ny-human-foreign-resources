@@ -84,6 +84,7 @@ def test_stay_collision_and_checkout(client: TestClient) -> None:
             "name_latin": "WANG WEI",
             "gender": "Nam",
             "passport_number": "P12345678",
+            "entry_date": "2026-07-01",
         },
     )
     assert emp_res.status_code == 201

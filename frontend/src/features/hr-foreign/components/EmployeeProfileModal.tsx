@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import type { EmployeeHistoryResponse, ProfileTab } from "../types";
-import { fetchEmployeeHistory } from "../api";
+import { fetchEmployeeHistory, deleteTravelRecord, deleteStay } from "../api";
 
 import { WorkPermitSection } from "./WorkPermitSection";
 import { ContractSection } from "./ContractSection";
@@ -50,9 +50,6 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
     )
   );
 
-
-
-
   const loadData = useCallback(async () => {
     if (!employeeId || !isOpen) { setData(null); return; }
     try {
@@ -70,6 +67,25 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
     await loadData();
     onUpdate?.();
   }, [loadData, onUpdate]);
+
+  const handleDeleteTravelRecord = async (recordId: number) => {
+    if (!employeeId) return;
+    try {
+      await deleteTravelRecord(employeeId, recordId);
+      await handleRefresh();
+    } catch (err: any) {
+      alert(err.message || "Không thể xóa đợt nhập xuất cảnh");
+    }
+  };
+
+  const handleDeleteStay = async (stayId: number) => {
+    try {
+      await deleteStay(stayId);
+      await handleRefresh();
+    } catch (err: any) {
+      alert(err.message || "Không thể xóa đợt lưu trú");
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -148,8 +164,8 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                 <span className="text-slate-500 block mb-0.5">Ngày Sinh:</span>
                 <span className="font-mono text-slate-800">{data.employee.date_of_birth || "-"}</span>
               </div>
-              <div className="col-span-2 sm:col-span-4 pt-3 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1">
+              <div className="col-span-2 sm:col-span-4 pt-3 border-t border-slate-200/60">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <span className="text-slate-500 block mb-0.5">📅 Ngày đến Việt Nam:</span>
                     <span className="font-mono font-bold text-slate-800">
@@ -180,14 +196,6 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                       )}
                     </span>
                   </div>
-                </div>
-                <div>
-                  <button
-                    onClick={() => setIsTravelModalOpen(true)}
-                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-xs cursor-pointer transition-colors"
-                  >
-                    <span>+</span> Cập nhật ngày
-                  </button>
                 </div>
               </div>
             </div>
@@ -282,7 +290,10 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
 
             {/* TAB CONTENT: STAYS */}
             {activeTab === "STAYS" && (
-              <ProfileStaysTab stays={data.stays} />
+              <ProfileStaysTab
+                stays={data.stays}
+                onDeleteStay={handleDeleteStay}
+              />
             )}
 
             {/* TAB CONTENT: TRAVEL_RECORDS */}
@@ -294,6 +305,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
                   setSelectedTravelRecord(tr);
                   setIsEditSingleTravelOpen(true);
                 }}
+                onDeleteRecord={handleDeleteTravelRecord}
               />
             )}
 

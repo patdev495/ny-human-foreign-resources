@@ -10,7 +10,7 @@ release/
 *.egg-info/
 
 *scratch/
-
+scripts/
 # Virtual environments & dependencies
 .venv/
 venv/

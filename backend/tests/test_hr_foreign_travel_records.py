@@ -303,4 +303,44 @@ def test_reject_future_actual_dates(client: TestClient, emp_id: int) -> None:
     assert "tương lai" in res.json()["detail"].lower()
 
 
+def test_delete_travel_record_cascades_to_stays(client: TestClient, emp_id: int) -> None:
+    # 1. Create open travel record
+    tr_res = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"entry_date": "2026-06-01", "expected_exit_date": "2026-09-01"},
+    )
+    assert tr_res.status_code == 201
+    tr_id = tr_res.json()["id"]
+
+    # 2. Create stay bound to this travel record
+    room_res = client.post("/api/hr-foreign/rooms", json={"room_number": "909"})
+    room_id = room_res.json()["id"]
+    stay_res = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": emp_id,
+            "accommodation_type": "KTX",
+            "room_id": room_id,
+            "stay_type": "CO_DINH",
+            "start_date": "2026-06-01",
+        },
+    )
+    assert stay_res.status_code == 201
+
+    # 3. Verify history has 1 travel record and 1 stay
+    hist_before = client.get(f"/api/hr-foreign/employees/{emp_id}/history").json()
+    assert len(hist_before["travel_records"]) == 1
+    assert len(hist_before["stays"]) == 1
+
+    # 4. Delete Travel Record
+    del_res = client.delete(f"/api/hr-foreign/employees/{emp_id}/travel-records/{tr_id}")
+    assert del_res.status_code == 204
+
+    # 5. Verify travel record AND stay are deleted
+    hist_after = client.get(f"/api/hr-foreign/employees/{emp_id}/history").json()
+    assert len(hist_after["travel_records"]) == 0
+    assert len(hist_after["stays"]) == 0
+
+
+
 

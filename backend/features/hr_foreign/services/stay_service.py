@@ -1,10 +1,11 @@
 from __future__ import annotations
 import datetime
 from collections import defaultdict
+from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from features.hr_foreign.models import Hotel, Room, Stay, TravelRecord
+from features.hr_foreign.models import ForeignEmployee, Hotel, Room, Stay, TravelRecord
 from features.hr_foreign.schemas import (
     HotelCreate,
     HotelUpdate,
@@ -116,7 +117,40 @@ def get_stays(
 
 
 def create_stay(db: Session, payload: StayCreate) -> Stay:
-    stay = Stay(**payload.model_dump())
+    emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == payload.employee_id).first()
+    if not emp:
+        raise HTTPException(status_code=404, detail="Không tìm thấy nhân viên.")
+
+    active_tr = (
+        db.query(TravelRecord)
+        .filter(
+            TravelRecord.employee_id == payload.employee_id,
+            TravelRecord.actual_exit_date.is_(None),
+        )
+        .order_by(TravelRecord.entry_date.desc(), TravelRecord.id.desc())
+        .first()
+    )
+    today = datetime.date.today()
+    if not active_tr:
+        if emp.entry_date and emp.entry_date <= today and not emp.actual_exit_date:
+            active_tr = TravelRecord(
+                employee_id=emp.id,
+                entry_date=emp.entry_date,
+                expected_exit_date=emp.expected_exit_date,
+            )
+            db.add(active_tr)
+            db.flush()
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Nhân viên đang ở nước ngoài. Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.",
+            )
+
+    data = payload.model_dump()
+    if not data.get("travel_record_id"):
+        data["travel_record_id"] = active_tr.id
+
+    stay = Stay(**data)
     db.add(stay)
     db.flush()
     db.commit()
@@ -125,26 +159,9 @@ def create_stay(db: Session, payload: StayCreate) -> Stay:
 
 
 def _sync_stay_checkout_with_travel_record(db: Session, stay: Stay, end_date: datetime.date) -> None:
-    emp = stay.employee
-    if not emp:
-        return
-    emp.actual_exit_date = end_date
-    latest_tr = (
-        db.query(TravelRecord)
-        .filter(TravelRecord.employee_id == emp.id, TravelRecord.actual_exit_date.is_(None))
-        .order_by(TravelRecord.entry_date.desc(), TravelRecord.id.desc())
-        .first()
-    )
-    if latest_tr:
-        latest_tr.actual_exit_date = end_date
-    elif emp.entry_date:
-        latest_tr = TravelRecord(
-            employee_id=emp.id,
-            entry_date=emp.entry_date,
-            expected_exit_date=emp.expected_exit_date,
-            actual_exit_date=end_date,
-        )
-        db.add(latest_tr)
+    # Checking out of a room/hotel (Stay) ends the accommodation period.
+    # It does not automatically mark the employee as leaving Vietnam on TravelRecord.
+    pass
 
 
 def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
@@ -164,6 +181,12 @@ def checkout_stay(db: Session, stay: Stay, end_date: datetime.date) -> Stay:
     db.commit()
     db.refresh(stay)
     return stay
+
+
+def delete_stay(db: Session, stay: Stay) -> None:
+    db.delete(stay)
+    db.commit()
+
 
 
 def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:

@@ -196,13 +196,15 @@ Tính năng gửi email tự động dạng bản tin gộp hàng ngày (Daily D
 
 ## Relationships
 
-- Một **Nhân viên nước ngoài** có nhiều **Lưu trú** theo thời gian.
+- Một **Nhân viên nước ngoài** có nhiều đợt **Nhật ký Nhập xuất cảnh** (`TravelRecord`) theo thời gian. Nếu chưa có đợt nhập cảnh nào hoặc đợt gần nhất đã về nước (`actual_exit_date` khác NULL), mặc định nhân viên được xác định là **Đang ở nước ngoài**.
+- Một đợt **Nhật ký Nhập xuất cảnh** (`TravelRecord`) biểu diễn 1 chuyến sang Việt Nam. Một `TravelRecord` có thể chứa 1 hoặc nhiều **Lưu trú** (`Stay`) nối tiếp nhau trong đợt sang đó (ví dụ: ở tạm Khách sạn vài ngày rồi chuyển sang Phòng KTX, hoặc đổi Phòng KTX trong cùng đợt sang).
+- **Ràng buộc xếp chỗ ở**: Chỉ cho phép xếp chỗ ở (KTX / Khách sạn) cho nhân viên đang ở Việt Nam (đang có 1 `TravelRecord` active chưa có ngày về nước). Nhân viên đang ở nước ngoài **không được phép xếp chỗ ở** — hệ thống sẽ báo lỗi và yêu cầu tạo Đợt nhập cảnh trước. Khi xếp chỗ ở, đợt `Stay` sẽ tự động liên kết với `TravelRecord` active gần nhất (`travel_record_id`).
 - Tại một thời điểm, một **Nhân viên nước ngoài** chỉ có một **Lưu trú** đang active (end_date = null). Khi thêm nhân viên vào chỗ ở mới, nếu nhân viên đang có lượt ở active ở nơi khác, hệ thống phải cảnh báo xung đột và dừng thao tác để người dùng tự xử lý (ví dụ: làm thủ tục trả phòng cũ trước).
 - Một **Phòng** có thể có nhiều **Lưu trú** đồng thời (nhiều người cùng phòng). Mỗi lưu trú có thể gán **Vị trí giường** (A, B...).
 - Một **Lưu trú** có nhiều **Visa** và nhiều **Tạm trú** (gia hạn giữa chừng không về nước).
 - Một **Lưu trú** có nhiều **Vắng ăn** (những ngày không tính tiền ăn).
 - **Đơn giá bữa ăn** áp dụng cho một ngày được tra theo bản ghi hiệu lực gần nhất ứng với loại ngày (Đầy đủ hay Ngày sự kiện).
-- Khi ghi nhận **Ngày thực tế đã về nước** (`actual_exit_date`), trạng thái nhân sự chuyển thành "Đã về nước". Nếu nhân sự đang ở KTX, HR chọn 1 trong 2 phương án: (1) **Trả phòng**: kết thúc Lưu trú (`end_date = actual_exit_date`), giải phóng giường; hoặc (2) **Giữ phòng**: duy trì Đợt lưu trú nhưng đánh dấu vắng ăn trong thời gian về nước để không tính tiền cơm.
+- Khi ghi nhận **Ngày thực tế đã về nước** (`actual_exit_date`), trạng thái nhân sự chuyển thành "Đã về nước". Hệ thống tự động đóng đợt **Lưu trú** đang active (`end_date = actual_exit_date`) thuộc `TravelRecord` đó (hoặc giữ phòng nếu HR chọn phương án giữ phòng vắng ăn).
 - Một **Bản ghi Điều xe** (`VehicleDispatch`) tham chiếu tới một **Loại xe** (`Vehicle`). Mỗi **Loại xe** thuộc 1 trong 2 **Nhóm sở hữu xe** (`COMPANY_OWNED` hoặc `OUTSOURCED`).
 - Khi lập bản ghi Điều xe, các trường thông tin (tài xế, biển số, đơn giá) được sao chép/gợi ý từ Danh mục xe sang Bản ghi Điều xe và cho phép HR sửa đổi tự do mà không ảnh hưởng tới dữ liệu master của Danh mục Xe.
 

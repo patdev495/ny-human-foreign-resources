@@ -18,6 +18,8 @@ from features.hr_foreign.schemas import (
     EventDayUpdate,
     MealAbsenceCreate,
     MealAbsenceRead,
+    MealExtraCreate,
+    MealExtraRead,
     MealExpenseReportResponse,
     MealPriceConfigCreate,
     MealPriceConfigRead,
@@ -60,6 +62,38 @@ def delete_meal_absence(abs_id: int, db: Session = Depends(get_db)) -> None:
     if not absence:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Absence not found")
     service.delete_meal_absence(db, absence)
+
+
+# --- MEAL EXTRAS ENDPOINTS ---
+
+@router.get("/stays/{stay_id}/meal-extras", response_model=list[MealExtraRead])
+def list_meal_extras(stay_id: int, db: Session = Depends(get_db)) -> list[MealExtraRead]:
+    stay = service.get_stay_by_id(db, stay_id)
+    if not stay:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
+    return service.get_meal_extras_by_stay(db, stay_id)
+
+
+@router.post(
+    "/stays/{stay_id}/meal-extras",
+    response_model=MealExtraRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_meal_extra(
+    stay_id: int, payload: MealExtraCreate, db: Session = Depends(get_db)
+) -> MealExtraRead:
+    stay = service.get_stay_by_id(db, stay_id)
+    if not stay:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
+    return service.create_meal_extra(db, stay_id, payload)
+
+
+@router.delete("/meal-extras/{extra_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_meal_extra(extra_id: int, db: Session = Depends(get_db)) -> None:
+    extra = service.get_meal_extra_by_id(db, extra_id)
+    if not extra:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Extra meal not found")
+    service.delete_meal_extra(db, extra)
 
 
 # --- DAILY MEAL FORECAST & LOCK ENDPOINTS ---

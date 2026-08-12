@@ -118,6 +118,15 @@ def checkout_stay(
     return _to_stay_read(checkout_stay_obj)
 
 
+@router.delete("/stays/{stay_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_stay(stay_id: int, db: Session = Depends(get_db)) -> None:
+    stay = service.get_stay_by_id(db, stay_id)
+    if not stay:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
+    service.delete_stay(db, stay)
+
+
+
 # --- VISAS ENDPOINTS ---
 
 @router.get("/stays/{stay_id}/visas", response_model=list[VisaRead])

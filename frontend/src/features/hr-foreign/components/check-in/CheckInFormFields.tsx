@@ -111,7 +111,12 @@ export const CheckInFormFields: React.FC<Props> = ({
             </option>
           ))}
         </select>
-        {selectedEmployee && hasActiveAccommodation && (
+        {selectedEmployee && !selectedEmployee.is_in_vietnam && (
+          <p className="mt-1 text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-200 p-2 rounded-lg">
+            ⚠️ Nhân sự <strong>{selectedEmployee.name_latin}</strong> hiện đang ở nước ngoài (chưa có Đợt nhập cảnh active). Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.
+          </p>
+        )}
+        {selectedEmployee && selectedEmployee.is_in_vietnam && hasActiveAccommodation && (
           <p className="mt-1 text-xs text-amber-600 font-medium">
             ⚠️ Nhân sự này hiện đang lưu trú tại: <strong>{selectedEmployee.current_room_number}</strong>.
           </p>

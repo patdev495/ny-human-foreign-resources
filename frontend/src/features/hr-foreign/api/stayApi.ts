@@ -9,7 +9,7 @@ import type {
   VisaCreate,
   VisaUpdate,
 } from "../types";
-import { BASE } from "./apiUtils";
+import { BASE, formatApiError } from "./apiUtils";
 
 export async function fetchStays(employeeId?: number, status?: string): Promise<Stay[]> {
   const params = new URLSearchParams();
@@ -22,6 +22,12 @@ export async function fetchStays(employeeId?: number, status?: string): Promise<
   return res.json() as Promise<Stay[]>;
 }
 
+export async function fetchStay(id: number): Promise<Stay> {
+  const res = await fetch(`${BASE}/stays/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch stay");
+  return res.json() as Promise<Stay>;
+}
+
 export async function createStay(payload: StayCreate): Promise<Stay> {
   const res = await fetch(`${BASE}/stays`, {
     method: "POST",
@@ -30,7 +36,7 @@ export async function createStay(payload: StayCreate): Promise<Stay> {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to create stay");
+    throw new Error(formatApiError(err, "Failed to create stay"));
   }
   return res.json() as Promise<Stay>;
 }
@@ -43,7 +49,7 @@ export async function updateStay(id: number, payload: StayUpdate): Promise<Stay>
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail || "Failed to update stay");
+    throw new Error(formatApiError(err, "Failed to update stay"));
   }
   return res.json() as Promise<Stay>;
 }
@@ -60,6 +66,17 @@ export async function checkoutStay(stayId: number, endDate: string): Promise<Sta
   }
   return res.json() as Promise<Stay>;
 }
+
+export async function deleteStay(stayId: number): Promise<void> {
+  const res = await fetch(`${BASE}/stays/${stayId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Không thể xóa đợt lưu trú");
+  }
+}
+
 
 export async function fetchVisas(stayId: number): Promise<Visa[]> {
   const res = await fetch(`${BASE}/stays/${stayId}/visas`);

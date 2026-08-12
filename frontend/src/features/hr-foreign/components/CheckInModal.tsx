@@ -115,6 +115,12 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       setError("Vui lòng chọn Nhân viên nước ngoài");
       return;
     }
+    if (selectedEmployee && !selectedEmployee.is_in_vietnam) {
+      setError(
+        `Nhân sự ${selectedEmployee.name_latin} hiện đang ở nước ngoài (chưa có Đợt nhập cảnh active). Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.`
+      );
+      return;
+    }
     if (selectedEmployee && hasActiveAccommodation) {
       setError(
         `Nhân sự ${selectedEmployee.name_latin} hiện đang có chỗ ở (${selectedEmployee.current_room_number}). Vui lòng làm thủ tục Trả phòng cũ trước khi xếp mới.`
