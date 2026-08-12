@@ -256,6 +256,7 @@ export const VehicleDispatchList: React.FC = () => {
         formData={formData}
         setFormData={setFormData}
         vehicles={vehicles}
+        providers={providers}
         onVehicleSelect={handleVehicleSelect}
         onSave={handleSave}
         onClose={() => setIsModalOpen(false)}

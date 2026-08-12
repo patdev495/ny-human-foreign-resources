@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { calculateCost, fetchProviders, fetchVendorRoutes } from "../../api";
 import { DispatchOdometerSection } from "./DispatchOdometerSection";
 import { DispatchPricingSection } from "./DispatchPricingSection";
+import { DispatchVehicleDetails } from "./DispatchVehicleDetails";
 import type {
   OwnershipGroup,
   RouteType,
@@ -18,6 +19,7 @@ interface DispatchModalProps {
   formData: VehicleDispatchCreatePayload;
   setFormData: React.Dispatch<React.SetStateAction<VehicleDispatchCreatePayload>>;
   vehicles: Vehicle[];
+  providers?: VehicleProvider[];
   onVehicleSelect: (vehicleIdStr: string) => void;
   onSave: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -29,19 +31,35 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
   formData,
   setFormData,
   vehicles,
+  providers: parentProviders,
   onVehicleSelect,
   onSave,
   onClose,
 }) => {
-  const [providers, setProviders] = useState<VehicleProvider[]>([]);
+  const [internalProviders, setInternalProviders] = useState<VehicleProvider[]>([]);
   const [vendorRoutes, setVendorRoutes] = useState<VendorRoute[]>([]);
   const [seatType, setSeatType] = useState<string>("4 chỗ");
 
+  const providers = parentProviders && parentProviders.length > 0 ? parentProviders : internalProviders;
+
   useEffect(() => {
-    if (isOpen) {
-      fetchProviders().then(setProviders).catch(console.error);
+    if (isOpen && (!parentProviders || parentProviders.length === 0)) {
+      fetchProviders().then(setInternalProviders).catch(console.error);
     }
-  }, [isOpen]);
+  }, [isOpen, parentProviders]);
+
+  // Ensure default provider is set when modal opens or providers load
+  useEffect(() => {
+    if (isOpen && providers.length > 0 && !formData.provider_id) {
+      const defaultP = providers.find((p) => p.name === "Bình An") || providers[0];
+      setFormData((prev) => ({
+        ...prev,
+        provider_id: defaultP.id,
+        provider_name: defaultP.name,
+        ownership_group: defaultP.provider_type,
+      }));
+    }
+  }, [isOpen, providers, formData.provider_id, setFormData]);
 
   useEffect(() => {
     if (formData.provider_id) {
@@ -118,6 +136,7 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
     const rId = parseInt(routeIdStr, 10);
     const selectedR = vendorRoutes.find((r) => r.id === rId);
     if (selectedR) {
+      const activeProviderId = formData.provider_id || (providers.find((p) => p.name === "Bình An") || providers[0])?.id;
       setFormData((prev) => ({
         ...prev,
         vendor_route_id: selectedR.id,
@@ -129,7 +148,7 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
           : `Xe ${selectedR.seat_type} (${prev.provider_name || "Thuê ngoài"})`,
       }));
       setSeatType(selectedR.seat_type);
-      handleCalculateCost(formData.provider_id, selectedR.id, "FIXED_ROUTE", formData.distance_km, formData.waiting_hours, selectedR.seat_type);
+      handleCalculateCost(activeProviderId, selectedR.id, "FIXED_ROUTE", formData.distance_km, formData.waiting_hours, selectedR.seat_type);
     }
   };
 
@@ -240,47 +259,7 @@ export const DispatchModal: React.FC<DispatchModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Tên Xe / Mô tả phương tiện <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.vehicle_name}
-                onChange={(e) => setFormData({ ...formData, vehicle_name: e.target.value })}
-                placeholder="VD: Xe 7 chỗ (Bình An), Chú Ngọc..."
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Tài xế, Biển số & SĐT</label>
-              <div className="grid grid-cols-3 gap-1.5">
-                <input
-                  type="text"
-                  value={formData.driver_name || ""}
-                  onChange={(e) => setFormData({ ...formData, driver_name: e.target.value })}
-                  placeholder="Tài xế"
-                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={formData.license_plate || ""}
-                  onChange={(e) => setFormData({ ...formData, license_plate: e.target.value })}
-                  placeholder="Biển số"
-                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none"
-                />
-                <input
-                  type="text"
-                  value={formData.driver_phone || ""}
-                  onChange={(e) => setFormData({ ...formData, driver_phone: e.target.value })}
-                  placeholder="SĐT tài xế"
-                  className="w-full px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none font-mono"
-                />
-              </div>
-            </div>
-          </div>
+          <DispatchVehicleDetails formData={formData} setFormData={setFormData} />
 
           {/* Pricing Logic or Odometer Section */}
           {formData.ownership_group === "COMPANY_OWNED" ? (
