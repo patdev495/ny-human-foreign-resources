@@ -102,7 +102,7 @@ def test_get_expiring_documents_with_per_doc_type_configs(db_session):
 
     # Visa expiring in 20 days (2026-08-12) -> > 15 days cutoff, so should NOT be in expiring_visas
     v = Visa(
-        stay_id=stay.id,
+        employee_id=emp.id,
         visa_type="LĐ2",
         expiry_date=today + datetime.timedelta(days=20),
     )

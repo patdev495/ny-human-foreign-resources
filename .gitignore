@@ -5,8 +5,9 @@ __pycache__/
 
 # Distribution / packaging
 build/
-dist/
+backend/dist/
 release/
+!frontend/dist/
 *.egg-info/
 
 *scratch/
@@ -28,7 +29,6 @@ venv/
 # Node & Frontend
 node_modules/
 frontend/node_modules/
-frontend/dist/
 frontend/.vite/
 .eslintcache
 

@@ -16,6 +16,12 @@ from features.hr_foreign.schemas import (
     DocWarningConfigResponse,
     DocWarningConfigUpdateItem,
     ExpiringDocumentsResponse,
+    TamTruCreate,
+    TamTruRead,
+    TamTruUpdate,
+    VisaCreate,
+    VisaRead,
+    VisaUpdate,
     WorkPermitCreate,
     WorkPermitRead,
     WorkPermitUpdate,
@@ -108,6 +114,90 @@ def delete_work_permit(permit_id: int, db: Session = Depends(get_db)) -> None:
     service.delete_work_permit(db, permit)
 
 
+# --- VISAS ENDPOINTS ---
+
+@router.get("/employees/{emp_id}/visas", response_model=list[VisaRead])
+def list_visas(emp_id: int, db: Session = Depends(get_db)) -> list[VisaRead]:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.get_visas_by_employee(db, emp_id)
+
+
+@router.post(
+    "/employees/{emp_id}/visas",
+    response_model=VisaRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_visa(
+    emp_id: int, payload: VisaCreate, db: Session = Depends(get_db)
+) -> VisaRead:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.create_visa(db, emp_id, payload)
+
+
+@router.put("/visas/{visa_id}", response_model=VisaRead)
+def update_visa(
+    visa_id: int, payload: VisaUpdate, db: Session = Depends(get_db)
+) -> VisaRead:
+    visa = service.get_visa_by_id(db, visa_id)
+    if not visa:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visa not found")
+    return service.update_visa(db, visa, payload)
+
+
+@router.delete("/visas/{visa_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_visa(visa_id: int, db: Session = Depends(get_db)) -> None:
+    visa = service.get_visa_by_id(db, visa_id)
+    if not visa:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visa not found")
+    service.delete_visa(db, visa)
+
+
+# --- TAM TRU ENDPOINTS ---
+
+@router.get("/employees/{emp_id}/tam-trus", response_model=list[TamTruRead])
+def list_tam_trus(emp_id: int, db: Session = Depends(get_db)) -> list[TamTruRead]:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.get_tam_trus_by_employee(db, emp_id)
+
+
+@router.post(
+    "/employees/{emp_id}/tam-trus",
+    response_model=TamTruRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_tam_tru(
+    emp_id: int, payload: TamTruCreate, db: Session = Depends(get_db)
+) -> TamTruRead:
+    emp = service.get_employee_by_id(db, emp_id)
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return service.create_tam_tru(db, emp_id, payload)
+
+
+@router.put("/tam-trus/{tam_tru_id}", response_model=TamTruRead)
+def update_tam_tru(
+    tam_tru_id: int, payload: TamTruUpdate, db: Session = Depends(get_db)
+) -> TamTruRead:
+    tam_tru = service.get_tam_tru_by_id(db, tam_tru_id)
+    if not tam_tru:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
+    return service.update_tam_tru(db, tam_tru, payload)
+
+
+@router.delete("/tam-trus/{tam_tru_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_tam_tru(tam_tru_id: int, db: Session = Depends(get_db)) -> None:
+    tam_tru = service.get_tam_tru_by_id(db, tam_tru_id)
+    if not tam_tru:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
+    service.delete_tam_tru(db, tam_tru)
+
+
 # --- EXPIRING DOCUMENTS & WARNING CONFIG ENDPOINTS ---
 
 @router.get("/doc-warning-configs", response_model=DocWarningConfigResponse)
@@ -178,11 +268,10 @@ def export_legal_profile(
                 elif att.entity_type in ("VISA", "TAM_TRU"):
                     if att.entity_type == "VISA":
                         v = db.query(models.Visa).filter(models.Visa.id == att.entity_id).first()
-                        stay = v.stay if v else None
+                        emp = v.employee if v else None
                     else:
                         tt = db.query(models.TamTru).filter(models.TamTru.id == att.entity_id).first()
-                        stay = tt.stay if tt else None
-                    emp = stay.employee if stay else None
+                        emp = tt.employee if tt else None
                 elif att.entity_type == "WORK_PERMIT":
                     wp = db.query(models.WorkPermit).filter(models.WorkPermit.id == att.entity_id).first()
                     emp = wp.employee if wp else None

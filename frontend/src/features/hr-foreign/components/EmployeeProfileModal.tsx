@@ -313,7 +313,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
             {/* TAB CONTENT: VISA_TAM_TRU */}
             {activeTab === "VISA_TAM_TRU" && (
               <VisaTamTruSection
-                stays={data.stays}
+                employeeId={data.employee.id}
                 visas={data.visas}
                 tamTrus={data.tam_trus}
                 onRefresh={handleRefresh}

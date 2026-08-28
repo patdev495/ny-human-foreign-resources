@@ -58,17 +58,17 @@ def test_visa_tamtru_and_expiring_alerts(client: TestClient) -> None:
         },
     ).json()
 
-    stay_id = stay["id"]
+    emp_id = emp["id"]
 
     # 1. Add Visas (1 expired/normal, 1 expiring within 30 days)
     today = datetime.date.today()
     expiring_date = (today + datetime.timedelta(days=10)).isoformat()
 
     v1 = client.post(
-        f"/api/hr-foreign/stays/{stay_id}/visas",
+        f"/api/hr-foreign/employees/{emp_id}/visas",
         json={
             "visa_type": "DN1",
-            "entry_date": "2026-01-01",
+            "issue_date": "2026-01-01",
             "expiry_date": expiring_date,
             "notes": "Visa sap het han",
         },
@@ -76,12 +76,12 @@ def test_visa_tamtru_and_expiring_alerts(client: TestClient) -> None:
     assert v1.status_code == 201, v1.json()
 
     # List visas
-    v_list = client.get(f"/api/hr-foreign/stays/{stay_id}/visas")
+    v_list = client.get(f"/api/hr-foreign/employees/{emp_id}/visas")
     assert len(v_list.json()) == 1
 
     # 2. Add TamTru (expiring within 15 days)
     tt1 = client.post(
-        f"/api/hr-foreign/stays/{stay_id}/tam-trus",
+        f"/api/hr-foreign/employees/{emp_id}/tam-trus",
         json={
             "registration_date": "2026-01-02",
             "expiry_date": (today + datetime.timedelta(days=15)).isoformat(),
@@ -91,7 +91,7 @@ def test_visa_tamtru_and_expiring_alerts(client: TestClient) -> None:
     assert tt1.status_code == 201, tt1.json()
 
     # List tamtrus
-    tt_list = client.get(f"/api/hr-foreign/stays/{stay_id}/tam-trus")
+    tt_list = client.get(f"/api/hr-foreign/employees/{emp_id}/tam-trus")
     assert len(tt_list.json()) == 1
 
     # 3. Check Expiring Documents Endpoint

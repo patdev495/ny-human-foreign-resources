@@ -45,16 +45,16 @@ export interface ContractUpdate extends ContractCreate {}
 
 export interface Visa {
   id: number;
-  stay_id: number;
+  employee_id: number;
   visa_type?: string | null;
-  entry_date?: string | null;
+  issue_date?: string | null;
   expiry_date?: string | null;
   notes?: string | null;
 }
 
 export interface VisaCreate {
   visa_type?: string | null;
-  entry_date?: string | null;
+  issue_date?: string | null;
   expiry_date?: string | null;
   notes?: string | null;
 }
@@ -63,7 +63,7 @@ export interface VisaUpdate extends VisaCreate {}
 
 export interface TamTru {
   id: number;
-  stay_id: number;
+  employee_id: number;
   registration_date?: string | null;
   expiry_date?: string | null;
   notes?: string | null;

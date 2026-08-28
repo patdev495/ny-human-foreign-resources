@@ -86,9 +86,9 @@ def test_generate_legal_profile_excel(db_session):
     db_session.flush()
 
     visa = Visa(
-        stay_id=stay.id,
+        employee_id=emp.id,
         visa_type="DN1",
-        entry_date=datetime.date(2026, 1, 10),
+        issue_date=datetime.date(2026, 1, 10),
         expiry_date=datetime.date(2026, 12, 31),
     )
     db_session.add(visa)
@@ -180,8 +180,8 @@ def test_generate_legal_profile_excel_with_empty_fields_and_fallback_attachment(
     db_session.add(stay)
     db_session.flush()
 
-    visa1 = Visa(stay_id=stay.id, visa_type=None, expiry_date=datetime.date(2025, 1, 1))
-    visa2_latest = Visa(stay_id=stay.id, visa_type=None, expiry_date=datetime.date(2026, 1, 1))
+    visa1 = Visa(employee_id=emp.id, visa_type=None, expiry_date=datetime.date(2025, 1, 1))
+    visa2_latest = Visa(employee_id=emp.id, visa_type=None, expiry_date=datetime.date(2026, 1, 1))
     db_session.add_all([visa1, visa2_latest])
     db_session.flush()
 

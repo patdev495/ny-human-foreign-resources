@@ -84,9 +84,9 @@ def test_models_creation(db_session: Session) -> None:
 
     # 4. Visa
     visa = Visa(
-        stay_id=stay.id,
+        employee_id=emp.id,
         visa_type="DN1",
-        entry_date=datetime.date(2026, 1, 1),
+        issue_date=datetime.date(2026, 1, 1),
         expiry_date=datetime.date(2026, 3, 31),
         notes="Visa 3 thang",
     )
@@ -94,7 +94,7 @@ def test_models_creation(db_session: Session) -> None:
 
     # 5. TamTru
     tamtru = TamTru(
-        stay_id=stay.id,
+        employee_id=emp.id,
         registration_date=datetime.date(2026, 1, 2),
         expiry_date=datetime.date(2026, 3, 30),
         notes="Tam tru CA xa",

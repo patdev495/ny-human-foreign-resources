@@ -3,12 +3,10 @@ from __future__ import annotations
 import datetime
 from collections import defaultdict
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func
 
 from features.hr_foreign.models import (
     Contract,
     ForeignEmployee,
-    Stay,
     TamTru,
     Visa,
     WorkPermit,
@@ -55,14 +53,13 @@ def get_expiring_documents(
     )
     expiring_visas: list[ExpiringDocumentItem] = []
     for v in visas:
-        stay = v.stay
-        emp = stay.employee if stay else None
+        emp = v.employee
         if emp and not _is_janitorial(emp):
             days_rem = (v.expiry_date - today).days
             expiring_visas.append(
                 ExpiringDocumentItem(
                     id=v.id,
-                    stay_id=v.stay_id,
+                    stay_id=None,
                     employee_id=emp.id,
                     employee_name=emp.name_latin,
                     passport_number=emp.passport_number,
@@ -81,14 +78,13 @@ def get_expiring_documents(
     )
     expiring_tam_trus: list[ExpiringDocumentItem] = []
     for tt in tam_trus:
-        stay = tt.stay
-        emp = stay.employee if stay else None
+        emp = tt.employee
         if emp and not _is_janitorial(emp):
             days_rem = (tt.expiry_date - today).days
             expiring_tam_trus.append(
                 ExpiringDocumentItem(
                     id=tt.id,
-                    stay_id=tt.stay_id,
+                    stay_id=None,
                     employee_id=emp.id,
                     employee_name=emp.name_latin,
                     passport_number=emp.passport_number,
@@ -177,41 +173,25 @@ def get_expiring_documents(
                 )
             )
 
-    # 6. Check Missing Information for Employees & Active Stays
-    # Exclude janitorial staff (employee_type == 'JANITORIAL') — they are managed separately
+    # 6. Check Missing Information — working employees (non-janitorial)
     all_employees = (
         db.query(ForeignEmployee)
-        .filter(ForeignEmployee.employee_type != "JANITORIAL")
+        .filter(
+            ForeignEmployee.employee_type != "JANITORIAL",
+            ForeignEmployee.status == "WORKING",
+        )
         .all()
     )
 
-    active_stays = (
-        db.query(Stay)
-        .filter(or_(Stay.end_date.is_(None), Stay.end_date > today))
-        .all()
-    )
-    active_stay_map = defaultdict(list)
-    for s in active_stays:
-        active_stay_map[s.employee_id].append(s)
+    all_visas = db.query(Visa).all()
+    visas_by_emp: dict[int, list[Visa]] = defaultdict(list)
+    for v in all_visas:
+        visas_by_emp[v.employee_id].append(v)
 
-    active_stay_ids = [s.id for s in active_stays]
-    visas_for_stays = (
-        db.query(Visa).filter(Visa.stay_id.in_(active_stay_ids)).all()
-        if active_stay_ids
-        else []
-    )
-    visas_by_stay = defaultdict(list)
-    for v in visas_for_stays:
-        visas_by_stay[v.stay_id].append(v)
-
-    tam_trus_for_stays = (
-        db.query(TamTru).filter(TamTru.stay_id.in_(active_stay_ids)).all()
-        if active_stay_ids
-        else []
-    )
-    tam_trus_by_stay = defaultdict(list)
-    for tt in tam_trus_for_stays:
-        tam_trus_by_stay[tt.stay_id].append(tt)
+    all_tam_trus = db.query(TamTru).all()
+    tam_trus_by_emp: dict[int, list[TamTru]] = defaultdict(list)
+    for tt in all_tam_trus:
+        tam_trus_by_emp[tt.employee_id].append(tt)
 
     all_wps = db.query(WorkPermit).all()
     wps_by_emp = defaultdict(list)
@@ -240,42 +220,41 @@ def get_expiring_documents(
                 )
             )
 
-        emp_active_stays = active_stay_map.get(emp.id, [])
-        for stay in emp_active_stays:
-            s_visas = visas_by_stay.get(stay.id, [])
-            if not s_visas or any(v.expiry_date is None for v in s_visas):
-                expiring_visas.append(
-                    ExpiringDocumentItem(
-                        id=None,
-                        stay_id=stay.id,
-                        employee_id=emp.id,
-                        employee_name=emp.name_latin,
-                        passport_number=emp.passport_number,
-                        doc_type="VISA",
-                        type_name="Visa",
-                        expiry_date=None,
-                        days_remaining=None,
-                        is_missing_info=True,
-                        missing_reason="Chưa đăng ký Visa hoặc thiếu ngày hết hạn",
-                    )
+        e_visas = visas_by_emp.get(emp.id, [])
+        if not e_visas or any(v.expiry_date is None for v in e_visas):
+            expiring_visas.append(
+                ExpiringDocumentItem(
+                    id=None,
+                    stay_id=None,
+                    employee_id=emp.id,
+                    employee_name=emp.name_latin,
+                    passport_number=emp.passport_number,
+                    doc_type="VISA",
+                    type_name="Visa",
+                    expiry_date=None,
+                    days_remaining=None,
+                    is_missing_info=True,
+                    missing_reason="Chưa đăng ký Visa hoặc thiếu ngày hết hạn",
                 )
-            s_tt = tam_trus_by_stay.get(stay.id, [])
-            if not s_tt or any(tt.expiry_date is None for tt in s_tt):
-                expiring_tam_trus.append(
-                    ExpiringDocumentItem(
-                        id=None,
-                        stay_id=stay.id,
-                        employee_id=emp.id,
-                        employee_name=emp.name_latin,
-                        passport_number=emp.passport_number,
-                        doc_type="TAM_TRU",
-                        type_name="Tạm trú",
-                        expiry_date=None,
-                        days_remaining=None,
-                        is_missing_info=True,
-                        missing_reason="Chưa đăng ký Tạm trú hoặc thiếu ngày hết hạn",
-                    )
+            )
+
+        e_tt = tam_trus_by_emp.get(emp.id, [])
+        if not e_tt or any(tt.expiry_date is None for tt in e_tt):
+            expiring_tam_trus.append(
+                ExpiringDocumentItem(
+                    id=None,
+                    stay_id=None,
+                    employee_id=emp.id,
+                    employee_name=emp.name_latin,
+                    passport_number=emp.passport_number,
+                    doc_type="TAM_TRU",
+                    type_name="Tạm trú",
+                    expiry_date=None,
+                    days_remaining=None,
+                    is_missing_info=True,
+                    missing_reason="Chưa đăng ký Tạm trú hoặc thiếu ngày hết hạn",
                 )
+            )
 
         if emp.actual_exit_date is None or emp.actual_exit_date > today:
             e_wps = wps_by_emp.get(emp.id, [])

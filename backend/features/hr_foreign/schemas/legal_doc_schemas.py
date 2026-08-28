@@ -9,7 +9,7 @@ from .stay_schemas import StayRead
 
 class VisaBase(BaseModel):
     visa_type: str | None = None
-    entry_date: datetime.date | None = None
+    issue_date: datetime.date | None = None
     expiry_date: datetime.date | None = None
     notes: str | None = None
 
@@ -24,7 +24,7 @@ class VisaUpdate(VisaBase):
 
 class VisaRead(VisaBase):
     id: int
-    stay_id: int
+    employee_id: int
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -47,7 +47,7 @@ class TamTruUpdate(TamTruBase):
 
 class TamTruRead(TamTruBase):
     id: int
-    stay_id: int
+    employee_id: int
 
     model_config = ConfigDict(from_attributes=True)
 

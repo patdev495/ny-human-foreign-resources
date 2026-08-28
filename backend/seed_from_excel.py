@@ -184,9 +184,9 @@ def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
         if v1_type or v1_from or v1_to:
             c1, n1 = parse_visa_info(v1_type)
             db.add(models.Visa(
-                stay_id=stay.id,
+                employee_id=emp.id,
                 visa_type=c1,
-                entry_date=v1_from,
+                issue_date=v1_from,
                 expiry_date=v1_to,
                 notes=n1,
             ))
@@ -199,9 +199,9 @@ def seed_from_danh_sach(db: Session, path: str) -> dict[str, int]:
         if v2_type or v2_from or v2_to:
             c2, n2 = parse_visa_info(v2_type)
             db.add(models.Visa(
-                stay_id=stay.id,
+                employee_id=emp.id,
                 visa_type=c2,
-                entry_date=v2_from,
+                issue_date=v2_from,
                 expiry_date=v2_to,
                 notes=n2,
             ))

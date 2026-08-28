@@ -95,6 +95,19 @@ def init_db() -> None:
             )
             conn.execute(
                 text(
+                    "IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'visas') AND name = N'entry_date') "
+                    "   AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'visas') AND name = N'issue_date') "
+                    "EXEC sp_rename 'visas.entry_date', 'issue_date', 'COLUMN';"
+                )
+            )
+            conn.execute(
+                text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'visas') AND name = N'issue_date') "
+                    "ALTER TABLE visas ADD issue_date DATE NULL;"
+                )
+            )
+            conn.execute(
+                text(
                     "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'meal_absences') AND name = N'meal_type') "
                     "ALTER TABLE meal_absences ADD meal_type NVARCHAR(50) NOT NULL DEFAULT N'ALL_DAY';"
                 )

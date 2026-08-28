@@ -75,13 +75,13 @@ def test_evaluate_employee_statuses_batch(db_session):
 
     # Add Visa, TamTru, WorkPermit, Contract for emp1
     visa1 = Visa(
-        stay_id=stay1.id,
+        employee_id=emp1.id,
         visa_type="DN1",
-        entry_date=datetime.date(2026, 1, 1),
+        issue_date=datetime.date(2026, 1, 1),
         expiry_date=datetime.date(2026, 8, 15),
     )
     tamtru1 = TamTru(
-        stay_id=stay1.id,
+        employee_id=emp1.id,
         registration_date=datetime.date(2026, 1, 1),
         expiry_date=datetime.date(2026, 8, 20),
     )
@@ -138,9 +138,9 @@ def test_get_expiring_documents_all_types(db_session):
     db_session.flush()
 
     # Visa expiring in 10 days
-    visa = Visa(stay_id=stay.id, visa_type="LĐ2", expiry_date=datetime.date(2026, 8, 1))
+    visa = Visa(employee_id=emp.id, visa_type="LĐ2", expiry_date=datetime.date(2026, 8, 1))
     # Tam tru expiring in 15 days
-    tam_tru = TamTru(stay_id=stay.id, expiry_date=datetime.date(2026, 8, 6))
+    tam_tru = TamTru(employee_id=emp.id, expiry_date=datetime.date(2026, 8, 6))
     # Work permit expiring in 20 days
     wp = WorkPermit(employee_id=emp.id, permit_number="WP-002", valid_to=datetime.date(2026, 8, 11))
     # Contract expiring in 25 days

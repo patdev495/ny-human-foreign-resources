@@ -294,10 +294,9 @@ def get_employee_history(db: Session, emp_id: int) -> EmployeeHistoryResponse | 
     )
     stays = db.query(Stay).filter(Stay.employee_id == emp_id).all()
     travel_records = list_travel_records(db, emp_id)
-    stay_ids = [s.id for s in stays]
 
-    visas = db.query(Visa).filter(Visa.stay_id.in_(stay_ids)).all() if stay_ids else []
-    tam_trus = db.query(TamTru).filter(TamTru.stay_id.in_(stay_ids)).all() if stay_ids else []
+    visas = db.query(Visa).filter(Visa.employee_id == emp_id).order_by(Visa.expiry_date.desc()).all()
+    tam_trus = db.query(TamTru).filter(TamTru.employee_id == emp_id).order_by(TamTru.expiry_date.desc()).all()
 
     stay_reads = []
     for s in stays:

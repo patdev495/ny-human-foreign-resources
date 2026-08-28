@@ -34,38 +34,28 @@ def evaluate_employee_statuses(
         .all()
     )
     stays_by_emp: dict[int, list[Stay]] = defaultdict(list)
-    stay_to_emp_id: dict[int, int] = {}
     for s in stays:
         stays_by_emp[s.employee_id].append(s)
-        stay_to_emp_id[s.id] = s.employee_id
-
-    all_stay_ids = list(stay_to_emp_id.keys())
 
     visas_by_emp: dict[int, list[Visa]] = defaultdict(list)
-    if all_stay_ids:
-        visas = (
-            db.query(Visa)
-            .filter(Visa.stay_id.in_(all_stay_ids), Visa.expiry_date.isnot(None))
-            .order_by(Visa.expiry_date.desc())
-            .all()
-        )
-        for v in visas:
-            emp_id = stay_to_emp_id.get(v.stay_id)
-            if emp_id:
-                visas_by_emp[emp_id].append(v)
+    visas = (
+        db.query(Visa)
+        .filter(Visa.employee_id.in_(emp_ids), Visa.expiry_date.isnot(None))
+        .order_by(Visa.expiry_date.desc())
+        .all()
+    )
+    for v in visas:
+        visas_by_emp[v.employee_id].append(v)
 
     tam_trus_by_emp: dict[int, list[TamTru]] = defaultdict(list)
-    if all_stay_ids:
-        tam_trus = (
-            db.query(TamTru)
-            .filter(TamTru.stay_id.in_(all_stay_ids), TamTru.expiry_date.isnot(None))
-            .order_by(TamTru.expiry_date.desc())
-            .all()
-        )
-        for tt in tam_trus:
-            emp_id = stay_to_emp_id.get(tt.stay_id)
-            if emp_id:
-                tam_trus_by_emp[emp_id].append(tt)
+    tam_trus = (
+        db.query(TamTru)
+        .filter(TamTru.employee_id.in_(emp_ids), TamTru.expiry_date.isnot(None))
+        .order_by(TamTru.expiry_date.desc())
+        .all()
+    )
+    for tt in tam_trus:
+        tam_trus_by_emp[tt.employee_id].append(tt)
 
     work_permits = (
         db.query(WorkPermit)

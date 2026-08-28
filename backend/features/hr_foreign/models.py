@@ -50,6 +50,8 @@ class ForeignEmployee(Base):
     work_permits = relationship("WorkPermit", back_populates="employee", cascade="all, delete-orphan", order_by="WorkPermit.valid_from")
     contracts = relationship("Contract", back_populates="employee", cascade="all, delete-orphan", order_by="Contract.start_date")
     travel_records = relationship("TravelRecord", back_populates="employee", cascade="all, delete-orphan", order_by="TravelRecord.entry_date")
+    visas = relationship("Visa", back_populates="employee", cascade="all, delete-orphan", order_by="Visa.expiry_date")
+    tam_trus = relationship("TamTru", back_populates="employee", cascade="all, delete-orphan", order_by="TamTru.expiry_date")
 
 
 class TravelRecord(Base):
@@ -113,8 +115,6 @@ class Stay(Base):
     travel_record = relationship("TravelRecord", back_populates="stays")
     room = relationship("Room", back_populates="stays")
     hotel = relationship("Hotel", back_populates="stays")
-    visas = relationship("Visa", back_populates="stay", cascade="all, delete-orphan")
-    tam_trus = relationship("TamTru", back_populates="stay", cascade="all, delete-orphan")
     meal_absences = relationship("MealAbsence", back_populates="stay", cascade="all, delete-orphan")
     meal_extras = relationship("MealExtra", back_populates="stay", cascade="all, delete-orphan")
 
@@ -123,25 +123,25 @@ class Visa(Base):
     __tablename__ = "visas"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
+    employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
     visa_type = Column(Unicode(100), nullable=True)  # DN1, LD2, DT1...
-    entry_date = Column(Date, nullable=True)
-    expiry_date = Column(Date, nullable=True)
+    issue_date = Column(Date, nullable=True)  # Ngày cấp
+    expiry_date = Column(Date, nullable=True)              # Ngày hết hạn
     notes = Column(UnicodeText, nullable=True)
 
-    stay = relationship("Stay", back_populates="visas")
+    employee = relationship("ForeignEmployee", back_populates="visas")
 
 
 class TamTru(Base):
     __tablename__ = "tam_trus"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    stay_id = Column(Integer, ForeignKey("stays.id"), nullable=False, index=True)
+    employee_id = Column(Integer, ForeignKey("foreign_employees.id"), nullable=False, index=True)
     registration_date = Column(Date, nullable=True)
     expiry_date = Column(Date, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
-    stay = relationship("Stay", back_populates="tam_trus")
+    employee = relationship("ForeignEmployee", back_populates="tam_trus")
 
 
 class MealAbsence(Base):

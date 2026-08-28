@@ -10,12 +10,6 @@ from features.hr_foreign.schemas import (
     StayCreate,
     StayRead,
     StayUpdate,
-    TamTruCreate,
-    TamTruRead,
-    TamTruUpdate,
-    VisaCreate,
-    VisaRead,
-    VisaUpdate,
 )
 
 router = APIRouter()
@@ -125,83 +119,3 @@ def delete_stay(stay_id: int, db: Session = Depends(get_db)) -> None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
     service.delete_stay(db, stay)
 
-
-
-# --- VISAS ENDPOINTS ---
-
-@router.get("/stays/{stay_id}/visas", response_model=list[VisaRead])
-def list_visas(stay_id: int, db: Session = Depends(get_db)) -> list[VisaRead]:
-    stay = service.get_stay_by_id(db, stay_id)
-    if not stay:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
-    return service.get_visas_by_stay(db, stay_id)
-
-
-@router.post(
-    "/stays/{stay_id}/visas", response_model=VisaRead, status_code=status.HTTP_201_CREATED
-)
-def create_visa(
-    stay_id: int, payload: VisaCreate, db: Session = Depends(get_db)
-) -> VisaRead:
-    stay = service.get_stay_by_id(db, stay_id)
-    if not stay:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
-    return service.create_visa(db, stay_id, payload)
-
-
-@router.delete("/visas/{visa_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_visa(visa_id: int, db: Session = Depends(get_db)) -> None:
-    visa = service.get_visa_by_id(db, visa_id)
-    if not visa:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visa not found")
-    service.delete_visa(db, visa)
-
-
-@router.put("/visas/{visa_id}", response_model=VisaRead)
-def update_visa(
-    visa_id: int, payload: VisaUpdate, db: Session = Depends(get_db)
-) -> VisaRead:
-    visa = service.get_visa_by_id(db, visa_id)
-    if not visa:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Visa not found")
-    return service.update_visa(db, visa, payload)
-
-
-# --- TAM TRU ENDPOINTS ---
-
-@router.get("/stays/{stay_id}/tam-trus", response_model=list[TamTruRead])
-def list_tam_trus(stay_id: int, db: Session = Depends(get_db)) -> list[TamTruRead]:
-    stay = service.get_stay_by_id(db, stay_id)
-    if not stay:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
-    return service.get_tam_trus_by_stay(db, stay_id)
-
-
-@router.post(
-    "/stays/{stay_id}/tam-trus", response_model=TamTruRead, status_code=status.HTTP_201_CREATED
-)
-def create_tam_tru(
-    stay_id: int, payload: TamTruCreate, db: Session = Depends(get_db)
-) -> TamTruRead:
-    stay = service.get_stay_by_id(db, stay_id)
-    if not stay:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stay not found")
-    return service.create_tam_tru(db, stay_id, payload)
-
-
-@router.delete("/tam-trus/{tam_tru_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_tam_tru(tam_tru_id: int, db: Session = Depends(get_db)) -> None:
-    tam_tru = service.get_tam_tru_by_id(db, tam_tru_id)
-    if not tam_tru:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
-    service.delete_tam_tru(db, tam_tru)
-
-
-@router.put("/tam-trus/{tam_tru_id}", response_model=TamTruRead)
-def update_tam_tru(
-    tam_tru_id: int, payload: TamTruUpdate, db: Session = Depends(get_db)
-) -> TamTruRead:
-    tam_tru = service.get_tam_tru_by_id(db, tam_tru_id)
-    if not tam_tru:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tam tru not found")
-    return service.update_tam_tru(db, tam_tru, payload)

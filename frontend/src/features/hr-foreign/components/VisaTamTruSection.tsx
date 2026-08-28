@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
-import type { Stay, TamTru, Visa } from "../types";
+import React, { useState } from "react";
+import type { TamTru, Visa } from "../types";
 import { VISA_TYPE_OPTIONS, getVisaLabel } from "../types";
 import {
   createVisa, deleteVisa, updateVisa,
   createTamTru, deleteTamTru, updateTamTru,
-  fetchVisas, fetchTamTrus,
 } from "../api";
 import { DocumentAttachmentSection } from "./DocumentAttachmentSection";
 
@@ -25,8 +24,8 @@ const ExpiryBadge: React.FC<{ dateStr?: string | null }> = ({ dateStr }) => {
 };
 
 // ---- VISA SECTION ----
-type VisaForm = { visa_type: string; entry_date: string; expiry_date: string; notes: string };
-const EMPTY_VISA: VisaForm = { visa_type: "DN1", entry_date: "", expiry_date: "", notes: "" };
+type VisaForm = { visa_type: string; issue_date: string; expiry_date: string; notes: string };
+const EMPTY_VISA: VisaForm = { visa_type: "DN1", issue_date: "", expiry_date: "", notes: "" };
 
 const VisaInlineForm: React.FC<{
   form: VisaForm; onChange: (f: VisaForm) => void;
@@ -47,8 +46,8 @@ const VisaInlineForm: React.FC<{
         </select>
       </div>
         <div>
-          <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày nhập cảnh</label>
-          <input type="date" value={form.entry_date} onChange={(e) => onChange({ ...form, entry_date: e.target.value })}
+          <label className="block text-[11px] text-slate-600 mb-0.5 font-medium">Ngày cấp</label>
+          <input type="date" value={form.issue_date} onChange={(e) => onChange({ ...form, issue_date: e.target.value })}
             className="w-full p-1.5 border border-slate-300 rounded bg-white" />
         </div>
         <div>
@@ -103,19 +102,15 @@ const TamTruInlineForm: React.FC<{
 
 // ---- MAIN COMPONENT ----
 interface VisaTamTruSectionProps {
-  stays: Stay[];
+  employeeId: number;
   visas: Visa[];
   tamTrus: TamTru[];
   onRefresh: () => void;
 }
 
 export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
-  stays, visas, tamTrus, onRefresh,
+  employeeId, visas, tamTrus, onRefresh,
 }) => {
-  // Pick the active (or latest) stay for creating new records
-  const today = new Date().toISOString().split("T")[0]!;
-  const activeStay = stays.find((s) => !s.end_date || s.end_date > today) ?? stays[0];
-
   // Visa state
   const [showAddVisa, setShowAddVisa] = useState(false);
   const [editingVisaId, setEditingVisaId] = useState<number | null>(null);
@@ -123,17 +118,16 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
   const [savingVisa, setSavingVisa] = useState(false);
 
   const openAddVisa = () => { setEditingVisaId(null); setVisaForm(EMPTY_VISA); setShowAddVisa(true); };
-  const openEditVisa = (v: Visa) => { setShowAddVisa(false); setEditingVisaId(v.id); setVisaForm({ visa_type: v.visa_type ?? "DN1", entry_date: v.entry_date ?? "", expiry_date: v.expiry_date ?? "", notes: v.notes ?? "" }); };
+  const openEditVisa = (v: Visa) => { setShowAddVisa(false); setEditingVisaId(v.id); setVisaForm({ visa_type: v.visa_type ?? "DN1", issue_date: v.issue_date ?? "", expiry_date: v.expiry_date ?? "", notes: v.notes ?? "" }); };
   const cancelVisa = () => { setShowAddVisa(false); setEditingVisaId(null); setVisaForm(EMPTY_VISA); };
 
   const submitVisa = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeStay) return alert("Chưa có đợt lưu trú.");
     setSavingVisa(true);
     try {
-      const p = { visa_type: visaForm.visa_type || null, entry_date: visaForm.entry_date || null, expiry_date: visaForm.expiry_date || null, notes: visaForm.notes || null };
+      const p = { visa_type: visaForm.visa_type || null, issue_date: visaForm.issue_date || null, expiry_date: visaForm.expiry_date || null, notes: visaForm.notes || null };
       if (editingVisaId) await updateVisa(editingVisaId, p);
-      else await createVisa(activeStay.id, p);
+      else await createVisa(employeeId, p);
       cancelVisa(); onRefresh();
     } catch { alert("Lỗi khi lưu Visa."); } finally { setSavingVisa(false); }
   };
@@ -155,12 +149,11 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
 
   const submitTT = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeStay) return alert("Chưa có đợt lưu trú.");
     setSavingTT(true);
     try {
       const p = { registration_date: ttForm.registration_date || null, expiry_date: ttForm.expiry_date || null, notes: ttForm.notes || null };
       if (editingTTId) await updateTamTru(editingTTId, p);
-      else await createTamTru(activeStay.id, p);
+      else await createTamTru(employeeId, p);
       cancelTT(); onRefresh();
     } catch { alert("Lỗi khi lưu Tạm trú."); } finally { setSavingTT(false); }
   };
@@ -215,10 +208,11 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
                             <ExpiryBadge dateStr={v.expiry_date} />
                           </div>
                           <div className="text-xs text-slate-500 font-mono">
-                            {formatDate(v.entry_date)} <span className="text-slate-300 mx-1">→</span> <span className="font-semibold text-slate-700">{formatDate(v.expiry_date)}</span>
+                            Cấp ngày: <span className="font-medium text-slate-700">{formatDate(v.issue_date)}</span>
+                            <span className="text-slate-300 mx-1">→</span>
+                            Hết hạn: <span className="font-semibold text-slate-700">{formatDate(v.expiry_date)}</span>
                           </div>
                           {v.notes && <div className="text-xs text-slate-600 font-medium italic bg-slate-50 border border-slate-100 px-2 py-0.5 rounded inline-block">Ghi chú: {v.notes}</div>}
-                          <div className="text-[10px] text-slate-300">Stay #{v.stay_id}</div>
                         </div>
                         <div className="flex gap-2 text-xs shrink-0">
                           <button onClick={() => isEditing ? cancelVisa() : openEditVisa(v)} className="text-blue-500 hover:text-blue-700 font-medium cursor-pointer">{isEditing ? "Đóng" : "Sửa"}</button>
@@ -310,49 +304,6 @@ export const VisaTamTruSection: React.FC<VisaTamTruSectionProps> = ({
         </div>
       </div>
     </div>
-  );
-};
-
-export interface StayVisaTamTruSectionProps {
-  stay: Stay;
-}
-
-export const StayVisaTamTruSection: React.FC<StayVisaTamTruSectionProps> = ({ stay }) => {
-  const [visas, setVisas] = useState<Visa[]>([]);
-  const [tamTrus, setTamTrus] = useState<TamTru[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const [vData, tData] = await Promise.all([
-        fetchVisas(stay.id),
-        fetchTamTrus(stay.id),
-      ]);
-      setVisas(vData);
-      setTamTrus(tData);
-    } catch (err) {
-      console.error("Failed to load visa/tamtru for stay:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [stay.id]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  if (loading) {
-    return <div className="text-xs text-slate-400 p-4">Đang tải thông tin Visa & Tạm trú...</div>;
-  }
-
-  return (
-    <VisaTamTruSection
-      stays={[stay]}
-      visas={visas}
-      tamTrus={tamTrus}
-      onRefresh={loadData}
-    />
   );
 };
 

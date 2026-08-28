@@ -97,16 +97,21 @@ def delete_work_permit(db: Session, permit: WorkPermit) -> None:
 
 # --- VISAS ---
 
-def get_visas_by_stay(db: Session, stay_id: int) -> list[Visa]:
-    return db.query(Visa).filter(Visa.stay_id == stay_id).all()
+def get_visas_by_employee(db: Session, employee_id: int) -> list[Visa]:
+    return (
+        db.query(Visa)
+        .filter(Visa.employee_id == employee_id)
+        .order_by(Visa.expiry_date.desc())
+        .all()
+    )
 
 
 def get_visa_by_id(db: Session, visa_id: int) -> Visa | None:
     return db.query(Visa).filter(Visa.id == visa_id).first()
 
 
-def create_visa(db: Session, stay_id: int, payload: VisaCreate) -> Visa:
-    visa = Visa(stay_id=stay_id, **payload.model_dump())
+def create_visa(db: Session, employee_id: int, payload: VisaCreate) -> Visa:
+    visa = Visa(employee_id=employee_id, **payload.model_dump())
     db.add(visa)
     db.flush()
     db.commit()
@@ -129,16 +134,21 @@ def update_visa(db: Session, visa: Visa, payload: VisaUpdate) -> Visa:
 
 # --- TAM TRU ---
 
-def get_tam_trus_by_stay(db: Session, stay_id: int) -> list[TamTru]:
-    return db.query(TamTru).filter(TamTru.stay_id == stay_id).all()
+def get_tam_trus_by_employee(db: Session, employee_id: int) -> list[TamTru]:
+    return (
+        db.query(TamTru)
+        .filter(TamTru.employee_id == employee_id)
+        .order_by(TamTru.expiry_date.desc())
+        .all()
+    )
 
 
 def get_tam_tru_by_id(db: Session, tam_tru_id: int) -> TamTru | None:
     return db.query(TamTru).filter(TamTru.id == tam_tru_id).first()
 
 
-def create_tam_tru(db: Session, stay_id: int, payload: TamTruCreate) -> TamTru:
-    tam_tru = TamTru(stay_id=stay_id, **payload.model_dump())
+def create_tam_tru(db: Session, employee_id: int, payload: TamTruCreate) -> TamTru:
+    tam_tru = TamTru(employee_id=employee_id, **payload.model_dump())
     db.add(tam_tru)
     db.flush()
     db.commit()

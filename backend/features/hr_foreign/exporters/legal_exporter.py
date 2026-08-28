@@ -161,12 +161,13 @@ def generate_legal_profile_excel(db: Session, today: datetime.date | None = None
             passport_atts = attachment_map.get(("PASSPORT", emp_obj.id))
             _set_hyperlink_with_atts(ws1.cell(row=curr_row, column=11), emp_eval.employee_code, emp_eval.name_latin, passport_atts)
 
-        if emp_obj and emp_obj.stays:
-            visa_ids = [v.id for s in emp_obj.stays for v in s.visas]
+        if emp_obj and emp_obj.visas:
+            visa_ids = [v.id for v in emp_obj.visas]
             visa_atts = _get_atts_for_ids("VISA", visa_ids)
             _set_hyperlink_with_atts(ws1.cell(row=curr_row, column=21), emp_eval.employee_code, emp_eval.name_latin, visa_atts)
 
-            tt_ids = [tt.id for s in emp_obj.stays for tt in s.tam_trus]
+        if emp_obj and emp_obj.tam_trus:
+            tt_ids = [tt.id for tt in emp_obj.tam_trus]
             tt_atts = _get_atts_for_ids("TAM_TRU", tt_ids)
             _set_hyperlink_with_atts(ws1.cell(row=curr_row, column=24), emp_eval.employee_code, emp_eval.name_latin, tt_atts)
 
@@ -205,26 +206,25 @@ def generate_legal_profile_excel(db: Session, today: datetime.date | None = None
 
     s2_idx = 1
     for emp in employees_db:
-        for stay in emp.stays:
-            for v in stay.visas:
-                s2_row = s2_idx + 1
-                ws2.append([
-                    s2_idx, emp.employee_code or "", emp.name_latin, "VISA",
-                    v.visa_type or "", v.entry_date.strftime("%d/%m/%Y") if v.entry_date else "",
-                    v.expiry_date.strftime("%d/%m/%Y") if v.expiry_date else "", v.notes or ""
-                ])
-                _set_hyperlink_if_exists(ws2.cell(row=s2_row, column=5), emp.employee_code, emp.name_latin, "VISA", v.id)
-                s2_idx += 1
+        for v in emp.visas:
+            s2_row = s2_idx + 1
+            ws2.append([
+                s2_idx, emp.employee_code or "", emp.name_latin, "VISA",
+                v.visa_type or "", v.issue_date.strftime("%d/%m/%Y") if v.issue_date else "",
+                v.expiry_date.strftime("%d/%m/%Y") if v.expiry_date else "", v.notes or ""
+            ])
+            _set_hyperlink_if_exists(ws2.cell(row=s2_row, column=5), emp.employee_code, emp.name_latin, "VISA", v.id)
+            s2_idx += 1
 
-            for tt in stay.tam_trus:
-                s2_row = s2_idx + 1
-                ws2.append([
-                    s2_idx, emp.employee_code or "", emp.name_latin, "TAM_TRU",
-                    "Đăng ký Tạm trú", tt.registration_date.strftime("%d/%m/%Y") if tt.registration_date else "",
-                    tt.expiry_date.strftime("%d/%m/%Y") if tt.expiry_date else "", tt.notes or ""
-                ])
-                _set_hyperlink_if_exists(ws2.cell(row=s2_row, column=5), emp.employee_code, emp.name_latin, "TAM_TRU", tt.id)
-                s2_idx += 1
+        for tt in emp.tam_trus:
+            s2_row = s2_idx + 1
+            ws2.append([
+                s2_idx, emp.employee_code or "", emp.name_latin, "TAM_TRU",
+                "Đăng ký Tạm trú", tt.registration_date.strftime("%d/%m/%Y") if tt.registration_date else "",
+                tt.expiry_date.strftime("%d/%m/%Y") if tt.expiry_date else "", tt.notes or ""
+            ])
+            _set_hyperlink_if_exists(ws2.cell(row=s2_row, column=5), emp.employee_code, emp.name_latin, "TAM_TRU", tt.id)
+            s2_idx += 1
 
         for wp in emp.work_permits:
             s2_row = s2_idx + 1
