@@ -63,9 +63,13 @@ def create_app() -> FastAPI:
         if not os.path.exists(static_dir):
             static_dir = os.path.join(exe_dir, "static")
     else:
-        static_dir = os.path.join(base_dir, "..", "static")
-        if not os.path.exists(static_dir):
-            static_dir = os.path.join(base_dir, "..", "frontend", "dist")
+        frontend_dist_dir = os.path.join(base_dir, "..", "frontend", "dist")
+        legacy_static_dir = os.path.join(base_dir, "..", "static")
+        static_dir = (
+            frontend_dist_dir
+            if os.path.exists(frontend_dist_dir)
+            else legacy_static_dir
+        )
 
     if os.path.exists(static_dir):
         assets_dir = os.path.join(static_dir, "assets")
