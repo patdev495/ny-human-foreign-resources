@@ -1,0 +1,2760 @@
+{
+  "version": "2.17",
+  "children": [
+    {
+      "type": "frame",
+      "id": "YKsGt",
+      "x": 0,
+      "y": 0,
+      "name": "NY HR Executive Dashboard",
+      "clip": true,
+      "width": 1440,
+      "height": 960,
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "1d2b7",
+          "name": "Sidebar",
+          "x": 0,
+          "y": 0,
+          "width": 260,
+          "height": 960,
+          "clip": true,
+          "fill": "#0F172A",
+          "children": [
+            {
+              "type": "frame",
+              "id": "b3689",
+              "name": "LogoBox",
+              "x": 20,
+              "y": 24,
+              "width": 40,
+              "height": 40,
+              "clip": true,
+              "fill": "#4F46E5",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "6a0f4",
+                  "x": 10,
+                  "y": 8,
+                  "name": "NY",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "auto",
+                  "width": 24,
+                  "height": 24,
+                  "content": "NY",
+                  "lineHeight": 1.4,
+                  "textAlign": "center",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 15,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 10
+            },
+            {
+              "type": "text",
+              "id": "449b8",
+              "x": 72,
+              "y": 24,
+              "name": "NY WORKSPACE",
+              "fill": "#F8FAFC",
+              "textGrowth": "auto",
+              "width": 160,
+              "height": 20,
+              "content": "NY WORKSPACE",
+              "lineHeight": 1.4,
+              "textAlign": "left",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 13,
+              "fontWeight": "800",
+              "letterSpacing": 0
+            },
+            {
+              "type": "text",
+              "id": "1f64f",
+              "x": 72,
+              "y": 44,
+              "name": "Executive HR Suite",
+              "fill": "#94A3B8",
+              "textGrowth": "auto",
+              "width": 160,
+              "height": 16,
+              "content": "Executive HR Suite",
+              "lineHeight": 1.4,
+              "textAlign": "left",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 10,
+              "fontWeight": "500",
+              "letterSpacing": 0
+            },
+            {
+              "type": "text",
+              "id": "db712",
+              "x": 20,
+              "y": 90,
+              "name": "PHÂN HỆ VẬN HÀNH",
+              "fill": "#475569",
+              "textGrowth": "auto",
+              "width": 220,
+              "height": 16,
+              "content": "PHÂN HỆ VẬN HÀNH",
+              "lineHeight": 1.4,
+              "textAlign": "left",
+              "fontFamily": "Plus Jakarta Sans",
+              "fontSize": 10,
+              "fontWeight": "700",
+              "letterSpacing": 0
+            },
+            {
+              "type": "frame",
+              "id": "4f30a",
+              "name": "Hồ sơ Nhân sự Nước ngoài",
+              "x": 16,
+              "y": 116,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#4F46E5",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "5db45",
+                  "x": 12,
+                  "y": 10,
+                  "name": "▶ ",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "▶ ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "12aa9",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Hồ sơ Nhân sự Nước ngoài",
+                  "fill": "#FFFFFF",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Hồ sơ Nhân sự Nước ngoài",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "5ccf8",
+              "name": "Chỗ ở & Lưu trú KTX",
+              "x": 16,
+              "y": 160,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ca78d",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "3b514",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Chỗ ở & Lưu trú KTX",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Chỗ ở & Lưu trú KTX",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "51c3b",
+              "name": "Thống kê Hiện diện Ngày",
+              "x": 16,
+              "y": 204,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "af01e",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "661b6",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Thống kê Hiện diện Ngày",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Thống kê Hiện diện Ngày",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "9b0cf",
+              "name": "Cảnh báo Hạn Giấy tờ",
+              "x": 16,
+              "y": 248,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "9b877",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "2c09e",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Cảnh báo Hạn Giấy tờ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Cảnh báo Hạn Giấy tờ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "860d1",
+              "name": "Điều hành & Đội xe Doanh nghiệp",
+              "x": 16,
+              "y": 292,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c549e",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "93e4d",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Điều hành & Đội xe Doanh ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Điều hành & Đội xe Doanh nghiệp",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "beb95",
+              "name": "Quản lý Hợp đồng Thuê xe",
+              "x": 16,
+              "y": 336,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "958e6",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "b618f",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Quản lý Hợp đồng Thuê xe",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Quản lý Hợp đồng Thuê xe",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "96a7b",
+              "name": "Chi phí Suất ăn & Bữa ăn",
+              "x": 16,
+              "y": 380,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "372d2",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "3f55a",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Chi phí Suất ăn & Bữa ăn",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Chi phí Suất ăn & Bữa ăn",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "c4599",
+              "name": "Chấm công Nhân sự Tạp vụ",
+              "x": 16,
+              "y": 424,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "21117",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "cf8e8",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Chấm công Nhân sự Tạp vụ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Chấm công Nhân sự Tạp vụ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "b39b5",
+              "name": "Trung tâm Báo cáo & Quyết toán",
+              "x": 16,
+              "y": 468,
+              "width": 228,
+              "height": 38,
+              "clip": true,
+              "fill": "#0F172A",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "55c5a",
+                  "x": 12,
+                  "y": 10,
+                  "name": "• ",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 16,
+                  "height": 18,
+                  "content": "• ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "0ec51",
+                  "x": 30,
+                  "y": 10,
+                  "name": "Trung tâm Báo cáo & Quyết",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 185,
+                  "height": 18,
+                  "content": "Trung tâm Báo cáo & Quyết toán",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 8
+            },
+            {
+              "type": "frame",
+              "id": "4a756",
+              "name": "UserCard",
+              "x": 16,
+              "y": 880,
+              "width": 228,
+              "height": 56,
+              "clip": true,
+              "fill": "#1E293B",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "19590",
+                  "name": "Avatar",
+                  "x": 12,
+                  "y": 10,
+                  "width": 36,
+                  "height": 36,
+                  "clip": true,
+                  "fill": "#38BDF8",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "81944",
+                      "x": 8,
+                      "y": 8,
+                      "name": "AD",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 20,
+                      "height": 20,
+                      "content": "AD",
+                      "lineHeight": 1.4,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "800",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 18
+                },
+                {
+                  "type": "text",
+                  "id": "8a475",
+                  "x": 56,
+                  "y": 10,
+                  "name": "Admin Quản Trị",
+                  "fill": "#F8FAFC",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 18,
+                  "content": "Admin Quản Trị",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "521f5",
+                  "x": 56,
+                  "y": 28,
+                  "name": "Ban Nhân Sự & Hành Chính",
+                  "fill": "#94A3B8",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 16,
+                  "content": "Ban Nhân Sự & Hành Chính",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 9,
+                  "fontWeight": "400",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 10
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "1f84a",
+          "name": "MainArea",
+          "x": 260,
+          "y": 0,
+          "width": 1180,
+          "height": 960,
+          "clip": true,
+          "fill": "#F8FAFC",
+          "children": [
+            {
+              "type": "frame",
+              "id": "8233e",
+              "name": "TopBar",
+              "x": 32,
+              "y": 24,
+              "width": 1116,
+              "height": 56,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "a278e",
+                  "x": 20,
+                  "y": 10,
+                  "name": "Tổng Quan Điều Hành Nhân ",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 500,
+                  "height": 20,
+                  "content": "Tổng Quan Điều Hành Nhân Sự & Đội Xe NY",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 15,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "57f2e",
+                  "x": 20,
+                  "y": 30,
+                  "name": "Trực quan hóa hồ sơ chuyê",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 500,
+                  "height": 16,
+                  "content": "Trực quan hóa hồ sơ chuyên gia nước ngoài, hợp đồng xe và lịch trình điều phối",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "0e2ec",
+                  "name": "StatusPill",
+                  "x": 930,
+                  "y": 12,
+                  "width": 166,
+                  "height": 32,
+                  "clip": true,
+                  "fill": "#ECFDF5",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "5396f",
+                      "x": 16,
+                      "y": 7,
+                      "name": "🟢 Hệ thống: Sẵn sàng",
+                      "fill": "#065F46",
+                      "textGrowth": "auto",
+                      "width": 134,
+                      "height": 18,
+                      "content": "🟢 Hệ thống: Sẵn sàng",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 8,
+                  "stroke": "#A7F3D0",
+                  "strokeWidth": 1
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "8d675",
+              "name": "Chuyên gia Nước ngoài",
+              "x": 32,
+              "y": 100,
+              "width": 264,
+              "height": 120,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "65ff9",
+                  "x": 16,
+                  "y": 14,
+                  "name": "Chuyên gia Nước ngoài",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 16,
+                  "content": "Chuyên gia Nước ngoài",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "df18d",
+                  "name": "Tag",
+                  "x": 174,
+                  "y": 12,
+                  "width": 74,
+                  "height": 20,
+                  "clip": true,
+                  "fill": "#EEF2FF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "5b57d",
+                      "x": 6,
+                      "y": 2,
+                      "name": "+2 mới",
+                      "fill": "#4F46E5",
+                      "textGrowth": "auto",
+                      "width": 62,
+                      "height": 14,
+                      "content": "+2 mới",
+                      "lineHeight": 1.4,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 9,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 6
+                },
+                {
+                  "type": "text",
+                  "id": "7bb8d",
+                  "x": 16,
+                  "y": 42,
+                  "name": "48 Nhân sự",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 32,
+                  "content": "48 Nhân sự",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "4b222",
+                  "x": 16,
+                  "y": 80,
+                  "name": "98% Đầy đủ hồ sơ pháp lý",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 20,
+                  "content": "98% Đầy đủ hồ sơ pháp lý",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 10,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "c0631",
+              "name": "Hiện diện Lưu trú",
+              "x": 316,
+              "y": 100,
+              "width": 264,
+              "height": 120,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "9517e",
+                  "x": 16,
+                  "y": 14,
+                  "name": "Hiện diện Lưu trú",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 16,
+                  "content": "Hiện diện Lưu trú",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "2686e",
+                  "name": "Tag",
+                  "x": 174,
+                  "y": 12,
+                  "width": 74,
+                  "height": 20,
+                  "clip": true,
+                  "fill": "#ECFDF5",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "20889",
+                      "x": 6,
+                      "y": 2,
+                      "name": "87.5% công suất",
+                      "fill": "#059669",
+                      "textGrowth": "auto",
+                      "width": 62,
+                      "height": 14,
+                      "content": "87.5% công suất",
+                      "lineHeight": 1.4,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 9,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 6
+                },
+                {
+                  "type": "text",
+                  "id": "19da9",
+                  "x": 16,
+                  "y": 42,
+                  "name": "42 Đang có mặt",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 32,
+                  "content": "42 Đang có mặt",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "9450a",
+                  "x": 16,
+                  "y": 80,
+                  "name": "28 KTX Công ty • 14 Khách",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 20,
+                  "content": "28 KTX Công ty • 14 Khách sạn",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 10,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "97a59",
+              "name": "Nhật ký Điều xe hôm nay",
+              "x": 600,
+              "y": 100,
+              "width": 264,
+              "height": 120,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "29dba",
+                  "x": 16,
+                  "y": 14,
+                  "name": "Nhật ký Điều xe hôm nay",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 16,
+                  "content": "Nhật ký Điều xe hôm nay",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "2ca4a",
+                  "name": "Tag",
+                  "x": 174,
+                  "y": 12,
+                  "width": 74,
+                  "height": 20,
+                  "clip": true,
+                  "fill": "#F0F9FF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "8b33d",
+                      "x": 6,
+                      "y": 2,
+                      "name": "Đúng lộ trình",
+                      "fill": "#0284C7",
+                      "textGrowth": "auto",
+                      "width": 62,
+                      "height": 14,
+                      "content": "Đúng lộ trình",
+                      "lineHeight": 1.4,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 9,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 6
+                },
+                {
+                  "type": "text",
+                  "id": "6fe93",
+                  "x": 16,
+                  "y": 42,
+                  "name": "16 Chuyến điều",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 32,
+                  "content": "16 Chuyến điều",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "55576",
+                  "x": 16,
+                  "y": 80,
+                  "name": "2 Innova khoán • 1 Xe tải",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 20,
+                  "content": "2 Innova khoán • 1 Xe tải 8T",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 10,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "50ad3",
+              "name": "Cảnh báo Hạn Giấy tờ",
+              "x": 884,
+              "y": 100,
+              "width": 264,
+              "height": 120,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "b9fd5",
+                  "x": 16,
+                  "y": 14,
+                  "name": "Cảnh báo Hạn Giấy tờ",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 150,
+                  "height": 16,
+                  "content": "Cảnh báo Hạn Giấy tờ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "ca32f",
+                  "name": "Tag",
+                  "x": 174,
+                  "y": 12,
+                  "width": 74,
+                  "height": 20,
+                  "clip": true,
+                  "fill": "#FFFBEB",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9c7a4",
+                      "x": 6,
+                      "y": 2,
+                      "name": "Khẩn cấp",
+                      "fill": "#D97706",
+                      "textGrowth": "auto",
+                      "width": 62,
+                      "height": 14,
+                      "content": "Khẩn cấp",
+                      "lineHeight": 1.4,
+                      "textAlign": "center",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 9,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 6
+                },
+                {
+                  "type": "text",
+                  "id": "2ceab",
+                  "x": 16,
+                  "y": 42,
+                  "name": "03 Cần xử lý",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 32,
+                  "content": "03 Cần xử lý",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 22,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "3600d",
+                  "x": 16,
+                  "y": 80,
+                  "name": "02 Visa • 01 Giấy phép LĐ",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 230,
+                  "height": 20,
+                  "content": "02 Visa • 01 Giấy phép LĐ",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 10,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "d1ddf",
+              "name": "TableCard",
+              "x": 32,
+              "y": 240,
+              "width": 1116,
+              "height": 480,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ebdf1",
+                  "x": 20,
+                  "y": 16,
+                  "name": "Nhật Ký Điều Phối Xe & Lị",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 500,
+                  "height": 22,
+                  "content": "Nhật Ký Điều Phối Xe & Lịch Trình Chuyên Gia Hôm Nay",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 14,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "3e1e4",
+                  "x": 20,
+                  "y": 38,
+                  "name": "Đồng bộ thời gian thực th",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 500,
+                  "height": 18,
+                  "content": "Đồng bộ thời gian thực theo GPS & Odometer xe khoán Đức Anh & xe đối tác Bình An",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "8477f",
+                  "name": "TH",
+                  "x": 20,
+                  "y": 68,
+                  "width": 1076,
+                  "height": 36,
+                  "clip": true,
+                  "fill": "#F1F5F9",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "aa3da",
+                      "x": 14,
+                      "y": 9,
+                      "name": "STT",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 18,
+                      "content": "STT",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "3ed81",
+                      "x": 60,
+                      "y": 9,
+                      "name": "NHÂN SỰ / CHUYÊN GIA",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 18,
+                      "content": "NHÂN SỰ / CHUYÊN GIA",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "86501",
+                      "x": 330,
+                      "y": 9,
+                      "name": "PHƯƠNG TIỆN & TÀI XẾ",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 18,
+                      "content": "PHƯƠNG TIỆN & TÀI XẾ",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "e68d8",
+                      "x": 570,
+                      "y": 9,
+                      "name": "LỘ TRÌNH DI CHUYỂN",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 18,
+                      "content": "LỘ TRÌNH DI CHUYỂN",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "694cc",
+                      "x": 860,
+                      "y": 9,
+                      "name": "KHUNG GIỜ",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 18,
+                      "content": "KHUNG GIỜ",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "4d218",
+                      "x": 970,
+                      "y": 9,
+                      "name": "TRẠNG THÁI",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 90,
+                      "height": 18,
+                      "content": "TRẠNG THÁI",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 6
+                },
+                {
+                  "type": "frame",
+                  "id": "69dc0",
+                  "name": "Row_01",
+                  "x": 20,
+                  "y": 112,
+                  "width": 1076,
+                  "height": 44,
+                  "clip": true,
+                  "fill": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7f3d9",
+                      "x": 14,
+                      "y": 12,
+                      "name": "01",
+                      "fill": "#94A3B8",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 20,
+                      "content": "01",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "8f783",
+                      "x": 60,
+                      "y": 12,
+                      "name": "Kim Min-jun (Giám đốc Kỹ ",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 20,
+                      "content": "Kim Min-jun (Giám đốc Kỹ thuật)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "d3288",
+                      "x": 330,
+                      "y": 12,
+                      "name": "29A-888.99 (Innova 7C)",
+                      "fill": "#334155",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 20,
+                      "content": "29A-888.99 (Innova 7C)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "76bf3",
+                      "x": 570,
+                      "y": 12,
+                      "name": "KTX Nhà máy ➔ Sân bay Nội",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 20,
+                      "content": "KTX Nhà máy ➔ Sân bay Nội Bài",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "54819",
+                      "x": 860,
+                      "y": 12,
+                      "name": "08:00 - 10:30",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 20,
+                      "content": "08:00 - 10:30",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e27cc",
+                      "name": "Badge",
+                      "x": 970,
+                      "y": 8,
+                      "width": 92,
+                      "height": 26,
+                      "clip": true,
+                      "fill": "#F0F9FF",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "57f38",
+                          "x": 6,
+                          "y": 4,
+                          "name": "Đang di chuyển",
+                          "fill": "#0284C7",
+                          "textGrowth": "auto",
+                          "width": 80,
+                          "height": 16,
+                          "content": "Đang di chuyển",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 0
+                        }
+                      ],
+                      "cornerRadius": 6
+                    }
+                  ],
+                  "cornerRadius": 6,
+                  "stroke": "#F1F5F9",
+                  "strokeWidth": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "a142c",
+                  "name": "Row_02",
+                  "x": 20,
+                  "y": 162,
+                  "width": 1076,
+                  "height": 44,
+                  "clip": true,
+                  "fill": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9fb25",
+                      "x": 14,
+                      "y": 12,
+                      "name": "02",
+                      "fill": "#94A3B8",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 20,
+                      "content": "02",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "2fed1",
+                      "x": 60,
+                      "y": 12,
+                      "name": "Park Sung-hoon (Chuyên gi",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 20,
+                      "content": "Park Sung-hoon (Chuyên gia Đúc)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "ada65",
+                      "x": 330,
+                      "y": 12,
+                      "name": "29B-123.45 (Innova 7C)",
+                      "fill": "#334155",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 20,
+                      "content": "29B-123.45 (Innova 7C)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "958be",
+                      "x": 570,
+                      "y": 12,
+                      "name": "KS Mường Thanh ➔ Nhà máy ",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 20,
+                      "content": "KS Mường Thanh ➔ Nhà máy NY",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "47b8d",
+                      "x": 860,
+                      "y": 12,
+                      "name": "07:30 - 08:15",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 20,
+                      "content": "07:30 - 08:15",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "decb2",
+                      "name": "Badge",
+                      "x": 970,
+                      "y": 8,
+                      "width": 92,
+                      "height": 26,
+                      "clip": true,
+                      "fill": "#ECFDF5",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "27de8",
+                          "x": 6,
+                          "y": 4,
+                          "name": "Hoàn thành",
+                          "fill": "#059669",
+                          "textGrowth": "auto",
+                          "width": 80,
+                          "height": 16,
+                          "content": "Hoàn thành",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 0
+                        }
+                      ],
+                      "cornerRadius": 6
+                    }
+                  ],
+                  "cornerRadius": 6,
+                  "stroke": "#F1F5F9",
+                  "strokeWidth": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "f800d",
+                  "name": "Row_03",
+                  "x": 20,
+                  "y": 212,
+                  "width": 1076,
+                  "height": 44,
+                  "clip": true,
+                  "fill": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "74bb5",
+                      "x": 14,
+                      "y": 12,
+                      "name": "03",
+                      "fill": "#94A3B8",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 20,
+                      "content": "03",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "8b3d5",
+                      "x": 60,
+                      "y": 12,
+                      "name": "Lee Dong-wook (Quản lý QA",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 20,
+                      "content": "Lee Dong-wook (Quản lý QA/QC)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "882df",
+                      "x": 330,
+                      "y": 12,
+                      "name": "29C-567.89 (Xe Tải 8T)",
+                      "fill": "#334155",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 20,
+                      "content": "29C-567.89 (Xe Tải 8T)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "3294c",
+                      "x": 570,
+                      "y": 12,
+                      "name": "Kho Vật tư ➔ Cảng Hải Phò",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 20,
+                      "content": "Kho Vật tư ➔ Cảng Hải Phòng",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "cebbd",
+                      "x": 860,
+                      "y": 12,
+                      "name": "09:00 - 14:00",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 20,
+                      "content": "09:00 - 14:00",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "3b3e2",
+                      "name": "Badge",
+                      "x": 970,
+                      "y": 8,
+                      "width": 92,
+                      "height": 26,
+                      "clip": true,
+                      "fill": "#FFFBEB",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "0f926",
+                          "x": 6,
+                          "y": 4,
+                          "name": "Chờ xuất bến",
+                          "fill": "#D97706",
+                          "textGrowth": "auto",
+                          "width": 80,
+                          "height": 16,
+                          "content": "Chờ xuất bến",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 0
+                        }
+                      ],
+                      "cornerRadius": 6
+                    }
+                  ],
+                  "cornerRadius": 6,
+                  "stroke": "#F1F5F9",
+                  "strokeWidth": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "c82aa",
+                  "name": "Row_04",
+                  "x": 20,
+                  "y": 262,
+                  "width": 1076,
+                  "height": 44,
+                  "clip": true,
+                  "fill": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "9f180",
+                      "x": 14,
+                      "y": 12,
+                      "name": "04",
+                      "fill": "#94A3B8",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 20,
+                      "content": "04",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "f6f68",
+                      "x": 60,
+                      "y": 12,
+                      "name": "Choi Jin-woo (Kỹ sư Bảo t",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 20,
+                      "content": "Choi Jin-woo (Kỹ sư Bảo trì)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "953fe",
+                      "x": 330,
+                      "y": 12,
+                      "name": "Nhà xe Bình An (16C)",
+                      "fill": "#334155",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 20,
+                      "content": "Nhà xe Bình An (16C)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "12f7c",
+                      "x": 570,
+                      "y": 12,
+                      "name": "Hà Nội ➔ Nhà máy NY",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 20,
+                      "content": "Hà Nội ➔ Nhà máy NY",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "6b709",
+                      "x": 860,
+                      "y": 12,
+                      "name": "06:45 - 07:45",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 20,
+                      "content": "06:45 - 07:45",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ecc35",
+                      "name": "Badge",
+                      "x": 970,
+                      "y": 8,
+                      "width": 92,
+                      "height": 26,
+                      "clip": true,
+                      "fill": "#ECFDF5",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "f19c7",
+                          "x": 6,
+                          "y": 4,
+                          "name": "Hoàn thành",
+                          "fill": "#059669",
+                          "textGrowth": "auto",
+                          "width": 80,
+                          "height": 16,
+                          "content": "Hoàn thành",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 0
+                        }
+                      ],
+                      "cornerRadius": 6
+                    }
+                  ],
+                  "cornerRadius": 6,
+                  "stroke": "#F1F5F9",
+                  "strokeWidth": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "b296d",
+                  "name": "Row_05",
+                  "x": 20,
+                  "y": 312,
+                  "width": 1076,
+                  "height": 44,
+                  "clip": true,
+                  "fill": "#FFFFFF",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "69fa0",
+                      "x": 14,
+                      "y": 12,
+                      "name": "05",
+                      "fill": "#94A3B8",
+                      "textGrowth": "auto",
+                      "width": 36,
+                      "height": 20,
+                      "content": "05",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "89078",
+                      "x": 60,
+                      "y": 12,
+                      "name": "Kang Tae-oh (Chuyên gia T",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 250,
+                      "height": 20,
+                      "content": "Kang Tae-oh (Chuyên gia Tự động)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "e46c1",
+                      "x": 330,
+                      "y": 12,
+                      "name": "29A-888.99 (Innova 7C)",
+                      "fill": "#334155",
+                      "textGrowth": "auto",
+                      "width": 220,
+                      "height": 20,
+                      "content": "29A-888.99 (Innova 7C)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "71146",
+                      "x": 570,
+                      "y": 12,
+                      "name": "Nhà máy NY ➔ Đối tác Sami",
+                      "fill": "#475569",
+                      "textGrowth": "auto",
+                      "width": 270,
+                      "height": 20,
+                      "content": "Nhà máy NY ➔ Đối tác Samil",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "96faa",
+                      "x": 860,
+                      "y": 12,
+                      "name": "13:30 - 16:00",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 100,
+                      "height": 20,
+                      "content": "13:30 - 16:00",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "frame",
+                      "id": "e5cfb",
+                      "name": "Badge",
+                      "x": 970,
+                      "y": 8,
+                      "width": 92,
+                      "height": 26,
+                      "clip": true,
+                      "fill": "#EEF2FF",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "1b5f5",
+                          "x": 6,
+                          "y": 4,
+                          "name": "Lên lịch chiều",
+                          "fill": "#4F46E5",
+                          "textGrowth": "auto",
+                          "width": 80,
+                          "height": 16,
+                          "content": "Lên lịch chiều",
+                          "lineHeight": 1.4,
+                          "textAlign": "center",
+                          "fontFamily": "Plus Jakarta Sans",
+                          "fontSize": 10,
+                          "fontWeight": "700",
+                          "letterSpacing": 0
+                        }
+                      ],
+                      "cornerRadius": 6
+                    }
+                  ],
+                  "cornerRadius": 6,
+                  "stroke": "#F1F5F9",
+                  "strokeWidth": 1
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            },
+            {
+              "type": "frame",
+              "id": "3a29b",
+              "name": "ContractSummary",
+              "x": 32,
+              "y": 736,
+              "width": 1116,
+              "height": 200,
+              "clip": true,
+              "fill": "#FFFFFF",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "28fa9",
+                  "x": 20,
+                  "y": 16,
+                  "name": "Gói Hợp Đồng Xe Khoán Thá",
+                  "fill": "#0F172A",
+                  "textGrowth": "auto",
+                  "width": 600,
+                  "height": 22,
+                  "content": "Gói Hợp Đồng Xe Khoán Tháng & Bảng Giá Tuyến Đường Đang Hiệu Lực",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 14,
+                  "fontWeight": "800",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "text",
+                  "id": "a5a90",
+                  "x": 20,
+                  "y": 38,
+                  "name": "Đơn vị Đức Anh (Khoán thá",
+                  "fill": "#64748B",
+                  "textGrowth": "auto",
+                  "width": 600,
+                  "height": 18,
+                  "content": "Đơn vị Đức Anh (Khoán tháng 7 chỗ & xe tải) • Đối tác Bình An (Cước theo tuyến)",
+                  "lineHeight": 1.4,
+                  "textAlign": "left",
+                  "fontFamily": "Plus Jakarta Sans",
+                  "fontSize": 11,
+                  "fontWeight": "500",
+                  "letterSpacing": 0
+                },
+                {
+                  "type": "frame",
+                  "id": "4d2df",
+                  "name": "MiniInnova",
+                  "x": 20,
+                  "y": 68,
+                  "width": 524,
+                  "height": 114,
+                  "clip": true,
+                  "fill": "#F8FAFC",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "26b2d",
+                      "x": 14,
+                      "y": 12,
+                      "name": "🚗 Gói 2 Xe 7 Chỗ (Toyota ",
+                      "fill": "#1E293B",
+                      "textGrowth": "auto",
+                      "width": 400,
+                      "height": 20,
+                      "content": "🚗 Gói 2 Xe 7 Chỗ (Toyota Innova) - Đức Anh",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "3f6b9",
+                      "x": 14,
+                      "y": 38,
+                      "name": "Giá trọn gói: 28.000.000 ",
+                      "fill": "#4F46E5",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Giá trọn gói: 28.000.000 đ/xe/tháng • Hạn mức: 2.600 km/tháng",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "bd5f1",
+                      "x": 14,
+                      "y": 58,
+                      "name": "Vượt km: 7.000 đ/km • Phụ",
+                      "fill": "#64748B",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Vượt km: 7.000 đ/km • Phụ cấp ca đêm (18h-22h): 100.000 đ/ca",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "fb091",
+                      "x": 14,
+                      "y": 80,
+                      "name": "Biển số: 29A-888.99 (TX. ",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Biển số: 29A-888.99 (TX. Nguyễn Văn A) • 29B-123.45 (TX. Trần Văn B)",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 10,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "b0dec",
+                  "name": "MiniTruck",
+                  "x": 564,
+                  "y": 68,
+                  "width": 524,
+                  "height": 114,
+                  "clip": true,
+                  "fill": "#F8FAFC",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "7a8c0",
+                      "x": 14,
+                      "y": 12,
+                      "name": "🚚 Gói Xe Tải 8 Tấn (CNHTC",
+                      "fill": "#1E293B",
+                      "textGrowth": "auto",
+                      "width": 400,
+                      "height": 20,
+                      "content": "🚚 Gói Xe Tải 8 Tấn (CNHTC 7.4 Tấn) - Đức Anh",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 12,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "c9d66",
+                      "x": 14,
+                      "y": 38,
+                      "name": "Giá trọn gói: 35.000.000 ",
+                      "fill": "#059669",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Giá trọn gói: 35.000.000 đ/tháng • Hạn mức: 3.000 km/tháng",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 11,
+                      "fontWeight": "600",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "df29c",
+                      "x": 14,
+                      "y": 58,
+                      "name": "Vượt km: 12.000 đ/km • Ng",
+                      "fill": "#64748B",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Vượt km: 12.000 đ/km • Ngoài giờ: 60.000 đ/h • Ăn ngoài: 50.000 đ/bữa",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "500",
+                      "letterSpacing": 0
+                    },
+                    {
+                      "type": "text",
+                      "id": "4ecaa",
+                      "x": 14,
+                      "y": 80,
+                      "name": "Biển số: 29C-567.89 (TX. ",
+                      "fill": "#0F172A",
+                      "textGrowth": "auto",
+                      "width": 480,
+                      "height": 18,
+                      "content": "Biển số: 29C-567.89 (TX. Lê Văn C) • Phục vụ Logistics & Vật tư Nhà máy",
+                      "lineHeight": 1.4,
+                      "textAlign": "left",
+                      "fontFamily": "Plus Jakarta Sans",
+                      "fontSize": 10,
+                      "fontWeight": "700",
+                      "letterSpacing": 0
+                    }
+                  ],
+                  "cornerRadius": 10,
+                  "stroke": "#E2E8F0",
+                  "strokeWidth": 1
+                }
+              ],
+              "cornerRadius": 12,
+              "stroke": "#E2E8F0",
+              "strokeWidth": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "themes": {
+    "Mode": [
+      "Light",
+      "Dark"
+    ]
+  },
+  "variables": {
+    "--sidebar": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#E7E8E5"
+        },
+        {
+          "value": "#18181b",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#666666"
+        },
+        {
+          "value": "#fafafa",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-primary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#18181b"
+        },
+        {
+          "value": "#18181b",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-primary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#fafafa"
+        },
+        {
+          "value": "#fafafa",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-border": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#CBCCC9"
+        },
+        {
+          "value": "#ffffff1a",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-accent": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#CBCCC9"
+        },
+        {
+          "value": "#2a2a30",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-accent-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#18181b"
+        },
+        {
+          "value": "#fafafa",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--sidebar-ring": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#71717a"
+        },
+        {
+          "value": "#71717a",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--background": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#F2F3F0"
+        },
+        {
+          "value": "#111111",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--card": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#FFFFFF"
+        },
+        {
+          "value": "#1A1A1A",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--card-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--popover": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#FFFFFF"
+        },
+        {
+          "value": "#1A1A1A",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--popover-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--primary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#FF8400"
+        },
+        {
+          "value": "#FF8400",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--primary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#111111",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--secondary": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#E7E8E5"
+        },
+        {
+          "value": "#2E2E2E",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--secondary-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#FFFFFF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--muted": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#F2F3F0"
+        },
+        {
+          "value": "#2E2E2E",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--muted-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#666666"
+        },
+        {
+          "value": "#B8B9B6",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--accent": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#F2F3F0"
+        },
+        {
+          "value": "#111111",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--accent-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#111111"
+        },
+        {
+          "value": "#F2F3F0",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--destructive": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#D93C15"
+        },
+        {
+          "value": "#FF5C33",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--border": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#CBCCC9"
+        },
+        {
+          "value": "#2E2E2E",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--input": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#CBCCC9"
+        },
+        {
+          "value": "#2E2E2E",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--ring": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#666666"
+        },
+        {
+          "value": "#666666",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--white": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "--black": {
+      "type": "color",
+      "value": "#000000"
+    },
+    "--font-primary": {
+      "type": "string",
+      "value": "JetBrains Mono"
+    },
+    "--font-secondary": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "--radius-none": {
+      "type": "number",
+      "value": 0
+    },
+    "--radius-pill": {
+      "type": "number",
+      "value": 999
+    },
+    "--color-success": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#DFE6E1"
+        },
+        {
+          "value": "#222924",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-success-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#004D1A"
+        },
+        {
+          "value": "#B6FFCE",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-warning": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#E9E3D8"
+        },
+        {
+          "value": "#291C0F",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-warning-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#804200"
+        },
+        {
+          "value": "#FF8400",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-error": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#E5DCDA"
+        },
+        {
+          "value": "#24100B",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-error-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#8C1C00"
+        },
+        {
+          "value": "#FF5C33",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-info": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#DFDFE6"
+        },
+        {
+          "value": "#222229",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--color-info-foreground": {
+      "type": "color",
+      "value": [
+        {
+          "value": "#000066"
+        },
+        {
+          "value": "#B2B2FF",
+          "theme": {
+            "Mode": "Dark"
+          }
+        }
+      ]
+    },
+    "--radius-m": {
+      "type": "number",
+      "value": 16
+    }
+  }
+}

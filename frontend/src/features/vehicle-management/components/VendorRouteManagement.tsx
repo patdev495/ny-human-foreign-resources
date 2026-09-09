@@ -1,4 +1,13 @@
 import React, { useEffect, useState } from "react";
+import {
+  Car,
+  FileText,
+  Zap,
+  ArrowRight,
+  CheckCircle2,
+  Building2,
+  Filter,
+} from "lucide-react";
 import { fetchProviders, fetchVendorRoutes } from "../api";
 import type { VehicleProvider, VendorRoute } from "../types";
 import { PdfViewerModal } from "./PdfViewerModal";
@@ -56,9 +65,12 @@ export const VendorRouteManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Provider Selector Tabs */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div className="executive-card p-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 overflow-x-auto shrink-0">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nhà xe ngoài:</span>
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mr-1">
+            <Building2 className="h-3.5 w-3.5 text-slate-400" />
+            <span>Đối tác vận tải:</span>
+          </span>
           {Array.from(
             new Map(
               providers
@@ -68,14 +80,16 @@ export const VendorRouteManagement: React.FC = () => {
           ).map((p) => (
             <button
               key={p.id}
+              type="button"
               onClick={() => setSelectedProviderId(p.id)}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 ${
+              className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
                 selectedProviderId === p.id
-                  ? "bg-blue-600 text-white shadow-xs"
+                  ? "bg-indigo-600 text-white shadow-sm"
                   : "bg-slate-100 hover:bg-slate-200 text-slate-700"
               }`}
             >
-              🚕 {p.name} {p.phone ? `(${p.phone})` : ""}
+              <Car className="h-3.5 w-3.5" />
+              <span>{p.name} {p.phone ? `(${p.phone})` : ""}</span>
             </button>
           ))}
         </div>
@@ -83,13 +97,13 @@ export const VendorRouteManagement: React.FC = () => {
         {/* Filter by purpose & PDF Viewer */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600">Hạng mục:</span>
+            <Filter className="h-3.5 w-3.5 text-slate-400" />
             <select
               value={filterPurpose}
               onChange={(e) => setFilterPurpose(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
-              <option value="ALL">Tất cả ({routes.length} tuyến)</option>
+              <option value="ALL">Tất cả mục đích ({routes.length} tuyến)</option>
               {purposes.map((p) => (
                 <option key={p} value={p}>
                   {p}
@@ -99,25 +113,30 @@ export const VendorRouteManagement: React.FC = () => {
           </div>
 
           <button
+            type="button"
             onClick={handleOpenPdf}
-            className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shrink-0 border border-slate-200/80"
           >
-            <span>📄</span> Xem File HĐ PDF
+            <FileText className="h-3.5 w-3.5 text-indigo-600" />
+            <span>Xem PDF Hợp Đồng</span>
           </button>
         </div>
       </div>
 
       {currentProvider && (
-        <div className="bg-blue-50/80 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="bg-indigo-50/70 border border-indigo-100/90 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div>
-            <span className="font-bold text-blue-900 text-sm">Hợp đồng Nhà xe: {currentProvider.name}</span>
+            <span className="font-bold text-indigo-950 text-sm">Hợp đồng Đối tác: {currentProvider.name}</span>
             {currentProvider.notes && (
               <span className="text-slate-600 ml-2 block sm:inline">— {currentProvider.notes}</span>
             )}
           </div>
-          <div className="text-blue-800 font-semibold bg-white/80 px-3 py-1.5 rounded-lg border border-blue-200/60 shadow-2xs">
-            ⚡ Phụ phí chờ: <span className="font-bold text-blue-900">30.000 đ/giờ</span> | Giá KM ngoài HĐ:{" "}
-            <span className="font-bold text-blue-900">14.000 đ/km</span>
+          <div className="text-indigo-900 font-semibold bg-white/90 px-3.5 py-1.5 rounded-lg border border-indigo-200/60 shadow-2xs flex items-center gap-2">
+            <Zap className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+            <span>
+              Phụ phí chờ: <span className="font-bold mono-metric text-indigo-950">30.000 đ/giờ</span> | Giá KM ngoài HĐ:{" "}
+              <span className="font-bold mono-metric text-indigo-950">14.000 đ/km</span>
+            </span>
           </div>
         </div>
       )}
@@ -129,17 +148,17 @@ export const VendorRouteManagement: React.FC = () => {
       )}
 
       {/* Routes Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div className="executive-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200">
+            <thead className="bg-slate-50/90 text-slate-600 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
               <tr>
-                <th className="p-3.5 w-12 text-center">STT</th>
-                <th className="p-3.5">Hạng mục dùng xe</th>
-                <th className="p-3.5">Điểm đi ➔ Điểm đến (Tuyến đường)</th>
-                <th className="p-3.5 text-center">Loại xe</th>
-                <th className="p-3.5 text-right">Giá cố định hợp đồng</th>
-                <th className="p-3.5 text-center">Chiều về (Khứ hồi)</th>
+                <th className="p-3.5 w-12 text-center" scope="col">STT</th>
+                <th className="p-3.5" scope="col">Hạng mục sử dụng</th>
+                <th className="p-3.5" scope="col">Lộ trình Tuyến đường</th>
+                <th className="p-3.5 text-center" scope="col">Loại xe</th>
+                <th className="p-3.5 text-right" scope="col">Cước phí hợp đồng</th>
+                <th className="p-3.5 text-center" scope="col">Khứ hồi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -158,30 +177,35 @@ export const VendorRouteManagement: React.FC = () => {
               ) : (
                 filteredRoutes.map((r, idx) => (
                   <tr key={r.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3.5 text-center text-slate-400 font-medium">{idx + 1}</td>
-                    <td className="p-3.5 font-semibold text-slate-800">{r.purpose || "Chung"}</td>
+                    <td className="p-3.5 text-center text-slate-400 mono-metric font-medium">{idx + 1}</td>
+                    <td className="p-3.5 font-semibold text-slate-800">
+                      <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px]">
+                        {r.purpose || "Chung"}
+                      </span>
+                    </td>
                     <td className="p-3.5">
-                      <div className="font-medium text-slate-900">
+                      <div className="font-medium text-slate-900 flex items-center gap-1.5">
                         <span className="text-emerald-700 font-semibold">{r.pickup_location}</span>
-                        <span className="mx-2 text-slate-400">➔</span>
-                        <span className="text-blue-700 font-semibold">{r.dropoff_location}</span>
+                        <ArrowRight className="h-3 w-3 text-slate-400 shrink-0" />
+                        <span className="text-indigo-700 font-semibold">{r.dropoff_location}</span>
                       </div>
                     </td>
                     <td className="p-3.5 text-center font-bold text-slate-700">
-                      <span className="bg-slate-100 text-slate-800 px-2.5 py-1 rounded-lg">
+                      <span className="bg-slate-100 text-slate-800 px-2.5 py-1 rounded-lg mono-metric">
                         {r.seat_type}
                       </span>
                     </td>
-                    <td className="p-3.5 text-right font-bold text-emerald-700 text-sm">
+                    <td className="p-3.5 text-right font-bold text-emerald-700 mono-metric text-sm">
                       {r.fixed_price.toLocaleString("vi-VN")} đ
                     </td>
                     <td className="p-3.5 text-center text-[11px] font-medium text-slate-500">
                       {r.is_two_way_same_price ? (
-                        <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold">
-                          ✔ Ngược lại đồng giá
+                        <span className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-full font-bold inline-flex items-center gap-1 border border-emerald-200/80">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          <span>Ngược lại đồng giá</span>
                         </span>
                       ) : (
-                        <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
+                        <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
                           Một chiều
                         </span>
                       )}

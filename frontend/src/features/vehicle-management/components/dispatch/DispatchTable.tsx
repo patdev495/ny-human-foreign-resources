@@ -29,7 +29,7 @@ export const DispatchTable: React.FC<DispatchTableProps> = ({
   const odoAnalysis = analyzeDailyDispatches(dispatches);
 
   return (
-    <div className="modern-card overflow-hidden">
+    <div className="executive-card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs text-slate-700">
           <thead className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -172,7 +172,7 @@ export const DispatchTable: React.FC<DispatchTableProps> = ({
                         </span>
                       </div>
                     </td>
-                    <td className="p-3.5 text-right font-mono font-bold text-slate-900">
+                    <td className="p-3.5 text-right mono-metric font-bold text-slate-900">
                       {d.cost > 0 ? (
                         <span className="text-emerald-600">
                           {d.cost.toLocaleString("vi-VN")} đ

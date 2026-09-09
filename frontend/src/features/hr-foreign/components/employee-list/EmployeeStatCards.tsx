@@ -31,6 +31,10 @@ export const EmployeeStatCards: React.FC<EmployeeStatCardsProps> = ({
     return s.includes("expired") || s.includes("warning");
   }).length;
 
+  const inVnPercent = totalCount > 0 ? Math.round((inVnCount / totalCount) * 100) : 0;
+  const returnedPercent = totalCount > 0 ? Math.round((returnedCount / totalCount) * 100) : 0;
+  const warningPercent = totalCount > 0 ? Math.round((warningDocCount / totalCount) * 100) : 0;
+
   const isAllActive = statusFilter === "ALL" && docStatusFilter === "ALL";
   const isInVnActive = statusFilter === "IN_VN" && docStatusFilter === "ALL";
   const isReturnedActive = statusFilter === "RETURNED" && docStatusFilter === "ALL";
@@ -38,14 +42,14 @@ export const EmployeeStatCards: React.FC<EmployeeStatCardsProps> = ({
     docStatusFilter === "HAS_WARNING" || docStatusFilter === "HAS_EXPIRED";
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Card 1: Tất cả nhân sự */}
       <KpiCard
         label="Tổng NS Nước ngoài"
         value={totalCount}
-        sublabel="Tất cả hồ sơ lưu trú"
+        sublabel="100% hồ sơ trong cơ sở dữ liệu"
         variant="indigo"
-        icon={<Users className="h-4 w-4" />}
+        icon={<Users className="h-5 w-5" />}
         active={isAllActive}
         badge={isAllActive ? "Đang chọn" : undefined}
         onClick={() => {
@@ -58,9 +62,9 @@ export const EmployeeStatCards: React.FC<EmployeeStatCardsProps> = ({
       <KpiCard
         label="Đang ở Việt Nam"
         value={inVnCount}
-        sublabel="Có mặt làm việc & lưu trú"
+        sublabel={`${inVnPercent}% nhân sự đang lưu trú`}
         variant="emerald"
-        icon={<UserCheck className="h-4 w-4" />}
+        icon={<UserCheck className="h-5 w-5" />}
         active={isInVnActive}
         badge={isInVnActive ? "Đang chọn" : undefined}
         onClick={() => {
@@ -73,9 +77,9 @@ export const EmployeeStatCards: React.FC<EmployeeStatCardsProps> = ({
       <KpiCard
         label="Đã về nước"
         value={returnedCount}
-        sublabel="Đã xuất cảnh / kết thúc đợt"
+        sublabel={`${returnedPercent}% đã xuất cảnh kết thúc đợt`}
         variant="rose"
-        icon={<PlaneLanding className="h-4 w-4" />}
+        icon={<PlaneLanding className="h-5 w-5" />}
         active={isReturnedActive}
         badge={isReturnedActive ? "Đang chọn" : undefined}
         onClick={() => {
@@ -88,11 +92,11 @@ export const EmployeeStatCards: React.FC<EmployeeStatCardsProps> = ({
       <KpiCard
         label="Cảnh báo Giấy tờ"
         value={warningDocCount}
-        sublabel={`Hết/Sắp hết hạn (≤${thresholdDays} ngày)`}
+        sublabel={`${warningPercent}% hồ sơ cần xử lý (≤${thresholdDays} ngày)`}
         variant="amber"
-        icon={<AlertTriangle className="h-4 w-4" />}
+        icon={<AlertTriangle className="h-5 w-5" />}
         active={isDocWarningActive}
-        badge={isDocWarningActive ? "Đang chọn" : undefined}
+        badge={isDocWarningActive ? "Cần chú ý" : undefined}
         onClick={() => {
           setDocStatusFilter("HAS_WARNING");
         }}

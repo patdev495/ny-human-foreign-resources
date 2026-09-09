@@ -1,4 +1,5 @@
 import React from "react";
+import { Car, DollarSign, Building2 } from "lucide-react";
 import type { VehicleDispatch } from "../../types";
 
 interface DispatchKpiBannerProps {
@@ -11,36 +12,46 @@ export const DispatchKpiBanner: React.FC<DispatchKpiBannerProps> = ({ dispatches
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-medium text-blue-600 uppercase tracking-wider block">
+      <div className="executive-card p-4.5 flex items-center justify-between">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
             Tổng số chuyến điều xe
           </span>
-          <span className="text-2xl font-bold text-blue-900">{dispatches.length} chuyến</span>
+          <div className="text-2xl font-extrabold text-slate-900 mono-metric">
+            {dispatches.length} <span className="text-xs font-semibold text-slate-500">chuyến</span>
+          </div>
         </div>
-        <span className="text-2xl">🚐</span>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600">
+          <Car className="h-5 w-5" />
+        </div>
       </div>
 
-      <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-medium text-emerald-600 uppercase tracking-wider block">
-            Tổng chi phí điều xe
+      <div className="executive-card p-4.5 flex items-center justify-between">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            Tổng chi phí cước điều xe
           </span>
-          <span className="text-2xl font-bold text-emerald-900">
-            {totalCost.toLocaleString("vi-VN")} đ
-          </span>
+          <div className="text-2xl font-extrabold text-emerald-700 mono-metric">
+            {totalCost.toLocaleString("vi-VN")} <span className="text-xs font-semibold text-emerald-600">đ</span>
+          </div>
         </div>
-        <span className="text-2xl">💰</span>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600">
+          <DollarSign className="h-5 w-5" />
+        </div>
       </div>
 
-      <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <span className="text-xs font-medium text-amber-600 uppercase tracking-wider block">
-            Xe thuê ngoài
+      <div className="executive-card p-4.5 flex items-center justify-between">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            Xe thuê ngoài đối tác
           </span>
-          <span className="text-2xl font-bold text-amber-900">{outsourcedCount} chuyến</span>
+          <div className="text-2xl font-extrabold text-amber-700 mono-metric">
+            {outsourcedCount} <span className="text-xs font-semibold text-amber-600">chuyến</span>
+          </div>
         </div>
-        <span className="text-2xl">🚕</span>
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 border border-amber-100 text-amber-600">
+          <Building2 className="h-5 w-5" />
+        </div>
       </div>
     </div>
   );
