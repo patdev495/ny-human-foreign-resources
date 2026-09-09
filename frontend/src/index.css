@@ -11,14 +11,21 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .workspace-shell { min-height: 100dvh; background: #f3f5fa; color: #17243d; }
 .workspace-header { height: 68px; background: rgb(255 255 255 / 92%); border-bottom: 1px solid #dce3ee; backdrop-filter: blur(14px); }
 .workspace-main { animation: workspace-enter 220ms cubic-bezier(.2,.8,.2,1) both; }
-.workspace-sidebar { background: #14233f !important; border-color: #243756 !important; color: #d8e1f1; }
-.workspace-sidebar > div { padding-top: 20px !important; }
-.workspace-sidebar button { color: #d8e1f1 !important; min-height: 42px; }
-.workspace-sidebar button:hover { background: rgb(255 255 255 / 10%) !important; color: #fff !important; }
-.workspace-sidebar button[class*="bg-blue-600"], .workspace-sidebar button[class*="bg-amber-600"], .workspace-sidebar button[class*="bg-emerald-600"] { background: #414783 !important; color: #fff !important; box-shadow: 0 6px 16px rgb(9 15 47 / 24%); }
-.workspace-sidebar [class*="border-l-2"] { border-color: rgb(255 255 255 / 16%) !important; }
-.workspace-sidebar [class*="text-slate-400"] { color: #aabbd5 !important; }
-.workspace-sidebar [class*="text-slate-700"], .workspace-sidebar [class*="text-slate-600"] { color: #d8e1f1 !important; }
+.workspace-sidebar { background: #101a30 !important; border-color: #22304b !important; color: #d6e0f1; }
+.workspace-nav-scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #304260 transparent; }
+.workspace-nav-kicker { margin: 0 0 8px; padding: 0 10px; color: #8fa3c5; font-size: 10px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.workspace-nav-trigger, .workspace-nav-item { width: 100%; display: flex; align-items: center; border: 0; cursor: pointer; color: #c2cfe3; transition: background-color 180ms ease, color 180ms ease, transform 180ms ease; }
+.workspace-nav-trigger { min-height: 48px; gap: 10px; padding: 6px 10px; border-radius: 12px; font-size: 14px; font-weight: 650; }
+.workspace-nav-trigger:hover { background: rgb(255 255 255 / 7%); color: #fff; }
+.workspace-nav-trigger-active { background: rgb(99 102 241 / 13%); color: #f5f7ff; }
+.workspace-nav-mark { display: grid; width: 28px; height: 28px; flex: 0 0 28px; place-items: center; border: 1px solid rgb(176 191 218 / 22%); border-radius: 8px; background: rgb(255 255 255 / 6%); color: #bdc9ff; font-size: 10px; font-weight: 800; letter-spacing: .03em; }
+.workspace-nav-trigger-active .workspace-nav-mark { border-color: rgb(165 180 252 / 45%); background: #5757c9; color: #fff; }
+.workspace-nav-children { display: grid; gap: 2px; margin: 2px 0 6px 20px; padding: 5px 0 5px 17px; border-left: 1px solid #31415e; animation: workspace-nav-open 180ms ease-out both; }
+.workspace-nav-item { min-height: 40px; gap: 10px; padding: 7px 10px; border-radius: 9px; color: #aebdd3; font-size: 13px; font-weight: 520; text-align: left; }
+.workspace-nav-item:hover { background: rgb(255 255 255 / 7%); color: #fff; }
+.workspace-nav-item-active { position: relative; background: rgb(99 102 241 / 18%); color: #fff; font-weight: 650; }
+.workspace-nav-item-active::before { position: absolute; left: -18px; width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: #a5b4fc; content: ""; }
+.workspace-nav-divider { height: 1px; margin: 12px 10px; background: #2a3956; }
 .workspace-page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
 .workspace-eyebrow { color: #4f46e5; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
 .workspace-page-title { margin: 6px 0 0; color: #17243d; font-size: clamp(1.65rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.15; }
@@ -49,5 +56,6 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .workspace-module-header button { min-height: 40px; }
 @keyframes workspace-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes workspace-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes workspace-nav-open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
 @media (max-width: 640px) { .workspace-page-header { flex-direction: column; gap: 16px; } .workspace-primary-action { width: 100%; } }

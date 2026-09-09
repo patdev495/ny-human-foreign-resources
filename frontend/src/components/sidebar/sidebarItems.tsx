@@ -27,6 +27,22 @@ export interface NavItem {
   icon: React.ReactNode;
 }
 
+type NavGlyphName = "clipboard" | "calendar" | "chart" | "document" | "building" | "utensils" | "export";
+
+const NavGlyph: React.FC<{ name: NavGlyphName }> = ({ name }) => {
+  const paths: Record<NavGlyphName, React.ReactNode> = {
+    clipboard: <><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 4V3h6v1" /><path d="M9 10h6M9 14h6" /></>,
+    calendar: <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></>,
+    chart: <><path d="M4 19V5M4 19h16" /><path d="M8 16v-4M12 16V8M16 16v-7" /></>,
+    document: <><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></>,
+    building: <><path d="M4 21h16M6 21V5h12v16M9 9h2m2 0h2M9 13h2m2 0h2" /></>,
+    utensils: <><path d="M7 3v8M4 3v4a3 3 0 0 0 6 0V3M7 11v10M17 3v18M17 3c2 2 3 5 0 8" /></>,
+    export: <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M12 17V11M9 14l3-3 3 3" /></>,
+  };
+
+  return <svg aria-hidden="true" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+};
+
 export const hrForeignItems: NavItem[] = [
   {
     key: "EMPLOYEES",
@@ -83,23 +99,23 @@ export const hrForeignItems: NavItem[] = [
 ];
 
 export const janitorItems: NavItem[] = [
-  { key: "JANITOR_PROFILES", label: "Hồ Sơ", icon: <span className="text-xs">📋</span> },
-  { key: "JANITOR_ATTENDANCE", label: "Điểm danh hàng ngày", icon: <span className="text-xs">📅</span> },
+  { key: "JANITOR_PROFILES", label: "Hồ Sơ", icon: <NavGlyph name="clipboard" /> },
+  { key: "JANITOR_ATTENDANCE", label: "Điểm danh hàng ngày", icon: <NavGlyph name="calendar" /> },
 ];
 
 export const vehicleItems: NavItem[] = [
-  { key: "VEHICLE_DISPATCH", label: "Nhật ký Điều xe", icon: <span className="text-xs">📅</span> },
-  { key: "VEHICLE_STATS", label: "Thống kê", icon: <span className="text-xs">📊</span> },
-  { key: "VEHICLE_CONTRACTS", label: "Hợp đồng và bảng giá", icon: <span className="text-xs">📑</span> },
+  { key: "VEHICLE_DISPATCH", label: "Nhật ký Điều xe", icon: <NavGlyph name="calendar" /> },
+  { key: "VEHICLE_STATS", label: "Thống kê", icon: <NavGlyph name="chart" /> },
+  { key: "VEHICLE_CONTRACTS", label: "Hợp đồng và bảng giá", icon: <NavGlyph name="document" /> },
 ];
 
 export const exportSubItems: NavItem[] = [
-  { key: "EXPORT_LEGAL", label: "Hồ sơ người nước ngoài", icon: <span className="text-xs">📄</span> },
-  { key: "EXPORT_PRESENCE", label: "Hiện diện KTX / Khách sạn", icon: <span className="text-xs">🏫</span> },
-  { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <span className="text-xs">🍱</span> },
-  { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <span className="text-xs">🧹</span> },
-  { key: "EXPORT_VEHICLES", label: "Chi phí Thuê xe", icon: <span className="text-xs">🚘</span> },
-  { key: "EXPORT_TRIP_DURATION", label: "Đợt Lưu trú & Nhập xuất cảnh", icon: <span className="text-xs">✈️</span> },
+  { key: "EXPORT_LEGAL", label: "Hồ sơ người nước ngoài", icon: <NavGlyph name="document" /> },
+  { key: "EXPORT_PRESENCE", label: "Hiện diện KTX / Khách sạn", icon: <NavGlyph name="building" /> },
+  { key: "EXPORT_MEAL", label: "Chi phí Bữa ăn", icon: <NavGlyph name="utensils" /> },
+  { key: "EXPORT_JANITOR", label: "Chấm công & Lương Tạp vụ", icon: <NavGlyph name="clipboard" /> },
+  { key: "EXPORT_VEHICLES", label: "Chi phí Thuê xe", icon: <NavGlyph name="chart" /> },
+  { key: "EXPORT_TRIP_DURATION", label: "Đợt Lưu trú & Nhập xuất cảnh", icon: <NavGlyph name="export" /> },
 ];
 
 
