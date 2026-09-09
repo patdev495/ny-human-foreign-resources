@@ -153,7 +153,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       <aside
-        className={`hidden sm:flex flex-col bg-white border-r border-slate-200 transition-all duration-300 z-30 ${
+        className={`workspace-sidebar hidden sm:flex flex-col border-r transition-[width] duration-200 z-30 ${
           isSidebarOpen ? "w-64" : "w-20"
         }`}
       >

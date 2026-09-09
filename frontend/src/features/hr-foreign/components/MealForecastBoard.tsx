@@ -41,8 +41,9 @@ export const MealForecastBoard: React.FC = () => {
       setErrorMsg(null);
       const data = await fetchDailyMealForecast(date);
       setForecast(data);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Không thể tải dữ liệu dự báo suất ăn");
+    } catch (err: unknown) {
+      console.error("Failed to load meal forecast:", err);
+      setErrorMsg("Không thể tải dự báo suất ăn. Kiểm tra kết nối rồi thử lại.");
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -56,8 +57,8 @@ export const MealForecastBoard: React.FC = () => {
     try {
       await updateStay(emp.stay_id, { has_meals: !emp.has_meals });
       await loadForecast(selectedDate, false);
-    } catch (err: any) {
-      alert(`Không thể thay đổi cài đặt đăng ký ăn KTX: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Không thể thay đổi cài đặt đăng ký ăn KTX: ${err instanceof Error ? err.message : "Lỗi không xác định"}`);
     }
   };
 
@@ -110,8 +111,8 @@ export const MealForecastBoard: React.FC = () => {
         }
       }
       await loadForecast(selectedDate, false);
-    } catch (err: any) {
-      alert(`Không thể thay đổi trạng thái suất ăn: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Không thể thay đổi trạng thái suất ăn: ${err instanceof Error ? err.message : "Lỗi không xác định"}`);
     }
   };
 
@@ -213,8 +214,9 @@ export const MealForecastBoard: React.FC = () => {
       </div>
 
       {errorMsg && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-700 font-medium">
-          ⚠️ {errorMsg}
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-800 font-medium flex items-center justify-between gap-4" role="alert">
+          <span>⚠️ {errorMsg}</span>
+          <button type="button" onClick={() => void loadForecast(selectedDate)} className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-bold text-rose-800 ring-1 ring-rose-200 hover:bg-rose-100">Thử lại</button>
         </div>
       )}
 

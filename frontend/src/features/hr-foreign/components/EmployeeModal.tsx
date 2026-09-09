@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { ForeignEmployee, ForeignEmployeeCreate } from "../types";
 
 
@@ -32,6 +32,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -70,6 +71,19 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     setError(null);
   }, [initialData, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape" && !submitting) onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isOpen, onClose, submitting]);
+
+  useEffect(() => {
+    if (isOpen) nameInputRef.current?.focus();
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,15 +118,16 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" role="presentation">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title">
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 className="text-lg font-semibold text-slate-800">
+          <h3 id="employee-modal-title" className="text-lg font-semibold text-slate-800">
             {initialData ? "Chỉnh sửa Hồ sơ Nhân sự" : "Thêm Hồ sơ Nhân sự Nước ngoài"}
           </h3>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none cursor-pointer"
+            aria-label="Đóng form hồ sơ nhân sự"
+            className="min-w-11 min-h-11 text-slate-400 hover:text-slate-600 text-xl font-bold leading-none cursor-pointer"
           >
             &times;
           </button>
@@ -136,6 +151,8 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Mã nhân viên</label>
               <input
+                ref={nameInputRef}
+                id="employee-name-latin"
                 type="text"
                 value={formData.employee_code || ""}
                 onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
@@ -145,7 +162,7 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="employee-name-latin" className="block text-sm font-medium text-slate-700 mb-1">
                 Tên Latin <span className="text-red-500">*</span>
               </label>
               <input

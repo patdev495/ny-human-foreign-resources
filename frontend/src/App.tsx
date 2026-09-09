@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { EmployeeList } from "./features/hr-foreign/components/EmployeeList";
 import { AccommodationManagement } from "./features/hr-foreign/components/AccommodationManagement";
 import { ExpiringDocsAlert } from "./features/hr-foreign/components/ExpiringDocsAlert";
@@ -12,14 +12,31 @@ import { Sidebar } from "./components/Sidebar";
 import type { NavTab } from "./components/Sidebar";
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<NavTab>("EMPLOYEES");
+  const readTabFromHash = (): NavTab => {
+    const candidate = window.location.hash.slice(1) as NavTab;
+    const knownTabs: NavTab[] = ["EMPLOYEES", "ACCOMMODATION", "DAILY_PRESENCE", "EXPIRING_DOCS", "VEHICLE_MANAGEMENT", "VEHICLE_DISPATCH", "VEHICLE_STATS", "VEHICLE_CONTRACTS", "MEAL_MANAGEMENT", "HR_DOMESTIC_PLACEHOLDER", "JANITOR_PROFILES", "JANITOR_ATTENDANCE", "EXPORT_LEGAL", "EXPORT_PRESENCE", "EXPORT_MEAL", "EXPORT_JANITOR", "EXPORT_VEHICLES", "EXPORT_TRIP_DURATION"];
+    return knownTabs.includes(candidate) ? candidate : "EMPLOYEES";
+  };
+  const [activeTab, setActiveTab] = useState<NavTab>(readTabFromHash);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  useEffect(() => {
+    const syncTabFromUrl = (): void => setActiveTab(readTabFromHash());
+    window.addEventListener("hashchange", syncTabFromUrl);
+    return () => window.removeEventListener("hashchange", syncTabFromUrl);
+  }, []);
+
+  const navigateToTab = (tab: NavTab): void => {
+    if (tab === activeTab) return;
+    window.location.hash = tab;
+    setActiveTab(tab);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans">
+    <div className="workspace-shell flex flex-col">
       {/* Top Header Navbar */}
-      <header className="bg-white text-slate-800 shadow-2xs sticky top-0 z-40 border-b border-slate-200">
+      <header className="workspace-header sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-3">
@@ -29,7 +46,8 @@ export const App: React.FC = () => {
                   setIsMobileOpen(!isMobileOpen);
                 }}
                 title={isSidebarOpen ? "Thu gọn Sidebar" : "Mở rộng Sidebar"}
-                className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer border border-slate-200"
+                aria-label={isSidebarOpen ? "Thu gọn thanh điều hướng" : "Mở rộng thanh điều hướng"}
+                className="inline-flex min-w-11 min-h-11 items-center justify-center rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer border border-slate-200"
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="3" y1="12" x2="21" y2="12" />
@@ -43,15 +61,15 @@ export const App: React.FC = () => {
                   NY
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg font-bold tracking-tight text-slate-900">Nienyi HR System</h1>
-                  <p className="text-xs text-slate-500 font-medium">Hệ thống Quản lý nhân sự nước ngoài</p>
+                  <span className="block text-lg font-bold tracking-tight text-slate-900">NY Workspace</span>
+                  <span className="block text-xs text-slate-500 font-medium">Nhân sự & vận hành</span>
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="hidden md:inline-flex text-xs font-bold px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full shadow-2xs">
-                Module: hr-foreign
+              <span className="hidden md:inline-flex text-xs font-bold px-3 py-1 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">
+                Không gian vận hành
               </span>
             </div>
           </div>
@@ -62,7 +80,7 @@ export const App: React.FC = () => {
       <div className="flex flex-1 relative">
         <Sidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={navigateToTab}
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
           isMobileOpen={isMobileOpen}
@@ -70,7 +88,7 @@ export const App: React.FC = () => {
         />
 
         {/* Main Content View Container */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main id="main-content" className="workspace-main flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
           {activeTab === "EMPLOYEES" && <EmployeeList />}
           {activeTab === "ACCOMMODATION" && <AccommodationManagement />}
           {activeTab === "DAILY_PRESENCE" && <DailyPresenceReport />}

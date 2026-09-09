@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   type NavTab,
   hrForeignItems,
@@ -21,6 +21,23 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   activeTab,
   setActiveTab,
 }) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lastFocusedElement = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isMobileOpen) return undefined;
+    lastFocusedElement.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    closeButtonRef.current?.focus();
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setIsMobileOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      lastFocusedElement.current?.focus();
+    };
+  }, [isMobileOpen, setIsMobileOpen]);
+
   if (!isMobileOpen) return null;
 
   const handleSelect = (tab: NavTab) => {
@@ -29,17 +46,19 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   };
 
   return (
-    <div className="sm:hidden fixed inset-0 z-50 flex">
+    <div className="workspace-mobile-drawer sm:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Điều hướng chính">
       <div
         className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
         onClick={() => setIsMobileOpen(false)}
       />
-      <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white p-4 space-y-4">
+      <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white p-4 space-y-4 overflow-y-auto">
         <div className="flex items-center justify-between pb-3 border-b border-slate-200">
           <span className="font-bold text-slate-800 text-sm">Danh mục Quản lý</span>
           <button
+            ref={closeButtonRef}
             onClick={() => setIsMobileOpen(false)}
-            className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+            aria-label="Đóng điều hướng"
+            className="min-w-11 min-h-11 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
           >
             ✕
           </button>
