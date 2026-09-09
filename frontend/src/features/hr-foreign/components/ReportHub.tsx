@@ -4,6 +4,17 @@ import { UnclosedMealLocksModal } from "./report-hub/UnclosedMealLocksModal";
 import { VehicleReportCard } from "./reports/VehicleReportCard";
 import { TripDurationReportCard } from "./reports/TripDurationReportCard";
 import type { NavTab } from "../../../components/Sidebar";
+import { ModuleHeader } from "../../../shared/components/ModuleHeader";
+import {
+  FileSpreadsheet,
+  FileText,
+  Building2,
+  UtensilsCrossed,
+  Sparkles,
+  Download,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 
 
 
@@ -66,24 +77,24 @@ export const ReportHub: React.FC<ReportHubProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Header Banner */}
-      <div className="workspace-module-header workspace-report bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-            📊
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">Trung tâm Xuất Báo cáo Excel</h1>
-            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
-              Tổng hợp và xuất dữ liệu báo cáo chuẩn hóa theo từng bộ phận nghiệp vụ (HR, KTX, Kế toán).
-            </p>
-          </div>
-        </div>
-      </div>
+      <ModuleHeader
+        title="Trung tâm Xuất Báo cáo Excel"
+        subtitle="Tổng hợp và xuất dữ liệu báo cáo chuẩn hóa theo từng phân hệ nghiệp vụ (HR, KTX, Bữa ăn, Lương, Xe)."
+        icon={FileSpreadsheet}
+        theme="rose"
+      />
 
       {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center justify-between">
-          <span>⚠️ {errorMessage}</span>
-          <button onClick={() => setErrorMessage(null)} className="text-rose-500 hover:text-rose-700 text-xs cursor-pointer">
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-semibold flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-rose-500" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer"
+          >
             Đóng
           </button>
         </div>
@@ -92,12 +103,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
       {/* REPORT VIEWS */}
       {/* VIEW 1: LEGAL REPORT */}
       {currentTab === "EXPORT_LEGAL" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-5">
+        <div className="modern-card p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">📄</span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
+                <FileText className="h-5 w-5" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Báo cáo Hồ sơ Nhân viên & Pháp lý</h3>
+                <h3 className="text-base font-bold text-slate-900">Báo cáo Hồ sơ Nhân viên & Pháp lý</h3>
                 <p className="text-xs text-slate-500">Chuẩn hóa dữ liệu HR Master + Giấy tờ Visa, Tạm trú, GPLĐ, HĐLĐ</p>
               </div>
             </div>
@@ -125,14 +138,17 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             <button
               onClick={handleDownloadLegal}
               disabled={loadingLegal}
-              className="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loadingLegal ? (
-                <span>⏳ Đang đóng gói dữ liệu...</span>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Đang đóng gói dữ liệu...</span>
+                </>
               ) : (
                 <>
-                  <span>📥</span>
-                  <span>{includeAttachments ? "Tải Gói ZIP (Excel + Giấy tờ đính kèm)" : "Tải File Excel Báo cáo Pháp lý"}</span>
+                  <Download className="h-4 w-4" />
+                  <span>{includeAttachments ? "Tải Gói ZIP (Excel + Đính kèm)" : "Tải File Excel Báo cáo"}</span>
                 </>
               )}
             </button>
@@ -142,12 +158,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
       {/* VIEW 2: PRESENCE REPORT */}
       {currentTab === "EXPORT_PRESENCE" && (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-5">
+        <div className="modern-card p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🏫</span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <Building2 className="h-5 w-5" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Báo cáo Hiện diện & Chỗ ở KTX / Khách sạn</h3>
+                <h3 className="text-base font-bold text-slate-900">Báo cáo Hiện diện & Chỗ ở KTX / Khách sạn</h3>
                 <p className="text-xs text-slate-500">Phân vùng sơ đồ chỗ ở, nhân sự chưa xếp chỗ & lịch trình về nước</p>
               </div>
             </div>
@@ -166,13 +184,16 @@ export const ReportHub: React.FC<ReportHubProps> = ({
             <button
               onClick={handleDownloadPresence}
               disabled={loadingPresence}
-              className="w-full sm:w-auto px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loadingPresence ? (
-                <span>⏳ Đang khởi tạo báo cáo...</span>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Đang khởi tạo báo cáo...</span>
+                </>
               ) : (
                 <>
-                  <span>📥</span>
+                  <Download className="h-4 w-4" />
                   <span>Tải File Excel Báo cáo Chỗ ở</span>
                 </>
               )}
@@ -183,12 +204,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
       {/* VIEW 3: MEAL EXPENSE REPORT */}
       {currentTab === "EXPORT_MEAL" && (
-        <div className="bg-white rounded-xl border border-amber-200 shadow-xs p-6 space-y-5">
+        <div className="modern-card p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-amber-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🍱</span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-100">
+                <UtensilsCrossed className="h-5 w-5" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Báo cáo Chi phí Bữa ăn (NNN & Lao công)</h3>
+                <h3 className="text-base font-bold text-slate-900">Báo cáo Chi phí Bữa ăn (NNN & Lao công)</h3>
                 <p className="text-xs text-slate-500">Tổng hợp suất ăn & chi phí thực tế theo khoảng thời gian tùy chọn</p>
               </div>
             </div>
@@ -250,12 +273,14 @@ export const ReportHub: React.FC<ReportHubProps> = ({
 
       {/* VIEW 4: JANITOR PAYROLL REPORT */}
       {currentTab === "EXPORT_JANITOR" && (
-        <div className="bg-white rounded-xl border border-purple-200 shadow-xs p-6 space-y-5">
+        <div className="modern-card p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-purple-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🧹</span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+                <Sparkles className="h-5 w-5" />
+              </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Báo cáo Chấm công & Lương Tạp vụ</h3>
+                <h3 className="text-base font-bold text-slate-900">Báo cáo Chấm công & Lương Tạp vụ</h3>
                 <p className="text-xs text-slate-500">Bảng chấm công chi tiết theo chuỗi ngày & tính lương công thức Excel</p>
               </div>
             </div>

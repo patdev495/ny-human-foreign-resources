@@ -5,6 +5,8 @@ import { getVisaLabel } from "../types";
 import { fetchExpiringDocuments, fetchDocWarningConfigs } from "../api";
 import { DocWarningConfigModal } from "./DocWarningConfigModal";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
+import { ModuleHeader } from "../../../shared/components/ModuleHeader";
+import { AlertTriangle, Settings } from "lucide-react";
 
 
 interface DocWarningSectionCardProps {
@@ -241,37 +243,23 @@ export const ExpiringDocsAlert: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Header Banner */}
-      <div className="workspace-module-header workspace-warning bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-            ⚠️
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-white">
-                Cảnh báo Giấy tờ sắp Hết hạn & Thiếu thông tin
-              </h1>
-              {totalExpiring > 0 && (
-                <span className="px-2.5 py-0.5 bg-amber-400/25 text-amber-100 text-xs font-bold rounded-full border border-amber-300/40">
-                  {totalExpiring} cần lưu ý
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
-              Cảnh báo các giấy tờ sắp hết hạn theo mốc đã cấu hình & thiếu thông tin. Bấm vào nhân sự để mở hồ sơ chỉnh sửa ngay.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
+      <ModuleHeader
+        title="Cảnh báo Giấy tờ sắp Hết hạn & Thiếu thông tin"
+        subtitle="Cảnh báo các giấy tờ sắp hết hạn theo mốc đã cấu hình & thiếu thông tin. Bấm vào nhân sự để mở hồ sơ chỉnh sửa ngay."
+        icon={AlertTriangle}
+        theme="amber"
+        badgeText={totalExpiring > 0 ? `${totalExpiring} cần lưu ý` : undefined}
+        actions={
           <button
+            type="button"
             onClick={() => setIsConfigModalOpen(true)}
-            className="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all border border-amber-400/40"
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 text-xs shadow-md transition-all cursor-pointer border border-amber-300/40"
           >
-            <span>⚙️</span> Cấu hình mốc cảnh báo
+            <Settings className="h-4 w-4 text-slate-950" />
+            <span>Cấu hình mốc cảnh báo</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {loading ? (
         <div className="py-12 text-center text-slate-400">Đang kiểm tra danh sách hết hạn...</div>

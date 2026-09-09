@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { X } from "lucide-react";
 import {
   type NavTab,
   hrForeignItems,
@@ -26,7 +27,8 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
 
   useEffect(() => {
     if (!isMobileOpen) return undefined;
-    lastFocusedElement.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    lastFocusedElement.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     closeButtonRef.current?.focus();
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key === "Escape") setIsMobileOpen(false);
@@ -46,51 +48,71 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
   };
 
   return (
-    <div className="workspace-mobile-drawer sm:hidden fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Điều hướng chính">
+    <div
+      className="fixed inset-0 z-50 flex sm:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Điều hướng chính"
+    >
+      {/* Frosted Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
         onClick={() => setIsMobileOpen(false)}
       />
-      <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white p-4 space-y-4 overflow-y-auto">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-200">
-          <span className="font-bold text-slate-800 text-sm">Danh mục Quản lý</span>
+
+      <div className="relative flex w-full max-w-xs flex-1 flex-col bg-slate-900 p-5 space-y-4 overflow-y-auto text-slate-300 border-r border-slate-800 shadow-2xl animate-in slide-in-from-left duration-200">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 text-white flex items-center justify-center font-extrabold text-sm shadow-md">
+              NY
+            </div>
+            <span className="font-bold text-white text-sm">NY Workspace</span>
+          </div>
           <button
             ref={closeButtonRef}
             onClick={() => setIsMobileOpen(false)}
             aria-label="Đóng điều hướng"
-            className="min-w-11 min-h-11 p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-1">
-          {hrForeignItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => handleSelect(item.key)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-                activeTab === item.key
-                  ? "bg-blue-600 text-white"
-                  : "text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              {item.icon}
-              <span>{item.label}</span>
-            </button>
-          ))}
 
-          <div className="pt-2 border-t border-slate-200 space-y-1">
-            <div className="px-3 py-1 text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-              <span>Nhân sự Tạp vụ</span>
-            </div>
+        <div className="space-y-4">
+          {/* Nhóm Nhân sự nước ngoài */}
+          <div className="space-y-1">
+            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-indigo-400">
+              Nhân sự Nước ngoài
+            </span>
+            {hrForeignItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => handleSelect(item.key)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                  activeTab === item.key
+                    ? "bg-indigo-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Nhóm Nhân sự Tạp vụ */}
+          <div className="space-y-1 pt-2 border-t border-slate-800">
+            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+              Nhân sự Tạp vụ
+            </span>
             {janitorItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => handleSelect(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                   activeTab === item.key
-                    ? "bg-amber-600 text-white"
-                    : "text-amber-800 hover:bg-amber-50"
+                    ? "bg-emerald-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 }`}
               >
                 {item.icon}
@@ -99,18 +121,19 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             ))}
           </div>
 
-          <div className="pt-2 border-t border-slate-200 space-y-1">
-            <div className="px-3 py-1 text-[11px] font-bold text-blue-800 uppercase tracking-wider flex items-center gap-1.5">
-              <span>Quản lý xe</span>
-            </div>
+          {/* Nhóm Quản lý xe */}
+          <div className="space-y-1 pt-2 border-t border-slate-800">
+            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-cyan-400">
+              Quản lý xe
+            </span>
             {vehicleItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => handleSelect(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                   activeTab === item.key
-                    ? "bg-blue-600 text-white"
-                    : "text-blue-800 hover:bg-blue-50"
+                    ? "bg-cyan-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 }`}
               >
                 {item.icon}
@@ -119,29 +142,19 @@ export const MobileSidebarDrawer: React.FC<MobileSidebarDrawerProps> = ({
             ))}
           </div>
 
-          <button
-            onClick={() => handleSelect("MEAL_MANAGEMENT")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold ${
-              activeTab === "MEAL_MANAGEMENT"
-                ? "bg-amber-600 text-white"
-                : "text-slate-700 hover:bg-slate-100"
-            }`}
-          >
-            <span>Chi phí bữa ăn</span>
-          </button>
-
-          <div className="pt-2 border-t border-slate-200 space-y-1">
-            <div className="px-3 py-1 text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-              <span>{exportItem.label}</span>
-            </div>
+          {/* Nhóm Báo cáo Excel */}
+          <div className="space-y-1 pt-2 border-t border-slate-800">
+            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-rose-400">
+              {exportItem.label}
+            </span>
             {exportSubItems.map((item) => (
               <button
                 key={item.key}
                 onClick={() => handleSelect(item.key)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                   activeTab === item.key
-                    ? "bg-emerald-600 text-white"
-                    : "text-emerald-800 hover:bg-emerald-50"
+                    ? "bg-rose-600 text-white font-bold shadow-xs"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 }`}
               >
                 {item.icon}

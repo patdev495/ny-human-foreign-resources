@@ -1,4 +1,16 @@
 import React, { useEffect, useState } from "react";
+import {
+  UserCheck,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Building2,
+  Hotel,
+  AlertTriangle,
+  PlaneTakeoff,
+  List,
+  LayoutGrid,
+} from "lucide-react";
 import { fetchDailyPresenceReport } from "../api";
 import type { DailyPresenceReportResponse } from "../types";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
@@ -6,6 +18,7 @@ import { PresenceKpiHeader } from "./daily-presence/PresenceKpiHeader";
 import { GroupedPresenceView } from "./daily-presence/GroupedPresenceView";
 import { PresenceTableList } from "./daily-presence/PresenceTableList";
 import { ExitedPresenceTable } from "./daily-presence/ExitedPresenceTable";
+import { ModuleHeader } from "../../../shared/components/ModuleHeader";
 
 export const DailyPresenceReport: React.FC = () => {
   const getTodayStr = () => new Date().toISOString().split("T")[0];
@@ -33,8 +46,9 @@ export const DailyPresenceReport: React.FC = () => {
     try {
       const res = await fetchDailyPresenceReport(date);
       setData(res);
-    } catch (err: any) {
-      setError(err.message || "Không thể tải báo cáo thống kê hiện diện");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Không thể tải báo cáo thống kê hiện diện";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -44,23 +58,38 @@ export const DailyPresenceReport: React.FC = () => {
     loadReport(targetDate);
   }, [targetDate]);
 
-  const setOffsetDate = (days: number) => {
-    const d = new Date(targetDate || getTodayStr());
-    d.setDate(d.getDate() + days);
+  const setOffsetDate = (offsetDays: number) => {
+    const d = new Date(targetDate);
+    d.setDate(d.getDate() + offsetDays);
     setTargetDate(d.toISOString().split("T")[0]);
   };
 
-  const matchesSearch = (item: any) => {
+  const matchesSearch = (item: {
+    employee_code?: string | null;
+    name_latin: string;
+    room_number?: string | null;
+    hotel_name?: string | null;
+    department?: string | null;
+  }) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      (item.name_latin && item.name_latin.toLowerCase().includes(q)) ||
-      (item.name_chinese && item.name_chinese.toLowerCase().includes(q)) ||
+      item.name_latin.toLowerCase().includes(q) ||
       (item.employee_code && item.employee_code.toLowerCase().includes(q)) ||
-      (item.location_name && item.location_name.toLowerCase().includes(q)) ||
+      (item.room_number && item.room_number.toLowerCase().includes(q)) ||
+      (item.hotel_name && item.hotel_name.toLowerCase().includes(q)) ||
       (item.department && item.department.toLowerCase().includes(q))
     );
   };
+
+  const filteredItems = (data?.items || [])
+    .filter((it) => {
+      if (activeSubTab === "KTX") return Boolean(it.room_number);
+      if (activeSubTab === "HOTEL") return Boolean(it.hotel_name);
+      if (activeSubTab === "UNASSIGNED") return !it.room_number && !it.hotel_name;
+      return true;
+    })
+    .filter(matchesSearch);
 
   const filteredKtxGroups = (data?.ktx_groups || [])
     .map((g) => ({
@@ -77,16 +106,9 @@ export const DailyPresenceReport: React.FC = () => {
     .filter((g) => g.items.length > 0);
 
   const filteredUnassignedItems = (data?.unassigned_items || []).filter(matchesSearch);
-  const filteredExitedItems = (data?.exited_items || []).filter(matchesSearch);
 
-  const filteredItems = (data?.items || [])
-    .filter((item) => {
-      if (!matchesSearch(item)) return false;
-      if (activeSubTab === "KTX") return item.accommodation_type === "KTX" && item.room_number;
-      if (activeSubTab === "HOTEL") return item.accommodation_type === "HOTEL" && item.hotel_name;
-      if (activeSubTab === "UNASSIGNED") return !item.room_number && !item.hotel_name;
-      return true;
-    })
+  const filteredExitedItems = (data?.exited_items || [])
+    .filter(matchesSearch)
     .sort((a, b) => {
       const aUnassigned = !a.room_number && !a.hotel_name ? 0 : 1;
       const bUnassigned = !b.room_number && !b.hotel_name ? 0 : 1;
@@ -94,52 +116,44 @@ export const DailyPresenceReport: React.FC = () => {
     });
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* Top Header Banner */}
-      <div className="workspace-module-header workspace-accommodation bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-            📊
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight text-white">Thống kê Hiện diện & Chỗ ở</h1>
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-white/20 text-white font-semibold border border-white/30">
-                Hàng ngày
-              </span>
-            </div>
-            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
-              Tra cứu số lượng & vị trí lưu trú của nhân sự nước ngoài đang có mặt tại Việt Nam.
-            </p>
-          </div>
-        </div>
-
-        {/* Date Selector */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <div className="flex items-center bg-sky-950/25 backdrop-blur-xs p-1 rounded-xl border border-sky-400/30">
+      <ModuleHeader
+        title="Thống kê Hiện diện & Chỗ ở"
+        subtitle="Tra cứu số lượng & vị trí lưu trú của nhân sự nước ngoài đang có mặt tại Việt Nam."
+        icon={UserCheck}
+        theme="indigo"
+        badgeText="Theo ngày"
+      >
+        {/* Date Selector Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-xl bg-slate-950/40 p-1 border border-white/10 backdrop-blur-md">
             <button
+              type="button"
               onClick={() => setOffsetDate(-1)}
-              className="px-2.5 py-1 text-xs font-semibold text-sky-100 hover:text-white hover:bg-white/15 rounded-lg transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               title="Hôm qua"
             >
-              &larr;
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setTargetDate(getTodayStr())}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 targetDate === getTodayStr()
-                  ? "bg-white text-sky-800 shadow-xs font-extrabold"
-                  : "text-sky-100 hover:text-white hover:bg-white/15"
+                  ? "bg-indigo-600 text-white shadow-xs font-extrabold"
+                  : "text-slate-300 hover:text-white hover:bg-white/10"
               }`}
             >
               Hôm nay
             </button>
             <button
+              type="button"
               onClick={() => setOffsetDate(1)}
-              className="px-2.5 py-1 text-xs font-semibold text-sky-100 hover:text-white hover:bg-white/15 rounded-lg transition-all"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               title="Ngày mai"
             >
-              &rarr;
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -147,11 +161,10 @@ export const DailyPresenceReport: React.FC = () => {
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            style={{ colorScheme: "light", color: "#0f172a" }}
-            className="px-3 py-1.5 text-xs font-semibold bg-white text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-2xs cursor-pointer [color-scheme:light]"
+            className="h-9 px-3 text-xs font-mono font-bold bg-white text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
           />
         </div>
-      </div>
+      </ModuleHeader>
 
       {data && (
         <PresenceKpiHeader
@@ -163,57 +176,65 @@ export const DailyPresenceReport: React.FC = () => {
         />
       )}
 
-      {/* Tabs & Search controls */}
-      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+      {/* Modern Filter Toolbar */}
+      <div className="modern-card p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
           {mainTab === "IN_VN" ? (
             <>
               <button
+                type="button"
                 onClick={() => setActiveSubTab("ALL")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   activeSubTab === "ALL"
-                    ? "bg-blue-600 text-white shadow-xs"
+                    ? "bg-indigo-600 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 Tất cả ({data?.summary.total_in_vn || 0})
               </button>
               <button
+                type="button"
                 onClick={() => setActiveSubTab("KTX")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   activeSubTab === "KTX"
                     ? "bg-emerald-600 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                🏢 Ký túc xá ({data?.summary.ktx_count || 0})
+                <Building2 className="h-3.5 w-3.5" />
+                <span>Ký túc xá ({data?.summary.ktx_count || 0})</span>
               </button>
               <button
+                type="button"
                 onClick={() => setActiveSubTab("HOTEL")}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   activeSubTab === "HOTEL"
                     ? "bg-amber-600 text-white shadow-xs"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                🏨 Khách sạn ({data?.summary.hotel_count || 0})
+                <Hotel className="h-3.5 w-3.5" />
+                <span>Khách sạn ({data?.summary.hotel_count || 0})</span>
               </button>
               {(data?.summary.unassigned_count || 0) > 0 && (
                 <button
+                  type="button"
                   onClick={() => setActiveSubTab("UNASSIGNED")}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                     activeSubTab === "UNASSIGNED"
                       ? "bg-rose-600 text-white shadow-xs"
                       : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
-                  ⚠️ Chưa xếp phòng ({data?.summary.unassigned_count})
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>Chưa xếp phòng ({data?.summary.unassigned_count})</span>
                 </button>
               )}
             </>
           ) : (
-            <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-xl border border-rose-200">
-              ✈️ Danh sách Đã về nước ({data?.summary.exited_count || 0})
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200">
+              <PlaneTakeoff className="h-4 w-4" />
+              <span>Danh sách Đã về nước ({data?.summary.exited_count || 0})</span>
             </span>
           )}
         </div>
@@ -222,42 +243,54 @@ export const DailyPresenceReport: React.FC = () => {
           {mainTab === "IN_VN" && (
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
               <button
+                type="button"
                 onClick={() => setViewMode("LIST")}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   viewMode === "LIST"
                     ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                ☰ Bảng chi tiết
+                <List className="h-3.5 w-3.5" />
+                <span>Bảng</span>
               </button>
               <button
+                type="button"
                 onClick={() => setViewMode("GROUPED")}
-                className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   viewMode === "GROUPED"
                     ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                ❖ Phân nhóm chỗ ở
+                <LayoutGrid className="h-3.5 w-3.5" />
+                <span>Nhóm</span>
               </button>
             </div>
           )}
 
-          <input
-            type="text"
-            placeholder="Tìm theo tên, mã NV, vị trí..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-64 px-3.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
+          <div className="relative w-full md:w-64">
+            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <Search className="h-3.5 w-3.5" />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm tên, mã, phòng..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-8 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+            />
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-slate-400">Đang tải báo cáo hiện diện...</div>
+        <div className="modern-card p-12 text-center text-slate-400">
+          <div className="workspace-skeleton h-12 w-full mb-3" />
+          <div className="workspace-skeleton h-12 w-full" />
+        </div>
       ) : error ? (
-        <div className="p-4 bg-rose-50 border-l-4 border-rose-500 text-rose-700 rounded-lg">
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-medium">
           {error}
         </div>
       ) : mainTab === "IN_VN" ? (

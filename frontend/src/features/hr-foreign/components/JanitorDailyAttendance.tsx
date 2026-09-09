@@ -8,6 +8,8 @@ import {
 import { fetchEmployees } from "../api";
 import type { ForeignEmployee } from "../types";
 import { JanitorRangeAbsenceModal } from "./janitorial/JanitorRangeAbsenceModal";
+import { ModuleHeader } from "../../../shared/components/ModuleHeader";
+import { CalendarCheck, CalendarRange, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 
 export const JanitorDailyAttendance: React.FC = () => {
   const [targetDate, setTargetDate] = useState(
@@ -31,13 +33,14 @@ export const JanitorDailyAttendance: React.FC = () => {
       setSheet(sheetData);
       setEmployees(
         allEmps.filter(
-          (e) =>
+          (e: ForeignEmployee) =>
             e.employee_type === "JANITORIAL" ||
             (e.role && e.role.toLowerCase().includes("tạp vụ"))
         )
       );
-    } catch (err: any) {
-      setErrorMessage(err.message || "Lỗi tải dữ liệu điểm danh tạp vụ");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Lỗi tải dữ liệu điểm danh tạp vụ";
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -94,62 +97,60 @@ export const JanitorDailyAttendance: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header Banner */}
-      <div className="workspace-module-header workspace-janitorial bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-            📅
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">
-              Điểm danh Tạp vụ Hàng ngày
-            </h1>
-            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
-              Mặc định tất cả Tạp vụ đi làm đủ. Tích chọn các trường hợp vắng/nghỉ và nhập lý do.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
+      <ModuleHeader
+        title="Điểm danh Tạp vụ Hàng ngày"
+        subtitle="Mặc định tất cả Tạp vụ đi làm đủ. Tích chọn các trường hợp vắng/nghỉ và nhập lý do."
+        icon={CalendarCheck}
+        theme="purple"
+        badgeText="Hàng ngày"
+        actions={
           <button
+            type="button"
             onClick={() => setIsRangeModalOpen(true)}
-            className="px-4 py-2.5 bg-white text-sky-800 font-extrabold text-xs rounded-xl shadow-xs hover:bg-sky-50 transition-all flex items-center gap-2 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-900 shadow-md hover:bg-slate-100 transition-all cursor-pointer"
           >
-            <span>🗓️</span>
+            <CalendarRange className="h-4 w-4 text-purple-600" />
             <span>Đăng ký nghỉ theo đợt</span>
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-medium">
-          ⚠️ {errorMessage}
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-rose-500" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
       {/* Date selector & Controls */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="modern-card p-4 flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2 w-full md:w-auto">
           <button
+            type="button"
             onClick={() => handleDateShift(-1)}
-            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
           >
-            ◀ Ngày trước
+            <ChevronLeft className="h-3.5 w-3.5" />
+            <span>Ngày trước</span>
           </button>
           <input
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
-            className="px-3 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none cursor-pointer"
           />
           <button
+            type="button"
             onClick={() => handleDateShift(1)}
-            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
           >
-            Ngày sau ▶
+            <span>Ngày sau</span>
+            <ChevronRight className="h-3.5 w-3.5" />
           </button>
           <button
+            type="button"
             onClick={() => setTargetDate(new Date().toISOString().split("T")[0])}
-            className="px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            className="px-3 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold text-xs rounded-xl transition-colors cursor-pointer border border-purple-200"
           >
             Hôm nay
           </button>

@@ -5,6 +5,8 @@ import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { JanitorModal } from "./janitorial/JanitorModal";
 import { JanitorStatCards } from "./janitorial/JanitorStatCards";
 import { JanitorTable } from "./janitorial/JanitorTable";
+import { ModuleHeader } from "../../../shared/components/ModuleHeader";
+import { Sparkles, UserPlus, AlertTriangle } from "lucide-react";
 
 export const JanitorialHrManagement: React.FC = () => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
@@ -165,31 +167,28 @@ export const JanitorialHrManagement: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header Banner */}
-      <div className="workspace-module-header workspace-janitorial bg-gradient-to-r from-sky-700 via-sky-600 to-blue-700 text-white rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sky-400/30">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center text-2xl shrink-0 backdrop-blur-xs">
-            🧹
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">Quản lý Nhân sự Tạp vụ</h1>
-            <p className="text-xs text-sky-100/90 mt-1 max-w-3xl leading-relaxed">
-              Quản lý hồ sơ nhân viên tạp vụ nội địa, nơi làm việc (KTX, CN09, CN15) và mức lương tháng/ngày.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleOpenAddModal}
-          className="px-4 py-2.5 bg-white text-sky-800 font-extrabold text-xs rounded-xl shadow-xs hover:bg-sky-50 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
-        >
-          <span>➕</span>
-          <span>Thêm Nhân viên Tạp vụ</span>
-        </button>
-      </div>
+      <ModuleHeader
+        title="Quản lý Nhân sự Tạp vụ"
+        subtitle="Quản lý hồ sơ nhân viên tạp vụ nội địa, nơi làm việc (KTX, CN09, CN15) và mức lương tháng/ngày."
+        icon={Sparkles}
+        theme="purple"
+        badgeText={`${employees.length} Nhân sự`}
+        actions={
+          <button
+            type="button"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-900 shadow-md hover:bg-slate-100 transition-all cursor-pointer"
+          >
+            <UserPlus className="h-4 w-4 text-purple-600" />
+            <span>Thêm Nhân viên Tạp vụ</span>
+          </button>
+        }
+      />
 
       {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-medium">
-          ⚠️ {errorMessage}
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-rose-500" />
+          <span>{errorMessage}</span>
         </div>
       )}
 
