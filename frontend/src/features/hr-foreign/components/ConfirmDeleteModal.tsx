@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { X, AlertTriangle } from "lucide-react";
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -26,6 +28,20 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !deleting) onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, deleting, onClose]);
+
   if (!isOpen) return null;
 
   const handleConfirm = async () => {
@@ -41,21 +57,22 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-150">
         {/* Danger Header */}
         <div className="px-6 py-4 bg-rose-600 text-white flex justify-between items-center">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">⚠️</span>
+            <AlertTriangle className="h-5 w-5" />
             <h3 className="text-base font-bold tracking-tight">{title}</h3>
           </div>
           <button
+            type="button"
             onClick={onClose}
             disabled={deleting}
-            className="text-white/80 hover:text-white text-2xl font-bold leading-none cursor-pointer disabled:opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
           >
-            &times;
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -117,4 +134,6 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

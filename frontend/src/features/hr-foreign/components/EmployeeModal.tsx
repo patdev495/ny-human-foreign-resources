@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import type { ForeignEmployee, ForeignEmployeeCreate } from "../types";
-
 
 interface EmployeeModalProps {
   isOpen: boolean;
@@ -73,11 +74,16 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key === "Escape" && !submitting) onClose();
     };
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
   }, [isOpen, onClose, submitting]);
 
   useEffect(() => {
@@ -117,19 +123,20 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4" role="presentation">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title">
-        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <h3 id="employee-modal-title" className="text-lg font-semibold text-slate-800">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-150" role="dialog" aria-modal="true" aria-labelledby="employee-modal-title">
+        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-900 text-white">
+          <h3 id="employee-modal-title" className="text-base font-bold text-white">
             {initialData ? "Chỉnh sửa Hồ sơ Nhân sự" : "Thêm Hồ sơ Nhân sự Nước ngoài"}
           </h3>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Đóng form hồ sơ nhân sự"
-            className="min-w-11 min-h-11 text-slate-400 hover:text-slate-600 text-xl font-bold leading-none cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
           >
-            &times;
+            <X className="h-4 w-4" />
           </button>
         </div>
 
@@ -295,4 +302,6 @@ export const EmployeeModal: React.FC<EmployeeModalProps> = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
