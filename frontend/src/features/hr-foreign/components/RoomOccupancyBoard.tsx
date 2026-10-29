@@ -54,7 +54,7 @@ export const RoomOccupancyBoard: React.FC = () => {
 
   const unassignedEmployees = employees.filter((emp) => {
     const upcomingArrival = Boolean(
-      emp.entry_date && emp.entry_date > new Date().toISOString().split("T")[0] && !emp.actual_exit_date
+      emp.entry_date && emp.entry_date > new Date().toISOString().split("T")[0]
     );
     if ((!emp.is_in_vietnam && !upcomingArrival) || emp.current_room_number) return false;
     if (!searchQuery.trim()) return true;

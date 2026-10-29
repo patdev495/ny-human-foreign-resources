@@ -305,6 +305,29 @@ def test_allow_future_entry_but_reject_future_exit(client: TestClient, emp_id: i
     assert "tương lai" in res.json()["detail"].lower()
 
 
+def test_upcoming_trip_does_not_inherit_previous_actual_exit(client: TestClient, emp_id: int) -> None:
+    today = datetime.date.today()
+    previous_entry = (today - datetime.timedelta(days=30)).isoformat()
+    previous_exit = (today - datetime.timedelta(days=10)).isoformat()
+    upcoming_entry = (today + datetime.timedelta(days=2)).isoformat()
+
+    previous = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"entry_date": previous_entry, "actual_exit_date": previous_exit},
+    )
+    assert previous.status_code == 201
+    upcoming = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"entry_date": upcoming_entry},
+    )
+    assert upcoming.status_code == 201
+
+    employee = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
+    assert employee["entry_date"] == upcoming_entry
+    assert employee["is_in_vietnam"] is False
+    assert employee["actual_exit_date"] is None
+
+
 def test_delete_travel_record_cascades_to_stays(client: TestClient, emp_id: int) -> None:
     # 1. Create open travel record
     tr_res = client.post(

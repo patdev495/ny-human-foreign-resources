@@ -104,8 +104,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   );
   const hasUpcomingArrival = Boolean(
     selectedEmployee?.entry_date &&
-    selectedEmployee.entry_date > new Date().toISOString().split("T")[0] &&
-    !selectedEmployee.actual_exit_date
+    selectedEmployee.entry_date > new Date().toISOString().split("T")[0]
   );
 
   useEffect(() => {
