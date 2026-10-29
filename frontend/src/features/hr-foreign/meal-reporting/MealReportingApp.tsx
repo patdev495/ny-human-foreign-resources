@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { getDates, getPeople, getReport, saveReport } from './api'
 import type { MealSelection, PublicPerson, ReportingDate } from './types'
+import { EndShiftReporting, weekdayLabel } from '../end-shift-reporting/EndShiftReporting'
 
-type Screen = 'choose' | 'confirm' | 'menu' | 'report'
+type Screen = 'choose' | 'confirm' | 'menu' | 'report' | 'end-shift'
 const STORAGE_KEY = 'ny-meal-person-id'
 const statusLabel: Record<PublicPerson['status'], string> = {
   KTX: 'Dormitory', HOTEL: 'Hotel', ABROAD: 'Returned home', UNASSIGNED: 'No dormitory room',
@@ -159,8 +160,8 @@ export function MealReportingApp() {
     <div className="mx-auto max-w-lg space-y-6">
       <header className="rounded-3xl bg-indigo-950 px-6 py-7 text-white shadow-lg">
         <div className="text-xs font-bold uppercase tracking-[0.22em] text-indigo-200">NY • Employee portal</div>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">Meal reporting</h1>
-        <p className="mt-2 text-sm text-indigo-100">Breakfast and dinner at the dormitory</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">{screen === 'end-shift' ? 'End of shift reporting' : 'Employee reporting'}</h1>
+        <p className="mt-2 text-sm text-indigo-100">{screen === 'end-shift' ? 'Your end of shift choice for the work day' : 'Meals and end of shift at the dormitory'}</p>
       </header>
 
       {loading && <p className="rounded-2xl bg-white p-6 text-center" role="status">Loading…</p>}
@@ -209,7 +210,7 @@ export function MealReportingApp() {
       {!loading && screen === 'menu' && person && <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div><p className="text-sm text-slate-600">Welcome,</p><h2 className="text-xl font-bold">{person.name_latin}</h2><p className="text-sm text-slate-600">Room {person.room_number}</p></div>
         <button type="button" onClick={() => setScreen('report')} className={`${button} bg-indigo-700 text-left text-white hover:bg-indigo-800`}>🍽️ Meal reporting <span className="block text-sm font-normal text-indigo-100">Breakfast and dinner</span></button>
-        <div aria-disabled="true" className={`${button} bg-slate-100 text-slate-500`}>🕒 End of shift reporting <span className="block text-sm font-normal">Coming soon</span></div>
+        <button type="button" onClick={() => setScreen('end-shift')} className={`${button} bg-indigo-700 text-left text-white hover:bg-indigo-800`}>🕒 End of shift reporting <span className="block text-sm font-normal text-indigo-100">17h30, 20h00 or self travel</span></button>
         <button type="button" onClick={signOut} className="w-full py-3 text-sm font-semibold text-slate-600 underline">Sign out / choose another person</button>
       </section>}
 
@@ -218,7 +219,7 @@ export function MealReportingApp() {
         <div><h2 className="text-xl font-bold">Meal report</h2><p className="text-sm text-slate-600">{person.name_latin} • Room {person.room_number}</p></div>
         <label className="block text-sm font-semibold">Meal date
           <select value={date} onChange={event => setDate(event.target.value)} className="mt-2 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3">
-            {dates.map(item => <option key={item.date} value={item.date}>{item.date}{item.can_submit ? '' : ' • View only'}</option>)}
+            {dates.map(item => <option key={item.date} value={item.date}>{weekdayLabel(item.date)}{item.can_submit ? '' : ' • View only'}</option>)}
           </select>
         </label>
         {reportLoading ? <p role="status">Loading report…</p> : <>
@@ -231,6 +232,7 @@ export function MealReportingApp() {
           {day?.can_submit ? <><p className="text-xs text-slate-600">Submit before 17:00 Vietnam time on the previous day, even when both boxes are unticked.</p><button type="button" disabled={saving} onClick={() => void submit()} className={`${button} bg-indigo-700 text-white hover:bg-indigo-800`}>{saving ? 'Saving…' : hasReport ? 'Save changes' : 'Submit meal report'}</button></> : <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">View only. Deadline passed or meals are not served this day. Contact HR for changes.</p>}
         </>}
       </section>}
+      {!loading && screen === 'end-shift' && person && <EndShiftReporting employeeId={person.id} name={person.name_latin} room={person.room_number} onBack={() => setScreen('menu')} />}
     </div>
   </main>
 }

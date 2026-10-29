@@ -61,6 +61,21 @@ Trạng thái của Nhân viên nước ngoài chưa gửi Báo cơm cho một n
 **Hạn báo cơm**:
 Mốc 17h ngày hôm trước ngày ăn, tính theo giờ của máy chủ triển khai tại Việt Nam. Sau mốc này, Nhân viên nước ngoài không thể gửi hoặc sửa Báo cơm cho ngày ăn đó và cần liên hệ HR nếu muốn thay đổi.
 
+**Báo giờ tan làm** (End of Shift Reporting):
+Thông tin Nhân viên nước ngoài đang ở KTX tự gửi cho một ngày làm việc về phương án tan làm, điểm đón và điểm đến để HR xác định nhu cầu xe. Ngày làm việc có thể là Chủ nhật; điểm đến hiện tại là KTX và có thể mở rộng về sau. Hai mốc giờ được hiểu là giờ tan làm do nhân viên khai báo.
+
+**Phương án tan làm**:
+Một trong ba lựa chọn của Báo giờ tan làm: tan làm lúc 17h30, tan làm lúc 20h00 hoặc Tự di chuyển. Tự di chuyển nghĩa là không cần HR điều xe và không cần khai báo điểm đón.
+
+**Chưa báo giờ tan làm**:
+Trạng thái của Nhân viên nước ngoài chưa gửi Báo giờ tan làm cho một ngày, khác với việc đã chọn Tự di chuyển.
+
+**Hạn báo giờ tan làm**:
+Mốc 17h của chính ngày làm việc được khai báo, tính theo giờ Việt Nam.
+
+**Nhu cầu xe tan làm**:
+Danh sách trạng thái khai báo của những Nhân viên nước ngoài thuộc diện báo giờ tan làm mà HR tra cứu theo ngày, điểm đón và phương án tan làm để tự sắp xếp xe. Danh sách này bao gồm cả người Chưa báo giờ tan làm, không phải bản phân xe hoặc phân tài xế.
+
 **Đăng ký ăn thêm** (Extra Meal Request):
 Bản ghi bổ sung suất ăn theo quy trình quản lý hiện tại cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn hoặc khách công tác). Báo cơm là nguồn xác định suất Sáng/Tối của Nhân viên nước ngoài trong quy trình mới.
 
@@ -93,7 +108,7 @@ Tính năng đánh dấu loại ngày cho một ngày đơn lẻ hoặc một kh
 - **Ngày đơn lẻ**: Nhập 1 trong 2 ô ngày tháng (hoặc `start_date` == `end_date`) + Chọn Loại ngày $\rightarrow$ Gán loại ngày cho ngày đơn lẻ đó.
 
 **Quản lý xe** (Vehicle Management):
-Sub-system / Phân hệ độc lập quản lý việc điều động phương tiện di chuyển, danh mục nhà xe, xe công ty, xe thuê ngoài và hợp đồng / bảng giá chi phí điều xe. Trên Sidebar, phân hệ này hiển thị dưới dạng nhóm Accordion gồm 3 mục con tinh gọn: **Nhật ký Điều xe**, **Nhật ký Quãng đường di chuyển**, và **Quản lý Hợp đồng & Nhà xe**.
+Sub-system / Phân hệ độc lập quản lý việc điều động phương tiện di chuyển, danh mục nhà xe, xe công ty, xe thuê ngoài và hợp đồng / bảng giá chi phí điều xe. Trên Sidebar, phân hệ này gồm **Nhật ký Điều xe**, **Điều xe tan làm** (tra cứu nhu cầu), **Nhật ký Quãng đường di chuyển**, và **Quản lý Hợp đồng & Nhà xe**.
 
 **Quản lý Hợp đồng & Nhà xe** (Unified Vehicle Contract & Provider Management):
 Mục quản lý tập trung toàn bộ hợp đồng và quy tắc tính cước của tất cả các nhà xe (cả nhà xe công ty và nhà xe ngoài). Giao diện được thiết kế mô đun dạng Sub-tab mở rộng để sẵn sàng tiếp nhận thêm các loại hợp đồng/nhà xe mới trong tương lai. Hiện tại gồm 2 loại chính:

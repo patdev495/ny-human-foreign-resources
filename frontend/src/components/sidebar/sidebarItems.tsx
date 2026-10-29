@@ -21,6 +21,7 @@ export type NavTab =
   | "EXPIRING_DOCS"
   | "VEHICLE_MANAGEMENT"
   | "VEHICLE_DISPATCH"
+  | "VEHICLE_END_SHIFT"
   | "VEHICLE_STATS"
   | "VEHICLE_CONTRACTS"
   | "MEAL_MANAGEMENT"
@@ -86,6 +87,11 @@ export const vehicleItems: NavItem[] = [
     key: "VEHICLE_DISPATCH",
     label: "Nhật ký Điều xe",
     icon: <Car className="h-4 w-4 shrink-0" />,
+  },
+  {
+    key: "VEHICLE_END_SHIFT",
+    label: "Điều xe tan làm",
+    icon: <CalendarCheck className="h-4 w-4 shrink-0" />,
   },
   {
     key: "VEHICLE_STATS",

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Car, Calendar, Gauge, FileText } from "lucide-react";
+import { Car, Calendar, Gauge, FileText, Clock } from "lucide-react";
 import { VehicleContractManagement } from "./VehicleContractManagement";
 import { VehicleStatsManagement } from "./VehicleStatsManagement";
 import { VehicleDispatchList } from "./VehicleDispatchList";
+import { EndShiftDemand } from "./EndShiftDemand";
 import type { NavTab } from "../../../components/Sidebar";
 import { ModuleHeader } from "../../../shared/components/ModuleHeader";
 
-type SubTabKey = "DISPATCH" | "STATS" | "CONTRACTS";
+type SubTabKey = "DISPATCH" | "END_SHIFT" | "STATS" | "CONTRACTS";
 
 interface VehicleManagementProps {
   activeTab?: NavTab;
@@ -21,6 +22,8 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
     switch (tab) {
       case "VEHICLE_DISPATCH":
         return "DISPATCH";
+      case "VEHICLE_END_SHIFT":
+        return "END_SHIFT";
       case "VEHICLE_STATS":
         return "STATS";
       case "VEHICLE_CONTRACTS":
@@ -34,6 +37,8 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
     switch (sub) {
       case "DISPATCH":
         return "VEHICLE_DISPATCH";
+      case "END_SHIFT":
+        return "VEHICLE_END_SHIFT";
       case "STATS":
         return "VEHICLE_STATS";
       case "CONTRACTS":
@@ -64,6 +69,11 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
           title: "Nhật ký Điều xe",
           desc: "Theo dõi lịch trình các chuyến điều xe đưa đón nhân sự, đối chiếu cước xe và tài xế.",
         };
+      case "END_SHIFT":
+        return {
+          title: "Điều xe tan làm",
+          desc: "Xem khai báo giờ tan làm theo ngày để tự sắp xếp xe đưa về KTX.",
+        };
       case "STATS":
         return {
           title: "Thống kê & Quãng đường di chuyển",
@@ -93,6 +103,11 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
             icon: <Calendar className="h-3.5 w-3.5" />,
           },
           {
+            key: "END_SHIFT",
+            label: "Điều xe tan làm",
+            icon: <Clock className="h-3.5 w-3.5" />,
+          },
+          {
             key: "STATS",
             label: "Thống kê Quãng đường",
             icon: <Gauge className="h-3.5 w-3.5" />,
@@ -109,6 +124,7 @@ export const VehicleManagement: React.FC<VehicleManagementProps> = ({
 
       {/* Sub-Tab Content */}
       {activeSubTab === "DISPATCH" && <VehicleDispatchList />}
+      {activeSubTab === "END_SHIFT" && <EndShiftDemand />}
       {activeSubTab === "STATS" && <VehicleStatsManagement />}
       {activeSubTab === "CONTRACTS" && <VehicleContractManagement />}
     </div>

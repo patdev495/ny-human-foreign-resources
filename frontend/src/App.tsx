@@ -29,6 +29,7 @@ const tabMetaMap: Record<NavTab, { section: string; title: string }> = {
   JANITOR_ATTENDANCE: { section: "Nhân sự tạp vụ", title: "Điểm danh hàng ngày" },
   VEHICLE_MANAGEMENT: { section: "Quản lý xe", title: "Điều hành xe" },
   VEHICLE_DISPATCH: { section: "Quản lý xe", title: "Nhật ký Điều xe" },
+  VEHICLE_END_SHIFT: { section: "Quản lý xe", title: "Điều xe tan làm" },
   VEHICLE_STATS: { section: "Quản lý xe", title: "Thống kê Quãng đường" },
   VEHICLE_CONTRACTS: { section: "Quản lý xe", title: "Hợp đồng & Bảng giá" },
   EXPORT_LEGAL: { section: "Báo cáo Excel", title: "Hồ sơ người nước ngoài" },
@@ -49,6 +50,7 @@ export const App: React.FC = () => {
       "EXPIRING_DOCS",
       "VEHICLE_MANAGEMENT",
       "VEHICLE_DISPATCH",
+      "VEHICLE_END_SHIFT",
       "VEHICLE_STATS",
       "VEHICLE_CONTRACTS",
       "MEAL_MANAGEMENT",
@@ -185,6 +187,7 @@ export const App: React.FC = () => {
             {activeTab === "EXPIRING_DOCS" && <ExpiringDocsAlert />}
             {(activeTab === "VEHICLE_MANAGEMENT" ||
               activeTab === "VEHICLE_DISPATCH" ||
+              activeTab === "VEHICLE_END_SHIFT" ||
               activeTab === "VEHICLE_STATS" ||
               activeTab === "VEHICLE_CONTRACTS") && (
               <VehicleManagement activeTab={activeTab} setActiveTab={setActiveTab} />

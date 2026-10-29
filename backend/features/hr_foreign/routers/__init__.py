@@ -7,6 +7,7 @@ from .legal_doc_router import router as legal_doc_router
 from .accommodation_router import router as accommodation_router
 from .email_router import router as email_router
 from .janitor_router import router as janitor_router
+from features.hr_foreign.end_shift_reporting.hr_router import router as end_shift_hr_router
 
 router = APIRouter()
 
@@ -17,6 +18,7 @@ router.include_router(legal_doc_router)
 router.include_router(accommodation_router)
 router.include_router(email_router)
 router.include_router(janitor_router)
+router.include_router(end_shift_hr_router)
 
 __all__ = ["router"]
 
