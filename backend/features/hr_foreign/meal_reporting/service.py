@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 
-from sqlalchemy import text
+from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
@@ -29,7 +29,7 @@ def active_stay(db: Session, employee_id: int, on_date: dt.date) -> Stay | None:
         db.query(Stay)
         .filter(
             Stay.employee_id == employee_id,
-            Stay.start_date <= on_date,
+            or_(Stay.start_date.is_(None), Stay.start_date <= on_date),
             (Stay.end_date.is_(None) | (Stay.end_date >= on_date)),
         )
         .order_by(Stay.start_date.desc(), Stay.id.desc())
@@ -55,7 +55,7 @@ def public_person(db: Session, employee: ForeignEmployee, on_date: dt.date) -> P
 def list_people(db: Session, query: str) -> list[PublicPerson]:
     employees = db.query(ForeignEmployee).filter(ForeignEmployee.employee_type == "FOREIGN").order_by(ForeignEmployee.name_latin).all()
     term = query.casefold().strip()
-    today = dt.date.today()
+    today = rules.now_vietnam().date()
     return [
         public_person(db, employee, today)
         for employee in employees
