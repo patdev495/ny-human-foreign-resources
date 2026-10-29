@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { DailyMealEmployeeItem, DailyMealSessionSummary, MealSessionLock } from "../types";
 import { fetchMealLockHistory } from "../api";
+import { vietnamDate } from "./meal-forecast/vietnamDate";
 
 interface LockMealSessionModalProps {
   date: string;
@@ -40,7 +41,14 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   const isAlreadyLocked = sessionSummary.is_locked;
   const isNewForeignLock = usesMealReports && sessionSummary.meal_session !== "LUNCH";
   const deadline = Date.parse(`${date}T00:00:00+07:00`) - 7 * 60 * 60 * 1000;
-  const isBeforeLockWindow = isNewForeignLock && Date.now() < deadline;
+  const [currentTime, setCurrentTime] = useState(Date.now);
+  const isBeforeLockWindow = isNewForeignLock && currentTime < deadline;
+  useEffect(() => {
+    if (!isBeforeLockWindow) return;
+    const delay = Math.min(Math.max(deadline - Date.now() + 1000, 1000), 2_147_483_647);
+    const timer = window.setTimeout(() => setCurrentTime(Date.now()), delay);
+    return () => window.clearTimeout(timer);
+  }, [deadline, isBeforeLockWindow, currentTime]);
   const [history, setHistory] = useState<MealSessionLock[]>([]);
   useEffect(() => {
     if (isNewForeignLock && isAlreadyLocked) {
@@ -48,8 +56,8 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
     }
   }, [date, isAlreadyLocked, isNewForeignLock, sessionSummary.meal_session]);
 
-  const getTodayStr = () => new Date().toISOString().split("T")[0];
-  const isPastDate = date < getTodayStr();
+  const today = vietnamDate();
+  const isPastDate = date < today;
   const isSunday = new Date(date + "T00:00:00").getDay() === 0;
   const [confirmedPast, setConfirmedPast] = useState<boolean>(false);
   const [confirmedRelock, setConfirmedRelock] = useState<boolean>(false);
@@ -308,7 +316,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
                 <span>⚠️ CẢNH BÁO: ĐANG CHỐT NGÀY TRONG QUÁ KHỨ</span>
               </div>
               <p className="text-[11px] text-rose-700 leading-relaxed">
-                Ngày bạn chọn (<strong>{date}</strong>) trước ngày hôm nay (<strong>{getTodayStr()}</strong>). Thao tác này sẽ ghi đè dữ liệu chốt suất ăn đối soát của ngày đã qua.
+                Ngày bạn chọn (<strong>{date}</strong>) trước ngày hôm nay (<strong>{today}</strong>). Thao tác này sẽ ghi đè dữ liệu chốt suất ăn đối soát của ngày đã qua.
               </p>
               <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-bold text-rose-900 bg-white p-2 rounded-lg border border-rose-200 hover:bg-rose-100/50 transition-colors">
                 <input
@@ -359,7 +367,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || isBeforeLockWindow}
-              className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:scale-95 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 text-xs font-bold text-white bg-amber-600 enabled:hover:bg-amber-700 enabled:active:scale-95 rounded-xl shadow-xs transition-all enabled:cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-60 flex items-center gap-1.5"
             >
               {isSubmitting
                 ? "Đang lưu..."

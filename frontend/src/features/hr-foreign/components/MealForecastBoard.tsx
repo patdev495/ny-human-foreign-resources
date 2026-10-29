@@ -4,9 +4,10 @@ import type { DailyMealForecastResponse, DailyMealSessionSummary } from "../type
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
 import { MealEmployeeForecastTable } from "./meal-forecast/MealEmployeeForecastTable";
+import { vietnamDate } from "./meal-forecast/vietnamDate";
 
 export function MealForecastBoard() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [selectedDate, setSelectedDate] = useState(() => vietnamDate(1));
   const [forecast, setForecast] = useState<DailyMealForecastResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
