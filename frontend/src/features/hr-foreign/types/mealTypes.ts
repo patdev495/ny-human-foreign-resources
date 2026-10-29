@@ -71,10 +71,14 @@ export interface DailyMealEmployeeItem {
   is_dinner_absent: boolean;
   is_breakfast_extra?: boolean;
   is_dinner_extra?: boolean;
+  breakfast_report_status: "EATING" | "NOT_EATING" | "NOT_REPORTED" | "INELIGIBLE";
+  dinner_report_status: "EATING" | "NOT_EATING" | "NOT_REPORTED" | "INELIGIBLE";
+  meal_report_updated_at?: string | null;
 }
 
 export interface DailyMealForecastResponse {
   date: string;
+  uses_meal_reports: boolean;
   day_type?: string;
   day_type_name?: string;
   suggested_price_per_meal?: number;
@@ -87,6 +91,13 @@ export interface DailyMealForecastResponse {
   dinner: DailyMealSessionSummary;
   active_ktx_residents_count: number;
   employees: DailyMealEmployeeItem[];
+}
+
+export interface HrMealReportHistory {
+  employee_id: number;
+  meal_date: string;
+  current: { breakfast: boolean; dinner: boolean } | null;
+  history: { breakfast: boolean; dinner: boolean; submitted_at: string }[];
 }
 
 export interface EventDay {
@@ -172,6 +183,8 @@ export interface MealExpenseReportResponse {
   total_meal_days: number;
   total_meals: number;
   total_expense: number;
+  total_fruit_expense: number;
+  grand_total_expense: number;
   items: MealExpenseReportItem[];
   janitor_items?: JanitorDailyItem[];
   total_janitor_meals?: number;

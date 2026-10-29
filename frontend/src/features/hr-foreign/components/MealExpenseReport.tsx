@@ -105,8 +105,9 @@ export const MealExpenseReport: React.FC = () => {
             <div className="p-4 bg-purple-50/60 border border-purple-100 rounded-xl">
               <div className="text-xs font-medium text-purple-700">Tổng Thành Tiền</div>
               <div className="text-xl font-bold text-purple-900 mt-1">
-                {report.total_expense.toLocaleString("vi-VN")} VNĐ
+                {report.grand_total_expense.toLocaleString("vi-VN")} VNĐ
               </div>
+              <div className="mt-1 text-xs text-purple-700">Gồm {report.total_fruit_expense.toLocaleString("vi-VN")} VNĐ hoa quả</div>
             </div>
           </div>
 
@@ -205,7 +206,7 @@ export const MealExpenseReport: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-center font-mono text-blue-900">{report.total_meals}</td>
                     <td className="px-4 py-3 text-right font-mono text-purple-900 text-base">
-                      {report.total_expense.toLocaleString("vi-VN")} VNĐ
+                      {report.grand_total_expense.toLocaleString("vi-VN")} VNĐ
                     </td>
                   </tr>
                 </tfoot>

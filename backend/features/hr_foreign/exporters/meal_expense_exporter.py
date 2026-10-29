@@ -130,7 +130,7 @@ def generate_meal_expense_excel(
 
 
     # Total summary row
-    last_r = 8 + day_idx - 1
+    last_r = 8 + len(daily_items) - 1
     tot_r = last_r + 1
 
     cell_tot_label = ws.cell(row=tot_r, column=1, value="总 共")

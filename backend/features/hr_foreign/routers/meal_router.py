@@ -27,8 +27,15 @@ from features.hr_foreign.schemas import (
     MealSessionLockCreate,
     MealSessionLockRead,
 )
+from features.hr_foreign.meal_reporting.schemas import HrMealReportView
+from features.hr_foreign.meal_reporting.service import hr_report_view
 
 router = APIRouter()
+
+
+@router.get("/meals/reports/{employee_id}/{meal_date}", response_model=HrMealReportView)
+def get_hr_meal_report(employee_id: int, meal_date: datetime.date, db: Session = Depends(get_db)) -> HrMealReportView:
+    return hr_report_view(db, employee_id, meal_date)
 
 
 
@@ -112,6 +119,13 @@ def lock_meal_session(
     payload: MealSessionLockCreate, db: Session = Depends(get_db)
 ) -> MealSessionLockRead:
     return service.lock_meal_session(db, payload)
+
+
+@router.get("/meals/locks/{lock_date}/{meal_session}/history", response_model=list[MealSessionLockRead])
+def get_meal_lock_history(
+    lock_date: datetime.date, meal_session: str, db: Session = Depends(get_db)
+) -> list[MealSessionLockRead]:
+    return service.get_meal_lock_history(db, lock_date, meal_session)
 
 
 # --- EVENT DAYS ENDPOINTS ---

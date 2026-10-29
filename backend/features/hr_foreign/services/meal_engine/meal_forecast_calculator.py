@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import os
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -20,6 +21,14 @@ from features.hr_foreign.schemas import (
     DailyMealSessionSummary,
 )
 from features.hr_foreign.services.janitor_service import get_dormitory_janitor_count_for_date
+from features.hr_foreign.meal_reporting.models import MealReport
+from features.hr_foreign.meal_reporting.service import active_travel
+
+
+def uses_meal_reports(target_date: datetime.date) -> bool:
+    start_date_text = os.getenv("MEAL_REPORTING_START_DATE")
+    start_date = datetime.date.fromisoformat(start_date_text) if start_date_text else datetime.date(2026, 10, 29)
+    return target_date >= start_date
 
 
 
@@ -104,6 +113,23 @@ def calculate_daily_forecast(
         .all()
     )
 
+    use_reports = uses_meal_reports(target_date)
+    reports_by_employee: dict[int, MealReport] = {}
+    if use_reports:
+        reports_by_employee = {
+            report.employee_id: report
+            for report in db.query(MealReport).filter(MealReport.meal_date == target_date).all()
+        }
+        latest_stays = {stay.employee_id: stay for stay in sorted(stays, key=lambda item: (item.start_date or datetime.date.min, item.id))}
+        for employee_id in reports_by_employee:
+            if employee_id not in latest_stays:
+                previous = (db.query(Stay)
+                    .filter(Stay.employee_id == employee_id, Stay.start_date <= target_date)
+                    .order_by(Stay.start_date.desc(), Stay.id.desc()).first())
+                if previous is not None:
+                    latest_stays[employee_id] = previous
+        stays = list(latest_stays.values())
+
     stay_ids = [s.id for s in stays]
     meal_absences = (
         db.query(MealAbsence)
@@ -131,6 +157,8 @@ def calculate_daily_forecast(
     dinner_absent_count = 0
     breakfast_extra_count = 0
     dinner_extra_count = 0
+    breakfast_report_count = 0
+    dinner_report_count = 0
 
     for stay in stays:
         emp = stay.employee
@@ -151,7 +179,21 @@ def calculate_daily_forecast(
         is_bf_extra = ("ALL_DAY" in stay_extras) or ("BREAKFAST" in stay_extras)
         is_dn_extra = ("ALL_DAY" in stay_extras) or ("DINNER" in stay_extras)
 
-        if stay.accommodation_type == "KTX" and stay.has_meals:
+        report = reports_by_employee.get(emp.id) if use_reports else None
+        is_report_eligible = (
+            stay.accommodation_type == "KTX" and stay.room_id is not None
+            and (stay.start_date is None or stay.start_date <= target_date)
+            and (stay.end_date is None or stay.end_date >= target_date)
+            and active_travel(db, emp.id, target_date) is not None
+        ) if use_reports else False
+        breakfast_status = "INELIGIBLE" if not is_report_eligible else "NOT_REPORTED" if report is None else "EATING" if report.breakfast else "NOT_EATING"
+        dinner_status = "INELIGIBLE" if not is_report_eligible else "NOT_REPORTED" if report is None else "EATING" if report.dinner else "NOT_EATING"
+        if is_report_eligible and report is not None:
+            breakfast_report_count += int(report.breakfast)
+            dinner_report_count += int(report.dinner)
+
+        eligible_for_count = is_report_eligible if use_reports else (stay.accommodation_type == "KTX" and stay.has_meals)
+        if eligible_for_count:
             active_ktx_residents_count += 1
             if is_bf_absent:
                 breakfast_absent_count += 1
@@ -177,11 +219,14 @@ def calculate_daily_forecast(
                 is_dinner_absent=is_dn_absent,
                 is_breakfast_extra=is_bf_extra,
                 is_dinner_extra=is_dn_extra,
+                breakfast_report_status=breakfast_status,
+                dinner_report_status=dinner_status,
+                meal_report_updated_at=report.updated_at if report else None,
             )
         )
 
-    bf_calculated = max(0, active_ktx_residents_count - breakfast_absent_count + breakfast_extra_count)
-    dn_calculated = max(0, active_ktx_residents_count - dinner_absent_count + dinner_extra_count)
+    bf_calculated = breakfast_report_count if use_reports else max(0, active_ktx_residents_count - breakfast_absent_count + breakfast_extra_count)
+    dn_calculated = dinner_report_count if use_reports else max(0, active_ktx_residents_count - dinner_absent_count + dinner_extra_count)
 
     bf_lock = locks_map.get("BREAKFAST")
     lc_lock = locks_map.get("LUNCH")
@@ -222,6 +267,7 @@ def calculate_daily_forecast(
 
     return DailyMealForecastResponse(
         date=target_date,
+        uses_meal_reports=use_reports,
         day_type=day_type,
         day_type_name=day_type_name,
         suggested_price_per_meal=bf_price,

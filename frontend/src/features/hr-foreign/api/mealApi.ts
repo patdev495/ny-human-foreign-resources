@@ -13,8 +13,15 @@ import type {
   MealPriceConfigCreate,
   MealSessionLock,
   MealSessionLockCreate,
+  HrMealReportHistory,
 } from "../types";
 import { BASE, formatApiError } from "./apiUtils";
+
+export async function fetchMealReportHistory(employeeId: number, date: string): Promise<HrMealReportHistory> {
+  const response = await fetch(`${BASE}/meals/reports/${employeeId}/${date}`);
+  if (!response.ok) throw new Error("Could not load meal report history");
+  return response.json() as Promise<HrMealReportHistory>;
+}
 
 export async function fetchMealAbsences(stayId: number): Promise<MealAbsence[]> {
   const res = await fetch(`${BASE}/stays/${stayId}/meal-absences`);
@@ -182,6 +189,14 @@ export async function lockMealSession(
     throw new Error(formatApiError(err, "Failed to lock meal session"));
   }
   return res.json() as Promise<MealSessionLock>;
+}
+
+export async function fetchMealLockHistory(
+  date: string, session: MealSessionLock["meal_session"]
+): Promise<MealSessionLock[]> {
+  const response = await fetch(`${BASE}/meals/locks/${encodeURIComponent(date)}/${session}/history`);
+  if (!response.ok) throw new Error("Không thể tải lịch sử chốt suất ăn");
+  return response.json() as Promise<MealSessionLock[]>;
 }
 
 export async function fetchMealExpenseReport(

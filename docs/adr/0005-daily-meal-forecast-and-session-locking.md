@@ -6,6 +6,8 @@ Date: 2026-07-24
 
 Accepted
 
+Quy tắc mặc định ăn và cách tính dự báo Sáng/Tối của ADR này được thay thế bởi ADR-0014 khi trang Báo cơm mới bắt đầu được sử dụng. Quy tắc chốt lại bữa Sáng/Tối cũng theo ADR-0014.
+
 ## Context
 
 Trước đây, hệ thống quản lý chi phí ăn uống chỉ hỗ trợ tính toán gộp theo ngày (mặc định 2 bữa/ngày) và ghi nhận vắng ăn nguyên ngày (`absence_date`). 

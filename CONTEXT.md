@@ -5,7 +5,7 @@ Hệ thống quản lý nhân sự dành cho công ty có nhân viên mang quố
 ## Language
 
 **Nhân viên nước ngoài** (Foreign Employee):
-Người nước ngoài đang lưu trú tại KTX của công ty, bất kể loại visa (LĐ2, DN1, THĂM THÂN, ĐT1…) hay quan hệ với công ty. Tất cả đều được đối xử giống nhau về ăn uống, ở và điều xe.
+Người nước ngoài có hồ sơ trong hệ thống, bất kể loại visa (LĐ2, DN1, THĂM THÂN, ĐT1…) hay quan hệ với công ty. Người đó có thể đang ở KTX, ở Khách sạn hoặc đã về nước; chỉ người đang ở KTX được Báo cơm.
 _Avoid_: expat, lao động nước ngoài, người nước ngoài, cán bộ nước ngoài
 
 **KTX** (Ký túc xá / Dormitory):
@@ -21,7 +21,7 @@ Cơ sở lưu trú đối tác (vd: Khách sạn Mường Thanh, Khách sạn Re
 Một đợt ở khách sạn của Nhân viên nước ngoài. Khi tạo mới bắt buộc phải có **Ngày vào** (`start_date`). Khi rời đi, HR thao tác Trả phòng Khách sạn để nhập **Ngày ra** (`end_date`). **Số tiền hóa đơn thanh toán** (`invoice_amount`) và các **Tài liệu đính kèm** (Hóa đơn GTGT, Giấy tờ tạm trú khách sạn, Xác nhận phòng) có thể đính kèm ngay lúc trả phòng hoặc cập nhật/bổ sung sau (linh hoạt theo thời điểm đối tác xuất hóa đơn). Dữ liệu này làm nền tảng cho chức năng tổng hợp đối chiếu chi phí khách sạn theo khoảng ngày.
 
 **Loại chỗ ở** (Accommodation Type):
-Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Một Lưu trú sẽ liên kết tới một **Phòng KTX** (nếu là KTX) hoặc một **Khách sạn** + **Số phòng khách sạn** (nếu là Khách sạn). Chỉ người ở KTX mới phát sinh chi phí ăn uống (`has_meals = True`). Người ở Khách sạn không phát sinh chi phí ăn KTX (`has_meals = False`) mà quản lý theo số tiền hóa đơn đợt ở.
+Có 2 loại: **KTX** (ký túc xá — công ty cung cấp) và **Khách sạn**. Một Lưu trú sẽ liên kết tới một **Phòng KTX** (nếu là KTX) hoặc một **Khách sạn** + **Số phòng khách sạn** (nếu là Khách sạn). Người ở KTX đủ điều kiện Báo cơm; người ở Khách sạn không Báo cơm và chi phí lưu trú được quản lý theo hóa đơn đợt ở.
 
 **Vị trí giường** (Bed Location):
 Vị trí chỗ ngủ được phân bổ cụ thể trong một **Phòng KTX** hoặc **Khách sạn** (vd: Giường A, Giường B, 2 giường, 1 giường…). Thuộc về một **Lưu trú** cụ thể.
@@ -29,14 +29,13 @@ Vị trí chỗ ngủ được phân bổ cụ thể trong một **Phòng KTX** 
 **Lưu trú** (Stay):
 Một chuyến sang Việt Nam của Nhân viên nước ngoài — từ ngày đến đến ngày về nước. Trong 1 Lưu trú: Phòng KTX là cố định; lần sang tiếp theo là Lưu trú mới.
 Mỗi Lưu trú mang cờ **có ăn** (has_meals) và **Loại hình** (cố định / công tác).
-Một Lưu trú có thể có **nhiều Visa** (gia hạn giữa chừng không về nước) và **nhiều Tạm trú** (gia hạn tương tự).
 _Avoid_: "cập nhật phòng", "đổi phòng", "đăng ký ăn"
 
 **Visa**:
-Một lần cấp phép nhập cảnh / lưu trú hợp pháp của Nhân viên nước ngoài. Thuộc về một Lưu trú. Một Lưu trú có thể có nhiều Visa nối tiếp nhau nếu gia hạn mà không về nước. Gồm: loại visa (DN1, LĐ2, THĂM THÂN, ĐT1…), ngày cấp/ngày vào, ngày hết hạn.
+Một lần cấp phép nhập cảnh / lưu trú hợp pháp của Nhân viên nước ngoài. Visa được quản lý độc lập theo Nhân viên nước ngoài, không thuộc một Lưu trú hay một đợt Nhập xuất cảnh cụ thể. Một nhân viên có thể có nhiều Visa nối tiếp nhau. Gồm: loại visa (DN1, LĐ2, THĂM THÂN, ĐT1…), ngày cấp và ngày hết hạn.
 
 **Tạm trú**:
-Một lần đăng ký tạm trú tại địa phương. Thuộc về một Lưu trú. Có thể gia hạn nhiều lần trong cùng một Lưu trú → nhiều bản ghi Tạm trú trên 1 Lưu trú.
+Một lần đăng ký tạm trú tại địa phương. Tạm trú được quản lý độc lập theo Nhân viên nước ngoài, không thuộc một Lưu trú hay một đợt Nhập xuất cảnh cụ thể. Một nhân viên có thể có nhiều bản ghi Tạm trú nối tiếp khi gia hạn.
 
 **Ngày dự kiến về nước** (Expected Exit Date):
 Mốc thời gian dự kiến cất cánh / kết thúc đợt lưu trú tại Việt Nam của Nhân viên nước ngoài trong một đợt di chuyển (`TravelRecord`). Dùng làm căn cứ tính toán cảnh báo quá hạn đợt lưu trú (`is_overdue_exit`) và xếp lịch điều xe đưa đón sân bay.
@@ -50,20 +49,29 @@ Tính chất của một **Lưu trú** cụ thể: **Cố định** (đóng quâ
 _Avoid_: "thường trú", "tạm thời"
 
 **Vắng ăn** (Meal Absence):
-Bản ghi đăng ký vắng ăn của Nhân viên nước ngoài cho một ngày cụ thể trong đợt Lưu trú (ví dụ: về nước tạm thời, nghỉ phép, đi công tác ngoài). Hỗ trợ phân loại theo **Loại bữa vắng** (`meal_type`): **Sáng** (BREAKFAST), **Tối** (DINNER), hoặc **Cả ngày** (ALL_DAY - mặc định). Mặc định mọi ngày trong Lưu trú KTX là có ăn cả 2 bữa. Trường hợp nhân sự vắng ăn thay đổi lịch đột xuất (vd: đăng ký vắng cả ngày nhưng tối về ăn), HR sẽ chủ động điều chỉnh bản ghi Vắng ăn (chuyển từ Vắng cả ngày sang Vắng bữa Sáng) hoặc điều chỉnh số suất thực chốt tại Modal Chốt suất ăn.
+Bản ghi vắng ăn của Nhân viên nước ngoài cho một ngày cụ thể trong đợt Lưu trú, theo bữa Sáng, bữa Tối hoặc cả ngày. Đây là khái niệm của quy trình quản lý hiện tại; Báo cơm là nguồn xác định ý định ăn trong quy trình tự khai báo mới.
 _Avoid_: "điểm danh", "check-in"
 
+**Báo cơm**:
+Thông tin do Nhân viên nước ngoài đang ở KTX tự gửi về ý định ăn bữa Sáng và bữa Tối tại KTX vào một ngày cụ thể. Mỗi bữa có thể được chọn ăn hoặc không ăn. Người đã về nước hoặc đang ở Khách sạn không thuộc diện được Báo cơm.
+
+**Chưa báo cơm**:
+Trạng thái của Nhân viên nước ngoài chưa gửi Báo cơm cho một ngày ăn, khác với việc đã gửi Báo cơm và chọn không ăn.
+
+**Hạn báo cơm**:
+Mốc 17h ngày hôm trước ngày ăn, tính theo giờ của máy chủ triển khai tại Việt Nam. Sau mốc này, Nhân viên nước ngoài không thể gửi hoặc sửa Báo cơm cho ngày ăn đó và cần liên hệ HR nếu muốn thay đổi.
+
 **Đăng ký ăn thêm** (Extra Meal Request):
-Bản ghi đăng ký ăn bổ sung cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn, người vắng ăn đổi lịch, hoặc khách công tác), phục vụ việc chốt dự báo số lượng suất ăn với nhà bếp.
+Bản ghi bổ sung suất ăn theo quy trình quản lý hiện tại cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn hoặc khách công tác). Báo cơm là nguồn xác định suất Sáng/Tối của Nhân viên nước ngoài trong quy trình mới.
 
 **Báo cáo Dự báo Suất ăn** (Daily Meal Forecast Report):
-Báo cáo thống kê tổng hợp số lượng suất ăn cần chuẩn bị cho từng bữa (Sáng/Tối) vào một ngày cụ thể (hoặc một khoảng ngày). HR có thể tra cứu danh sách chi tiết (ai ăn, ai vắng) và bật/tắt trạng thái ăn/vắng của từng người bất kể lúc nào. Công thức: Số người ở KTX - (Vắng theo bữa + Vắng cả ngày) + (Đăng ký ăn thêm theo bữa).
+Báo cáo thống kê tổng hợp số lượng suất ăn cần chuẩn bị cho từng bữa vào một ngày cụ thể (hoặc một khoảng ngày). Trong quy trình tự khai báo mới, số suất Sáng và Tối của Nhân viên nước ngoài dựa trên Báo cơm; HR tra cứu danh sách chi tiết và chốt suất ăn.
 
 **Chốt suất ăn theo Bữa** (Meal Session Lock):
-Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính thức báo nhà bếp cho từng bữa cụ thể: **Sáng** (`BREAKFAST` - NNN), **Trưa** (`LUNCH` - Lao công), hoặc **Tối** (`DINNER` - NNN) trong ngày. Mỗi bữa chỉ được phép Chốt duy nhất **1 lần** cho toàn bộ hệ thống.
+Thao tác đóng băng (Snapshot) tập trung số lượng suất ăn chính thức báo nhà bếp cho từng bữa cụ thể: **Sáng** (`BREAKFAST` - NNN), **Trưa** (`LUNCH` - Lao công), hoặc **Tối** (`DINNER` - NNN) trong ngày. Mỗi bữa có một bản chốt đang hiệu lực; HR có thể chốt lại bữa Sáng/Tối và giữ lịch sử các lần chốt.
 - **Giao diện Modal Chốt suất ăn**: Liệt kê chi tiết danh sách breakdown theo từng **Khối Nhân sự** (VD: Nhân viên nước ngoài bao nhiêu suất / đơn giá bao nhiêu; Lao công bao nhiêu suất / đơn giá bao nhiêu).
 - **Hệ thống đề xuất**: Số suất tính toán tự động và đơn giá theo từng Khối Nhân sự (tra từ Danh mục Loại ngày & Đơn giá Suất ăn).
-- **Quyền điều chỉnh**: HR có quyền điều chỉnh số suất thực chốt (`final_meal_count`), đơn giá thực chốt (`locked_price_per_meal`) của từng Khối Nhân sự, và nhập ghi chú lý do điều chỉnh.
+- **Quyền điều chỉnh**: HR có quyền điều chỉnh số suất thực chốt (`final_meal_count`), đơn giá thực chốt (`locked_price_per_meal`) của từng Khối Nhân sự. Trong quy trình Báo cơm mới, lý do là bắt buộc nếu số suất Sáng/Tối thực chốt khác số đề xuất hoặc khi chốt lại.
 - **Đóng băng (Snapshot)**: Khi bấm Chốt, hệ thống lưu trữ bản ghi Chốt chung kèm danh sách chi tiết (details) từng khối: $\text{Tổng tiền bữa chốt} = \sum (\text{final\_meal\_count}_{\text{khối}} \times \text{locked\_price\_per\_meal}_{\text{khối}})$.
 
 **Khối Nhân sự** (Participant / Employee Group):
@@ -201,7 +209,7 @@ Tính năng gửi email tự động dạng bản tin gộp hàng ngày (Daily D
 - **Ràng buộc xếp chỗ ở**: Chỉ cho phép xếp chỗ ở (KTX / Khách sạn) cho nhân viên đang ở Việt Nam (đang có 1 `TravelRecord` active chưa có ngày về nước). Nhân viên đang ở nước ngoài **không được phép xếp chỗ ở** — hệ thống sẽ báo lỗi và yêu cầu tạo Đợt nhập cảnh trước. Khi xếp chỗ ở, đợt `Stay` sẽ tự động liên kết với `TravelRecord` active gần nhất (`travel_record_id`).
 - Tại một thời điểm, một **Nhân viên nước ngoài** chỉ có một **Lưu trú** đang active (end_date = null). Khi thêm nhân viên vào chỗ ở mới, nếu nhân viên đang có lượt ở active ở nơi khác, hệ thống phải cảnh báo xung đột và dừng thao tác để người dùng tự xử lý (ví dụ: làm thủ tục trả phòng cũ trước).
 - Một **Phòng** có thể có nhiều **Lưu trú** đồng thời (nhiều người cùng phòng). Mỗi lưu trú có thể gán **Vị trí giường** (A, B...).
-- Một **Lưu trú** có nhiều **Visa** và nhiều **Tạm trú** (gia hạn giữa chừng không về nước).
+- Một **Nhân viên nước ngoài** có nhiều **Visa** và nhiều **Tạm trú** độc lập, theo lịch sử gia hạn của từng loại giấy tờ.
 - Một **Lưu trú** có nhiều **Vắng ăn** (những ngày không tính tiền ăn).
 - **Đơn giá bữa ăn** áp dụng cho một ngày được tra theo bản ghi hiệu lực gần nhất ứng với loại ngày (Đầy đủ hay Ngày sự kiện).
 - Khi ghi nhận **Ngày thực tế đã về nước** (`actual_exit_date`), trạng thái nhân sự chuyển thành "Đã về nước". Hệ thống tự động đóng đợt **Lưu trú** đang active (`end_date = actual_exit_date`) thuộc `TravelRecord` đó (hoặc giữ phòng nếu HR chọn phương án giữ phòng vắng ăn).

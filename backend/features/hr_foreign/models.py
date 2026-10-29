@@ -267,6 +267,23 @@ class MealSessionLock(Base):
     )
 
 
+class MealSessionLockRevision(Base):
+    """Immutable snapshot of each breakfast or dinner lock action."""
+    __tablename__ = "meal_session_lock_revisions"
+    __table_args__ = {"implicit_returning": False}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    lock_id = Column(Integer, ForeignKey("meal_session_locks.id"), nullable=False, index=True)
+    lock_date = Column(Date, nullable=False)
+    meal_session = Column(Unicode(50), nullable=False)
+    calculated_meal_count = Column(Integer, nullable=False)
+    final_meal_count = Column(Integer, nullable=False)
+    locked_price_per_meal = Column(Float, nullable=False)
+    locked_at = Column(DateTime, nullable=False)
+    locked_by = Column(Unicode(255), nullable=True)
+    notes = Column(UnicodeText, nullable=True)
+
+
 class EmailNotificationConfig(Base):
     """Cấu hình email nhận cảnh báo và lịch gửi email tự động cho HR."""
     __tablename__ = "email_notification_configs"

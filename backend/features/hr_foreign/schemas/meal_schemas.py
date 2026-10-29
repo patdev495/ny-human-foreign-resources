@@ -140,6 +140,8 @@ class MealExpenseReportResponse(BaseModel):
     total_meal_days: int
     total_meals: int
     total_expense: float
+    total_fruit_expense: float = 0.0
+    grand_total_expense: float = 0.0
     items: list[MealExpenseReportItem]
     janitor_items: list[JanitorDailyItem] = []
     total_janitor_meals: int = 0
@@ -245,10 +247,14 @@ class DailyMealEmployeeItem(BaseModel):
     is_dinner_absent: bool = False
     is_breakfast_extra: bool = False
     is_dinner_extra: bool = False
+    breakfast_report_status: str = "NOT_REPORTED"
+    dinner_report_status: str = "NOT_REPORTED"
+    meal_report_updated_at: datetime.datetime | None = None
 
 
 class DailyMealForecastResponse(BaseModel):
     date: datetime.date
+    uses_meal_reports: bool = False
     day_type: str = "NORMAL"
     day_type_name: str = "Ngày bình thường"
     suggested_price_per_meal: float = 30000.0

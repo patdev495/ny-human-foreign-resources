@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
-import type { DailyMealSessionSummary } from "../types";
+import type { DailyMealEmployeeItem, DailyMealSessionSummary, MealSessionLock } from "../types";
+import { fetchMealLockHistory } from "../api";
 
 interface LockMealSessionModalProps {
   date: string;
   sessionSummary: DailyMealSessionSummary;
   dayTypeName?: string;
   suggestedPrice?: number;
+  employees: DailyMealEmployeeItem[];
+  usesMealReports: boolean;
   onClose: () => void;
   onConfirm: (payload: {
     lock_date: string;
@@ -22,6 +25,8 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   sessionSummary,
   dayTypeName,
   suggestedPrice,
+  employees,
+  usesMealReports,
   onClose,
   onConfirm,
 }) => {
@@ -33,6 +38,15 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
       : "Bữa Tối (Nước ngoài) 🌙";
 
   const isAlreadyLocked = sessionSummary.is_locked;
+  const isNewForeignLock = usesMealReports && sessionSummary.meal_session !== "LUNCH";
+  const deadline = Date.parse(`${date}T00:00:00+07:00`) - 7 * 60 * 60 * 1000;
+  const isBeforeLockWindow = isNewForeignLock && Date.now() < deadline;
+  const [history, setHistory] = useState<MealSessionLock[]>([]);
+  useEffect(() => {
+    if (isNewForeignLock && isAlreadyLocked) {
+      void fetchMealLockHistory(date, sessionSummary.meal_session).then(setHistory).catch(() => setHistory([]));
+    }
+  }, [date, isAlreadyLocked, isNewForeignLock, sessionSummary.meal_session]);
 
   const getTodayStr = () => new Date().toISOString().split("T")[0];
   const isPastDate = date < getTodayStr();
@@ -47,7 +61,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   const [lockedPrice, setLockedPrice] = useState<number>(
     sessionSummary.locked_price_per_meal ?? suggestedPrice ?? 30000
   );
-  const [notes, setNotes] = useState<string>(sessionSummary.notes || "");
+  const [notes, setNotes] = useState<string>(isNewForeignLock && isAlreadyLocked ? "" : sessionSummary.notes || "");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -89,6 +103,10 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isNewForeignLock && Date.now() < deadline) {
+      setErrorMsg("Chỉ được chốt từ 17h ngày hôm trước theo giờ Việt Nam.");
+      return;
+    }
     if (isSunday && !confirmedSunday) {
       setErrorMsg("⚠️ Cảnh báo: Ngày được chọn chốt là Chủ Nhật (ngày Chủ Nhật thực tế không tính suất ăn). Vui lòng tích chọn ô xác nhận đồng ý bên dưới.");
       return;
@@ -109,6 +127,10 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
       setErrorMsg("Đơn giá bữa ăn phải lớn hơn 0");
       return;
     }
+    if (isNewForeignLock && (isAlreadyLocked || finalCount !== sessionSummary.calculated_meal_count) && !notes.trim()) {
+      setErrorMsg("Vui lòng nhập lý do khi điều chỉnh số suất hoặc chốt lại.");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -122,8 +144,8 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
         notes: notes.trim() || undefined,
       });
       onClose();
-    } catch (err: any) {
-      setErrorMsg(err.message || "Không thể chốt suất ăn");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Không thể chốt suất ăn");
     } finally {
       setIsSubmitting(false);
     }
@@ -188,6 +210,21 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           </div>
 
           {/* Final Count Input */}
+          {isBeforeLockWindow && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-800">Chỉ được chốt từ 17h ngày hôm trước theo giờ Việt Nam.</p>}
+          {isNewForeignLock && <details className="rounded-xl border border-slate-200 p-3 text-xs">
+            <summary className="cursor-pointer font-bold text-slate-700">Xem chi tiết Báo cơm theo bữa</summary>
+            <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+              {employees.filter(employee => employee.accommodation_type === "KTX").map(employee => {
+                const status = sessionSummary.meal_session === "BREAKFAST" ? employee.breakfast_report_status : employee.dinner_report_status;
+                const label = status === "EATING" ? "Có ăn" : status === "NOT_EATING" ? "Không ăn" : status === "NOT_REPORTED" ? "Chưa báo cơm" : "Không đủ điều kiện";
+                return <div key={employee.employee_id} className="flex justify-between gap-2 border-b border-slate-100 py-1"><span>{employee.name_latin} · {employee.location_name}</span><strong>{label}</strong></div>;
+              })}
+            </div>
+          </details>}
+          {history.length > 0 && <details className="rounded-xl border border-slate-200 p-3 text-xs">
+            <summary className="cursor-pointer font-bold text-slate-700">Lịch sử chốt ({history.length})</summary>
+            <ol className="mt-2 space-y-1">{history.map(item => <li key={item.id}>{new Date(item.locked_at).toLocaleString("vi-VN")}: {item.final_meal_count} suất · {item.locked_price_per_meal.toLocaleString("vi-VN")}đ{item.notes ? ` · ${item.notes}` : ""}</li>)}</ol>
+          </details>}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Số suất thực tế chốt báo Nhà bếp <span className="text-rose-500">*</span>
@@ -229,7 +266,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           {/* Notes */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Ghi chú lý do điều chỉnh (nếu có)
+              Lý do điều chỉnh {isNewForeignLock && (isAlreadyLocked || finalCount !== sessionSummary.calculated_meal_count) ? "*" : "(nếu có)"}
             </label>
             <textarea
               rows={2}
@@ -304,7 +341,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
           {/* Notice Banner */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">
-            💡 <strong>Lưu ý:</strong> Bạn có thể chốt hoặc điều chỉnh cập nhật lại số suất ăn và đơn giá bất cứ lúc nào. Dữ liệu mới nhất sẽ được cập nhật để đối soát hóa đơn với nhà bếp.
+            💡 <strong>Lưu ý:</strong> Bản chốt mới nhất được dùng để đối soát chi phí. Mỗi lần chốt lại bữa Sáng/Tối được lưu trong lịch sử.
           </div>
 
           {/* Action Buttons */}
@@ -319,7 +356,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isBeforeLockWindow}
               className="px-5 py-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 active:scale-95 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
             >
               {isSubmitting

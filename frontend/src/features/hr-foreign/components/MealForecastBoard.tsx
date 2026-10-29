@@ -1,252 +1,87 @@
-import React, { useEffect, useState } from "react";
-import {
-  createMealAbsence,
-  createMealExtra,
-  deleteMealAbsence,
-  deleteMealExtra,
-  fetchDailyMealForecast,
-  fetchMealAbsences,
-  fetchMealExtras,
-  lockMealSession,
-  updateStay,
-} from "../api";
-import type {
-  DailyMealEmployeeItem,
-  DailyMealForecastResponse,
-  DailyMealSessionSummary,
-  MealAbsence,
-  MealExtra,
-} from "../types";
+import { useEffect, useState } from "react";
+import { fetchDailyMealForecast, lockMealSession } from "../api";
+import type { DailyMealForecastResponse, DailyMealSessionSummary } from "../types";
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
 import { MealEmployeeForecastTable } from "./meal-forecast/MealEmployeeForecastTable";
 
-export const MealForecastBoard: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+export function MealForecastBoard() {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [forecast, setForecast] = useState<DailyMealForecastResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [lodging, setLodging] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
+  const [lockTarget, setLockTarget] = useState<DailyMealSessionSummary | null>(null);
 
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [lodgingFilter, setLodgingFilter] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
-
-  const [lockSessionTarget, setLockSessionTarget] =
-    useState<DailyMealSessionSummary | null>(null);
-
-  const loadForecast = async (date: string, showLoading = true) => {
+  async function load(date: string, showLoading = true) {
+    if (showLoading) setLoading(true);
+    setError(null);
     try {
-      if (showLoading) setLoading(true);
-      setErrorMsg(null);
-      const data = await fetchDailyMealForecast(date);
-      setForecast(data);
-    } catch (err: unknown) {
-      console.error("Failed to load meal forecast:", err);
-      setErrorMsg("Không thể tải dự báo suất ăn. Kiểm tra kết nối rồi thử lại.");
+      setForecast(await fetchDailyMealForecast(date));
+    } catch {
+      setError("Không thể tải dự báo suất ăn. Kiểm tra kết nối rồi thử lại.");
     } finally {
-      if (showLoading) setLoading(false);
+      setLoading(false);
     }
-  };
+  }
 
-  useEffect(() => {
-    loadForecast(selectedDate, true);
-  }, [selectedDate]);
+  useEffect(() => { void load(selectedDate); }, [selectedDate]);
 
-  const handleToggleHasMeals = async (emp: DailyMealEmployeeItem) => {
-    try {
-      await updateStay(emp.stay_id, { has_meals: !emp.has_meals });
-      await loadForecast(selectedDate, false);
-    } catch (err: unknown) {
-      alert(`Không thể thay đổi cài đặt đăng ký ăn KTX: ${err instanceof Error ? err.message : "Lỗi không xác định"}`);
-    }
-  };
-
-  const handleToggleAbsence = async (
-    emp: DailyMealEmployeeItem,
-    sessionType: "BREAKFAST" | "DINNER"
-  ) => {
-    try {
-      if (emp.has_meals) {
-        const isCurrentAbsent =
-          sessionType === "BREAKFAST" ? emp.is_breakfast_absent : emp.is_dinner_absent;
-
-        if (isCurrentAbsent) {
-          const absences: MealAbsence[] = await fetchMealAbsences(emp.stay_id);
-          const targetAbs = absences.find(
-            (a) =>
-              a.absence_date === selectedDate &&
-              (a.meal_type === sessionType || a.meal_type === "ALL_DAY" || !a.meal_type)
-          );
-          if (targetAbs) {
-            await deleteMealAbsence(targetAbs.id);
-          }
-        } else {
-          await createMealAbsence(emp.stay_id, {
-            absence_date: selectedDate,
-            meal_type: sessionType,
-            reason: "Bật/tắt vắng ăn từ bảng Thống kê hằng ngày",
-          });
-        }
-      } else {
-        const isCurrentExtra =
-          sessionType === "BREAKFAST" ? emp.is_breakfast_extra : emp.is_dinner_extra;
-
-        if (isCurrentExtra) {
-          const extras: MealExtra[] = await fetchMealExtras(emp.stay_id);
-          const targetExtra = extras.find(
-            (e) =>
-              e.extra_date === selectedDate &&
-              (e.meal_type === sessionType || e.meal_type === "ALL_DAY" || !e.meal_type)
-          );
-          if (targetExtra) {
-            await deleteMealExtra(targetExtra.id);
-          }
-        } else {
-          await createMealExtra(emp.stay_id, {
-            extra_date: selectedDate,
-            meal_type: sessionType,
-            reason: "Đăng ký ăn thêm từ bảng Thống kê hằng ngày",
-          });
-        }
-      }
-      await loadForecast(selectedDate, false);
-    } catch (err: unknown) {
-      alert(`Không thể thay đổi trạng thái suất ăn: ${err instanceof Error ? err.message : "Lỗi không xác định"}`);
-    }
-  };
-
-  const handleLockSessionConfirm = async (payload: {
+  async function confirmLock(payload: {
     lock_date: string;
     meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
     calculated_meal_count: number;
     final_meal_count: number;
     locked_price_per_meal: number;
     notes?: string;
-  }) => {
+  }) {
     await lockMealSession(payload);
-    await loadForecast(selectedDate, false);
-  };
+    await load(selectedDate, false);
+  }
 
-  const filteredEmployees =
-    forecast?.employees.filter((emp) => {
-      if (lodgingFilter !== "ALL" && emp.accommodation_type !== lodgingFilter) {
-        return false;
-      }
-      if (!searchTerm) return true;
-      const term = searchTerm.toLowerCase();
-      return (
-        emp.name_latin.toLowerCase().includes(term) ||
-        (emp.name_chinese && emp.name_chinese.toLowerCase().includes(term)) ||
-        (emp.employee_code && emp.employee_code.toLowerCase().includes(term)) ||
-        emp.location_name.toLowerCase().includes(term)
-      );
-    }) || [];
+  const employees = forecast?.employees.filter(employee => {
+    if (lodging !== "ALL" && employee.accommodation_type !== lodging) return false;
+    const term = search.toLocaleLowerCase();
+    return !term || employee.name_latin.toLocaleLowerCase().includes(term)
+      || (employee.name_chinese ?? "").toLocaleLowerCase().includes(term)
+      || (employee.employee_code ?? "").toLocaleLowerCase().includes(term)
+      || employee.location_name.toLocaleLowerCase().includes(term);
+  }) ?? [];
 
-  const getSuggestedPriceForTarget = (target: DailyMealSessionSummary) => {
-    if (target.meal_session === "BREAKFAST") {
-      return forecast?.suggested_breakfast_price ?? 30000;
-    }
-    if (target.meal_session === "LUNCH") {
-      return forecast?.suggested_janitor_price ?? 25000;
-    }
-    return forecast?.suggested_dinner_price ?? 40000;
-  };
+  const suggestedPrice = lockTarget?.meal_session === "BREAKFAST"
+    ? forecast?.suggested_breakfast_price
+    : lockTarget?.meal_session === "LUNCH"
+      ? forecast?.suggested_janitor_price
+      : forecast?.suggested_dinner_price;
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Header controls & Date Selector */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-              📅 Chọn ngày xem & chốt:
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all cursor-pointer"
-            />
-          </div>
-
-          {new Date(selectedDate + "T00:00:00").getDay() === 0 && (
-            <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl px-3.5 py-2 flex items-center gap-2 text-xs text-rose-800 font-bold animate-in fade-in duration-150">
-              <span className="text-base">🚨</span>
-              <span>LƯU Ý: Ngày <strong>{selectedDate}</strong> là <strong>Chủ Nhật</strong>. Theo quy định thực tế, ngày Chủ Nhật không phục vụ/tính suất ăn.</span>
-            </div>
-          )}
-
-          {forecast && (
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border flex items-center gap-1.5 ${
-                  forecast.day_type === "NORMAL"
-                    ? "bg-blue-50 text-blue-800 border-blue-200"
-                    : "bg-purple-100 text-purple-800 border-purple-300"
-                }`}
-              >
-                <span>{forecast.day_type === "NORMAL" ? "🏷️" : "⭐"}</span>
-                <span>Loại ngày: <strong>{forecast.day_type_name || forecast.day_type}</strong></span>
-                <span className="opacity-40">|</span>
-                <span className="font-mono text-[11px]">
-                  Sáng NNN: {(forecast.suggested_breakfast_price ?? 30000).toLocaleString("vi-VN")}k | Tối NNN: {(forecast.suggested_dinner_price ?? 40000).toLocaleString("vi-VN")}k | Lao công: {(forecast.suggested_janitor_price ?? 25000).toLocaleString("vi-VN")}k
-                </span>
-              </span>
-
-              {forecast.event_notes && (
-                <span className="text-xs text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl font-medium border border-slate-200">
-                  💡 {forecast.event_notes}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => loadForecast(selectedDate, true)}
-            className="px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-          >
-            🔄 Làm mới
-          </button>
-        </div>
-      </div>
-
-      {errorMsg && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-800 font-medium flex items-center justify-between gap-4" role="alert">
-          <span>⚠️ {errorMsg}</span>
-          <button type="button" onClick={() => void loadForecast(selectedDate)} className="shrink-0 rounded-lg bg-white px-3 py-2 text-xs font-bold text-rose-800 ring-1 ring-rose-200 hover:bg-rose-100">Thử lại</button>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="p-12 text-center text-slate-400 font-medium">Đang tải dự báo suất ăn...</div>
-      ) : forecast ? (
-        <>
-          <MealSessionCards forecast={forecast} onLockSession={setLockSessionTarget} />
-          <MealEmployeeForecastTable
-            filteredEmployees={filteredEmployees}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            lodgingFilter={lodgingFilter}
-            setLodgingFilter={setLodgingFilter}
-            onToggleAbsence={handleToggleAbsence}
-            onToggleHasMeals={handleToggleHasMeals}
-          />
-        </>
-      ) : null}
-
-      {lockSessionTarget && (
-        <LockMealSessionModal
-          date={selectedDate}
-          sessionSummary={lockSessionTarget}
-          dayTypeName={forecast?.day_type_name}
-          suggestedPrice={getSuggestedPriceForTarget(lockSessionTarget)}
-          onClose={() => setLockSessionTarget(null)}
-          onConfirm={handleLockSessionConfirm}
-        />
-      )}
+  return <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
+      <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
+        📅 Chọn ngày xem & chốt:
+        <input type="date" value={selectedDate} onChange={event => setSelectedDate(event.target.value)} className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800" />
+      </label>
+      <button type="button" onClick={() => void load(selectedDate)} className="rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200">🔄 Làm mới</button>
     </div>
-  );
-};
+
+    {forecast && <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
+      <span className="rounded-xl bg-blue-50 px-3 py-2">Loại ngày: {forecast.day_type_name ?? forecast.day_type}</span>
+      <span className="rounded-xl bg-blue-50 px-3 py-2">Sáng: {(forecast.suggested_breakfast_price ?? 30000).toLocaleString("vi-VN")}đ</span>
+      <span className="rounded-xl bg-blue-50 px-3 py-2">Tối: {(forecast.suggested_dinner_price ?? 40000).toLocaleString("vi-VN")}đ</span>
+      <span className="rounded-xl bg-blue-50 px-3 py-2">Lao công: {(forecast.suggested_janitor_price ?? 25000).toLocaleString("vi-VN")}đ</span>
+      {forecast.event_notes && <span className="rounded-xl bg-slate-100 px-3 py-2">{forecast.event_notes}</span>}
+    </div>}
+
+    {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</div>}
+    {loading ? <p className="p-12 text-center text-slate-500">Đang tải dự báo suất ăn...</p> : forecast && <>
+      <MealSessionCards forecast={forecast} onLockSession={setLockTarget} />
+      <MealEmployeeForecastTable key={selectedDate} filteredEmployees={employees} searchTerm={search} setSearchTerm={setSearch}
+        lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={forecast.uses_meal_reports} />
+    </>}
+
+    {lockTarget && <LockMealSessionModal date={selectedDate} sessionSummary={lockTarget}
+      employees={forecast?.employees ?? []} usesMealReports={forecast?.uses_meal_reports ?? false}
+      dayTypeName={forecast?.day_type_name} suggestedPrice={suggestedPrice}
+      onClose={() => setLockTarget(null)} onConfirm={confirmLock} />}
+  </div>;
+}
