@@ -51,7 +51,7 @@ export function EndShiftDemand() {
     {error && <p role="alert" className="rounded-xl bg-rose-50 p-4 text-sm text-rose-800">{error}</p>}
     {loading ? <p role="status" className="rounded-xl bg-white p-5 text-sm text-slate-600">Đang tải khai báo…</p> : demand && <>
       <p className="rounded-xl bg-cyan-50 p-4 text-sm font-semibold text-cyan-900">{carCount} người đã báo cần xe • Chưa báo không tính vào nhu cầu xe</p>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-3">
         {demand.groups.map(group => <article key={group.key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <h3>
             <button type="button" aria-expanded={expandedGroup === group.key} aria-controls={`end-shift-group-${group.key}`}
