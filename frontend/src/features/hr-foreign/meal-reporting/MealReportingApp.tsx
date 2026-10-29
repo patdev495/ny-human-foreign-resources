@@ -37,7 +37,7 @@ export function MealReportingApp() {
       setPeople(peopleResult)
       setSuggestions(peopleResult)
       setDates(datesResult)
-      setDate(datesResult[0]?.date ?? '')
+      setDate(datesResult[1]?.date ?? datesResult[0]?.date ?? '')
       const remembered = Number(localStorage.getItem(STORAGE_KEY))
       const person = peopleResult.find(item => item.id === remembered)
       if (person?.can_report) {
@@ -223,11 +223,12 @@ export function MealReportingApp() {
         </label>
         {reportLoading ? <p role="status">Loading report…</p> : <>
           <p className={`rounded-xl p-3 text-sm font-semibold ${hasReport ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-900'}`}>{hasReport ? 'Reported • current choices below' : 'Not reported yet'}</p>
+          <p className="text-xs text-slate-600">Tick a box if you will eat that meal. Leave it unticked if you will not eat.</p>
           {(['breakfast', 'dinner'] as const).map(meal => <label key={meal} className="flex items-center justify-between rounded-2xl border border-slate-200 p-4">
             <span className="font-semibold capitalize">{meal}</span>
-            <span className="flex items-center gap-3 text-sm"><span>{selection[meal] ? 'Eating' : 'Not eating'}</span><input type="checkbox" aria-label={`Eating ${meal}`} checked={selection[meal]} disabled={!day?.can_submit} onChange={event => { setSelection({ ...selection, [meal]: event.target.checked }); setMessage('') }} className="h-6 w-6 accent-indigo-700" /></span>
+            <input type="checkbox" aria-label={`Eat ${meal}`} checked={selection[meal]} disabled={!day?.can_submit} onChange={event => { setSelection({ ...selection, [meal]: event.target.checked }); setMessage('') }} className="h-6 w-6 accent-indigo-700" />
           </label>)}
-          {day?.can_submit ? <><p className="text-xs text-slate-600">Submit before 17:00 Vietnam time on the previous day. Both “Not eating” choices still require submission.</p><button type="button" disabled={saving} onClick={() => void submit()} className={`${button} bg-indigo-700 text-white hover:bg-indigo-800`}>{saving ? 'Saving…' : hasReport ? 'Save changes' : 'Submit meal report'}</button></> : <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">View only. Deadline passed or meals are not served this day. Contact HR for changes.</p>}
+          {day?.can_submit ? <><p className="text-xs text-slate-600">Submit before 17:00 Vietnam time on the previous day, even when both boxes are unticked.</p><button type="button" disabled={saving} onClick={() => void submit()} className={`${button} bg-indigo-700 text-white hover:bg-indigo-800`}>{saving ? 'Saving…' : hasReport ? 'Save changes' : 'Submit meal report'}</button></> : <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">View only. Deadline passed or meals are not served this day. Contact HR for changes.</p>}
         </>}
       </section>}
     </div>
