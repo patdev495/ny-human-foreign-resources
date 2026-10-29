@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { fetchEndShiftDemand } from '../endShiftApi'
 import type { DemandKey, DemandView } from '../endShiftApi'
 
@@ -24,11 +25,13 @@ export function EndShiftDemand() {
   const [demand, setDemand] = useState<DemandView | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [expandedGroup, setExpandedGroup] = useState<DemandKey | null>(null)
 
   useEffect(() => {
     let live = true
     setLoading(true)
     setError('')
+    setExpandedGroup(null)
     fetchEndShiftDemand(date).then(result => { if (live) setDemand(result) })
       .catch((cause: unknown) => { if (live) setError(cause instanceof Error ? cause.message : 'Không thể tải dữ liệu.') })
       .finally(() => { if (live) setLoading(false) })
@@ -49,18 +52,27 @@ export function EndShiftDemand() {
     {loading ? <p role="status" className="rounded-xl bg-white p-5 text-sm text-slate-600">Đang tải khai báo…</p> : demand && <>
       <p className="rounded-xl bg-cyan-50 p-4 text-sm font-semibold text-cyan-900">{carCount} người đã báo cần xe • Chưa báo không tính vào nhu cầu xe</p>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {demand.groups.map(group => <article key={group.key} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-            <h3 className="font-bold text-slate-900">{groupLabels[group.key]}</h3>
-            <span className="rounded-full bg-cyan-100 px-3 py-1 text-sm font-bold text-cyan-900" aria-label={`${group.count} người`}>{group.count}</span>
-          </div>
-          {group.people.length === 0 ? <p className="pt-4 text-sm text-slate-500">Không có người</p> : <ul className="divide-y divide-slate-100">
-            {group.people.map(person => <li key={person.employee_id} className="py-3 text-sm">
-              <span className="font-semibold text-slate-800">{person.name_latin}</span>
-              {person.name_chinese && <span className="ml-2 text-slate-500">{person.name_chinese}</span>}
-              {person.room_number && <span className="block text-xs text-slate-500">Phòng KTX {person.room_number}</span>}
-            </li>)}
-          </ul>}
+        {demand.groups.map(group => <article key={group.key} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <h3>
+            <button type="button" aria-expanded={expandedGroup === group.key} aria-controls={`end-shift-group-${group.key}`}
+              onClick={() => setExpandedGroup(current => current === group.key ? null : group.key)}
+              className="flex w-full items-center justify-between gap-3 p-5 text-left transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-cyan-600">
+              <span className="font-bold text-slate-900">{groupLabels[group.key]}</span>
+              <span className="flex shrink-0 items-center gap-3">
+                <span className="rounded-full bg-cyan-100 px-3 py-1 text-sm font-bold text-cyan-900" aria-label={`${group.count} người`}>{group.count}</span>
+                <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${expandedGroup === group.key ? 'rotate-180' : ''}`} aria-hidden="true" />
+              </span>
+            </button>
+          </h3>
+          {expandedGroup === group.key && <div id={`end-shift-group-${group.key}`} className="border-t border-slate-100 px-5">
+            {group.people.length === 0 ? <p className="py-4 text-sm text-slate-500">Không có người</p> : <ul className="divide-y divide-slate-100">
+              {group.people.map(person => <li key={person.employee_id} className="py-3 text-sm">
+                <span className="font-semibold text-slate-800">{person.name_latin}</span>
+                {person.name_chinese && <span className="ml-2 text-slate-500">{person.name_chinese}</span>}
+                {person.room_number && <span className="block text-xs text-slate-500">Phòng KTX {person.room_number}</span>}
+              </li>)}
+            </ul>}
+          </div>}
         </article>)}
       </div>
     </>}
