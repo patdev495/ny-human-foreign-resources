@@ -35,11 +35,6 @@ def _validate_travel_record_dates(
     actual_exit: datetime.date | None,
 ) -> None:
     today = datetime.date.today()
-    if entry and entry > today:
-        raise HTTPException(
-            status_code=400,
-            detail="Ngày thực tế đến Việt Nam không được chọn ngày tương lai. Để lên lịch sang, vui lòng nhập vào 'Ngày dự kiến sang'.",
-        )
     if actual_exit and actual_exit > today:
         raise HTTPException(
             status_code=400,
@@ -149,6 +144,14 @@ def update_travel_record(
         expected_exit=payload.expected_exit_date,
         actual_exit=payload.actual_exit_date,
     )
+    if payload.entry_date:
+        earliest_stay = (
+            db.query(Stay)
+            .filter(Stay.travel_record_id == record.id, Stay.start_date < payload.entry_date)
+            .first()
+        )
+        if earliest_stay:
+            raise HTTPException(status_code=400, detail="Ngày đến không thể sau ngày bắt đầu ở đã xếp.")
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(record, key, value)
     

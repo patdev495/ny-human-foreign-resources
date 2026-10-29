@@ -53,7 +53,10 @@ export const RoomOccupancyBoard: React.FC = () => {
   };
 
   const unassignedEmployees = employees.filter((emp) => {
-    if (!emp.is_in_vietnam || emp.current_room_number) return false;
+    const upcomingArrival = Boolean(
+      emp.entry_date && emp.entry_date > new Date().toISOString().split("T")[0] && !emp.actual_exit_date
+    );
+    if ((!emp.is_in_vietnam && !upcomingArrival) || emp.current_room_number) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (

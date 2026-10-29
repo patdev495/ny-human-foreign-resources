@@ -283,16 +283,18 @@ def test_record_exit_optional_actual_exit_date_updates_expected_dates(
     assert emp["is_in_vietnam"] is True
 
 
-def test_reject_future_actual_dates(client: TestClient, emp_id: int) -> None:
+def test_allow_future_entry_but_reject_future_exit(client: TestClient, emp_id: int) -> None:
     future_date = (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
 
-    # Reject future entry_date
+    # HR can register an upcoming arrival for accommodation planning.
     res = client.post(
         f"/api/hr-foreign/employees/{emp_id}/travel-records",
         json={"entry_date": future_date},
     )
-    assert res.status_code == 400
-    assert "khuyến nghị" in res.json()["detail"].lower() or "tương lai" in res.json()["detail"].lower()
+    assert res.status_code == 201
+    emp = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
+    assert emp["entry_date"] == future_date
+    assert emp["is_in_vietnam"] is False
 
     # Reject future actual_exit_date
     res = client.post(

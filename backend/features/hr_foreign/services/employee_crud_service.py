@@ -52,11 +52,6 @@ def _validate_travel_dates(
     actual_exit = payload_actual_exit
 
     today = datetime.date.today()
-    if entry and entry > today:
-        raise HTTPException(
-            status_code=400,
-            detail="Ngày thực tế đến Việt Nam không được chọn ngày tương lai. Để lên lịch sang, vui lòng điền vào 'Ngày dự kiến sang'.",
-        )
     if actual_exit and actual_exit > today:
         raise HTTPException(
             status_code=400,

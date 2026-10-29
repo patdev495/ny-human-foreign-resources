@@ -57,9 +57,6 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
       if (actualExitDate && actualExitDate > todayStr) {
         throw new Error("Ngày thực tế đã về nước không được chọn ngày tương lai. Để lên lịch về, vui lòng điền vào 'Ngày dự kiến về'.");
       }
-      if (entryDate && entryDate > todayStr) {
-        throw new Error("Ngày thực tế đến Việt Nam không được chọn ngày tương lai. Để lên lịch sang, vui lòng điền vào 'Ngày dự kiến sang'.");
-      }
       if (isInVietnam) {
         if (!actualExitDate && !expectedExitDate && !expectedEntryDate) {
           throw new Error("Vui lòng nhập/cập nhật ít nhất 1 mốc ngày (Dự kiến về nước, Thực tế về nước, hoặc Dự kiến sang)");
@@ -270,12 +267,11 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
                   <input
                     type="date"
                     value={entryDate}
-                    max={new Date().toISOString().split("T")[0]}
                     onChange={(e) => setEntryDate(e.target.value)}
                     className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-medium"
                   />
                   <p className="text-[10px] text-slate-500 mt-1">
-                    Điền khi nhân sự thực tế đã đến VN
+                    Có thể điền trước ngày đến để lên lịch xếp chỗ ở
                   </p>
                 </div>
               </div>

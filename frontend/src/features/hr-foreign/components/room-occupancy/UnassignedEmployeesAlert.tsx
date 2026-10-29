@@ -18,11 +18,11 @@ export const UnassignedEmployeesAlert: React.FC<Props> = ({
         <div className="flex items-center gap-2">
           <span className="text-base">⚠️</span>
           <h3 className="text-sm font-bold text-amber-900">
-            Cảnh báo: Có {unassignedEmployees.length} nhân sự đang ở Việt Nam nhưng CHƯA ĐƯỢC XẾP CHỖ Ở
+            Có {unassignedEmployees.length} nhân sự đã hoặc sắp đến Việt Nam cần xếp chỗ ở
           </h3>
         </div>
         <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
-          Cần xếp chỗ ngay
+          Cần xếp chỗ
         </span>
       </div>
 
@@ -37,6 +37,7 @@ export const UnassignedEmployeesAlert: React.FC<Props> = ({
               <p className="text-[11px] text-slate-500 mt-0.5 truncate">
                 {emp.employee_code || "Chưa có mã"} &bull; {emp.department || "N/A"}
               </p>
+              {emp.entry_date && <p className="text-[11px] text-slate-600">Ngày đến: {emp.entry_date}</p>}
             </div>
             <button
               onClick={() => onCheckIn(emp.id)}

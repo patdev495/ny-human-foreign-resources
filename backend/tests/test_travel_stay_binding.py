@@ -67,6 +67,43 @@ def test_cannot_assign_stay_when_employee_abroad(client: TestClient) -> None:
     assert "nước ngoài" in stay_res.json()["detail"].lower()
 
 
+def test_schedule_stay_from_future_arrival(client: TestClient) -> None:
+    arrival = datetime.date.today() + datetime.timedelta(days=10)
+    before_arrival = arrival - datetime.timedelta(days=1)
+    emp = client.post("/api/hr-foreign/employees", json={"name_latin": "LI MEI", "gender": "Nữ"})
+    emp_id = emp.json()["id"]
+    trip = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"entry_date": arrival.isoformat()},
+    )
+    assert trip.status_code == 201
+    room = client.post("/api/hr-foreign/rooms", json={"room_number": "1701"})
+    payload = {
+        "employee_id": emp_id,
+        "accommodation_type": "KTX",
+        "room_id": room.json()["id"],
+        "stay_type": "CO_DINH",
+        "start_date": before_arrival.isoformat(),
+    }
+    rejected = client.post("/api/hr-foreign/stays", json=payload)
+    assert rejected.status_code == 400
+    assert "ngày thực tế đến" in rejected.json()["detail"].lower()
+
+    payload["start_date"] = arrival.isoformat()
+    stay = client.post("/api/hr-foreign/stays", json=payload)
+    assert stay.status_code == 201
+    assert stay.json()["travel_record_id"] == trip.json()["id"]
+    employee = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
+    assert employee["is_in_vietnam"] is False
+    assert employee["current_room_number"] == "1701"
+
+    changed_arrival = client.put(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records/{trip.json()['id']}",
+        json={"entry_date": (arrival + datetime.timedelta(days=1)).isoformat()},
+    )
+    assert changed_arrival.status_code == 400
+
+
 def test_assign_stay_success_and_binds_travel_record_id(client: TestClient) -> None:
     """Cycle 2: Khi nhân sự đã có Đợt nhập cảnh -> Xếp phòng thành công và tự động gán travel_record_id."""
     emp_res = client.post(

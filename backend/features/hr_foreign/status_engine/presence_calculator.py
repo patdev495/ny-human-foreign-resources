@@ -123,7 +123,10 @@ def evaluate_employee_statuses(
         if emp.actual_exit_date and emp.actual_exit_date <= today:
             res.is_in_vietnam = False
             res.actual_exit_date = emp.actual_exit_date
-        elif last_exit_date and (not emp.entry_date or emp.entry_date > today):
+        elif effective_entry and effective_entry > today:
+            res.is_in_vietnam = False
+            res.actual_exit_date = last_exit_date
+        elif last_exit_date and not emp.entry_date:
             res.is_in_vietnam = False
             res.actual_exit_date = last_exit_date
         elif effective_entry and effective_entry <= today:

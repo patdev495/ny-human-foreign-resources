@@ -44,9 +44,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
     const todayStr = new Date().toISOString().split("T")[0];
 
     try {
-      if (entryDate && entryDate > todayStr) {
-        throw new Error("Ngày thực tế đến VN không được chọn ngày tương lai.");
-      }
       if (actualExitDate && actualExitDate > todayStr) {
         throw new Error("Ngày thực tế đã về nước không được chọn ngày tương lai.");
       }
@@ -111,7 +108,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
             <input
               type="date"
               value={entryDate}
-              max={new Date().toISOString().split("T")[0]}
               onChange={(e) => setEntryDate(e.target.value)}
               className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-medium bg-amber-50/30"
             />

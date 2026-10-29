@@ -111,9 +111,14 @@ export const CheckInFormFields: React.FC<Props> = ({
             </option>
           ))}
         </select>
-        {selectedEmployee && !selectedEmployee.is_in_vietnam && (
+        {selectedEmployee && !selectedEmployee.is_in_vietnam && (!selectedEmployee.entry_date || selectedEmployee.entry_date <= new Date().toISOString().split("T")[0]) && (
           <p className="mt-1 text-xs text-rose-600 font-semibold bg-rose-50 border border-rose-200 p-2 rounded-lg">
             ⚠️ Nhân sự <strong>{selectedEmployee.name_latin}</strong> hiện đang ở nước ngoài (chưa có Đợt nhập cảnh active). Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.
+          </p>
+        )}
+        {selectedEmployee && !selectedEmployee.is_in_vietnam && selectedEmployee.entry_date && selectedEmployee.entry_date > new Date().toISOString().split("T")[0] && !selectedEmployee.actual_exit_date && (
+          <p className="mt-1 text-xs text-blue-700 bg-blue-50 border border-blue-200 p-2 rounded-lg">
+            Nhân sự dự kiến đến ngày {selectedEmployee.entry_date}. Có thể xếp chỗ ở từ ngày này.
           </p>
         )}
         {selectedEmployee && selectedEmployee.is_in_vietnam && hasActiveAccommodation && (
@@ -228,6 +233,7 @@ export const CheckInFormFields: React.FC<Props> = ({
           <input
             type="date"
             value={startDate}
+            min={selectedEmployee?.entry_date || undefined}
             onChange={(e) => setStartDate(e.target.value)}
             className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />

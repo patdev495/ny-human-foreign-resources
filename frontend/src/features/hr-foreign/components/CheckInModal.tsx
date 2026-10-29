@@ -102,10 +102,18 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   const hasActiveAccommodation = Boolean(
     selectedEmployee && selectedEmployee.current_room_number
   );
+  const hasUpcomingArrival = Boolean(
+    selectedEmployee?.entry_date &&
+    selectedEmployee.entry_date > new Date().toISOString().split("T")[0] &&
+    !selectedEmployee.actual_exit_date
+  );
 
   useEffect(() => {
     if (selectedEmployee && selectedEmployee.work_type) {
       setStayType(selectedEmployee.work_type as "CO_DINH" | "CONG_TAC");
+    }
+    if (selectedEmployee?.entry_date && startDate < selectedEmployee.entry_date) {
+      setStartDate(selectedEmployee.entry_date);
     }
   }, [selectedEmployeeId, employees]);
 
@@ -115,10 +123,14 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       setError("Vui lòng chọn Nhân viên nước ngoài");
       return;
     }
-    if (selectedEmployee && !selectedEmployee.is_in_vietnam) {
+    if (selectedEmployee && !selectedEmployee.is_in_vietnam && !hasUpcomingArrival) {
       setError(
         `Nhân sự ${selectedEmployee.name_latin} hiện đang ở nước ngoài (chưa có Đợt nhập cảnh active). Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.`
       );
+      return;
+    }
+    if (selectedEmployee?.entry_date && startDate < selectedEmployee.entry_date) {
+      setError(`Ngày bắt đầu ở phải từ ngày đến Việt Nam (${selectedEmployee.entry_date}) trở đi.`);
       return;
     }
     if (selectedEmployee && hasActiveAccommodation) {

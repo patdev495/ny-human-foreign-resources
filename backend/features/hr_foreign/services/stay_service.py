@@ -130,9 +130,8 @@ def create_stay(db: Session, payload: StayCreate) -> Stay:
         .order_by(TravelRecord.entry_date.desc(), TravelRecord.id.desc())
         .first()
     )
-    today = datetime.date.today()
     if not active_tr:
-        if emp.entry_date and emp.entry_date <= today and not emp.actual_exit_date:
+        if emp.entry_date and not emp.actual_exit_date:
             active_tr = TravelRecord(
                 employee_id=emp.id,
                 entry_date=emp.entry_date,
@@ -145,6 +144,14 @@ def create_stay(db: Session, payload: StayCreate) -> Stay:
                 status_code=400,
                 detail="Nhân viên đang ở nước ngoài. Vui lòng tạo Đợt nhập cảnh trước khi xếp chỗ ở.",
             )
+
+    if not active_tr.entry_date or not payload.start_date or payload.start_date < active_tr.entry_date:
+        raise HTTPException(
+            status_code=400,
+            detail="Ngày bắt đầu ở phải từ ngày thực tế đến Việt Nam trở đi.",
+        )
+    if payload.travel_record_id and payload.travel_record_id != active_tr.id:
+        raise HTTPException(status_code=400, detail="Đợt lưu trú phải thuộc đợt nhập cảnh hiện tại.")
 
     data = payload.model_dump()
     if not data.get("travel_record_id"):
@@ -165,6 +172,13 @@ def _sync_stay_checkout_with_travel_record(db: Session, stay: Stay, end_date: da
 
 
 def update_stay(db: Session, stay: Stay, payload: StayUpdate) -> Stay:
+    start_date = payload.start_date if payload.start_date is not None else stay.start_date
+    travel_record_id = payload.travel_record_id or stay.travel_record_id
+    travel_record = db.query(TravelRecord).filter(TravelRecord.id == travel_record_id).first() if travel_record_id else None
+    employee = db.query(ForeignEmployee).filter(ForeignEmployee.id == stay.employee_id).first()
+    arrival_date = travel_record.entry_date if travel_record else (employee.entry_date if employee else None)
+    if arrival_date and (not start_date or start_date < arrival_date):
+        raise HTTPException(status_code=400, detail="Ngày bắt đầu ở phải từ ngày thực tế đến Việt Nam trở đi.")
     previous_end_date = stay.end_date
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(stay, key, value)
@@ -196,7 +210,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     # Single bulk query for all active stays to eliminate N+1 queries
     all_active_stays = (
         db.query(Stay)
-        .filter(or_(Stay.end_date.is_(None), Stay.end_date > today))
+        .filter(Stay.start_date <= today, or_(Stay.end_date.is_(None), Stay.end_date > today))
         .all()
     )
 
