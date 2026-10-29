@@ -16,6 +16,11 @@ export function MealReportingApp() {
   const [candidate, setCandidate] = useState<PublicPerson | null>(null)
   const [screen, setScreen] = useState<Screen>('choose')
   const [search, setSearch] = useState('')
+  const [suggestions, setSuggestions] = useState<PublicPerson[]>([])
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const [searchError, setSearchError] = useState('')
+  const [activeSuggestion, setActiveSuggestion] = useState(0)
   const [date, setDate] = useState('')
   const [selection, setSelection] = useState<MealSelection>({ breakfast: false, dinner: false })
   const [hasReport, setHasReport] = useState(false)
@@ -30,6 +35,7 @@ export function MealReportingApp() {
     Promise.all([getPeople(), getDates()]).then(([peopleResult, datesResult]) => {
       if (!live) return
       setPeople(peopleResult)
+      setSuggestions(peopleResult)
       setDates(datesResult)
       setDate(datesResult[0]?.date ?? '')
       const remembered = Number(localStorage.getItem(STORAGE_KEY))
@@ -45,6 +51,30 @@ export function MealReportingApp() {
     }).finally(() => { if (live) setLoading(false) })
     return () => { live = false }
   }, [])
+
+  useEffect(() => {
+    if (screen !== 'choose') return
+    const query = search.trim()
+    if (!query) {
+      setSuggestions(people)
+      setSearching(false)
+      setSearchError('')
+      return
+    }
+    let live = true
+    const timer = window.setTimeout(() => {
+      setSearching(true)
+      getPeople(query).then(result => {
+        if (!live) return
+        setSuggestions(result)
+        setActiveSuggestion(0)
+        setSearchError('')
+      }).catch((cause: unknown) => {
+        if (live) setSearchError(cause instanceof Error ? cause.message : 'Could not search names.')
+      }).finally(() => { if (live) setSearching(false) })
+    }, 250)
+    return () => { live = false; window.clearTimeout(timer) }
+  }, [search, screen, people])
 
   const person = people.find(item => item.id === selectedId) ?? null
   const day = dates.find(item => item.date === date)
@@ -101,10 +131,29 @@ export function MealReportingApp() {
     }
   }
 
-  const filtered = people.filter(item => {
-    const query = search.trim().toLocaleLowerCase()
-    return !query || item.name_latin.toLocaleLowerCase().includes(query) || (item.name_chinese ?? '').toLocaleLowerCase().includes(query)
-  })
+  function choosePerson(item: PublicPerson) {
+    setCandidate(item)
+    setDropdownOpen(false)
+    setScreen('confirm')
+    setError('')
+  }
+
+  function handleSearchKey(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Escape') setDropdownOpen(false)
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setDropdownOpen(true)
+      setActiveSuggestion(index => Math.min(index + 1, Math.max(0, suggestions.length - 1)))
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveSuggestion(index => Math.max(index - 1, 0))
+    }
+    if (event.key === 'Enter' && dropdownOpen && suggestions[activeSuggestion]) {
+      event.preventDefault()
+      choosePerson(suggestions[activeSuggestion])
+    }
+  }
 
   return <main className="min-h-dvh bg-slate-50 px-4 py-6 text-slate-900 sm:py-12">
     <div className="mx-auto max-w-lg space-y-6">
@@ -123,14 +172,25 @@ export function MealReportingApp() {
           <h2 className="text-xl font-bold">Find your name</h2>
           <p className="mt-1 text-sm text-slate-600">Select your name, then confirm your room.</p>
         </div>
-        <input aria-label="Search by name" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search Latin or Chinese name" className="w-full rounded-2xl border border-slate-300 px-4 py-3" />
-        <div className="max-h-[55vh] space-y-2 overflow-y-auto">
-          {filtered.map(item => <button key={item.id} type="button" onClick={() => { setCandidate(item); setScreen('confirm'); setError('') }} className="w-full rounded-2xl border border-slate-200 p-4 text-left hover:border-indigo-400 hover:bg-indigo-50">
-            <span className="block font-bold">{item.name_latin}</span>
-            {item.name_chinese && <span className="block text-sm text-slate-600">{item.name_chinese}</span>}
-            <span className={`mt-1 block text-xs font-semibold ${item.can_report ? 'text-emerald-700' : 'text-amber-700'}`}>{statusLabel[item.status]}{item.room_number ? ` • Room ${item.room_number}` : ''}</span>
-          </button>)}
-          {filtered.length === 0 && <p className="py-5 text-center text-sm text-slate-600">No matching names.</p>}
+        <div className="relative">
+          <input aria-label="Search by name" role="combobox" aria-autocomplete="list" aria-controls="person-suggestions" aria-expanded={dropdownOpen}
+            value={search} onFocus={() => setDropdownOpen(true)} onKeyDown={handleSearchKey}
+            onChange={event => { setSearch(event.target.value); setSuggestions([]); setSearching(Boolean(event.target.value.trim())); setActiveSuggestion(0); setDropdownOpen(true) }}
+            placeholder="Search Latin or Chinese name" autoComplete="off"
+            className="w-full rounded-2xl border border-slate-300 px-4 py-3 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+          {dropdownOpen && <div id="person-suggestions" role="listbox" aria-label="Matching names"
+            className="absolute inset-x-0 top-full z-20 mt-2 max-h-[45vh] space-y-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+            {searching && <p role="status" className="px-3 py-2 text-sm text-slate-600">Searching…</p>}
+            {searchError && <p role="alert" className="px-3 py-2 text-sm text-rose-700">{searchError}</p>}
+            {!searching && !searchError && suggestions.map((item, index) => <button key={item.id} type="button" role="option" aria-selected={index === activeSuggestion}
+              onMouseDown={event => event.preventDefault()} onClick={() => choosePerson(item)}
+              className={`w-full rounded-xl p-3 text-left hover:bg-indigo-50 ${index === activeSuggestion ? 'bg-indigo-50' : ''}`}>
+              <span className="block font-bold">{item.name_latin}</span>
+              {item.name_chinese && <span className="block text-sm text-slate-600">{item.name_chinese}</span>}
+              <span className={`mt-1 block text-xs font-semibold ${item.can_report ? 'text-emerald-700' : 'text-amber-700'}`}>{statusLabel[item.status]}{item.room_number ? ` • Room ${item.room_number}` : ''}</span>
+            </button>)}
+            {!searching && !searchError && suggestions.length === 0 && <p className="px-3 py-4 text-center text-sm text-slate-600">No matching names.</p>}
+          </div>}
         </div>
       </section>}
 
