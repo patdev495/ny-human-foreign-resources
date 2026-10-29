@@ -76,16 +76,17 @@ def create_app() -> FastAPI:
         if os.path.exists(assets_dir):
             app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-        @app.get("/{full_path:path}")
-        async def serve_frontend(full_path: str):
+        @app.get("/{full_path:path}", response_model=None)
+        async def serve_frontend(full_path: str) -> FileResponse | None:
             if full_path.startswith("api/"):
                 return None
             target_path = os.path.join(static_dir, full_path)
             if os.path.exists(target_path) and os.path.isfile(target_path):
-                return FileResponse(target_path)
+                headers = {"Cache-Control": "no-store"} if full_path == "index.html" else None
+                return FileResponse(target_path, headers=headers)
             index_path = os.path.join(static_dir, "index.html")
             if os.path.exists(index_path):
-                return FileResponse(index_path)
+                return FileResponse(index_path, headers={"Cache-Control": "no-store"})
             return None
 
     return app

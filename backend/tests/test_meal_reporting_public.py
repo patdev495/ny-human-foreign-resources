@@ -322,6 +322,9 @@ def test_hr_lock_opens_at_17h_and_relock_preserves_history(
     with TestClient(hr_app) as hr:
         assert hr.post("/api/hr-foreign/meals/lock", json=payload).status_code == 422
         clock[0] = dt.datetime(2026, 11, 2, 17, 0, tzinfo=vietnam_tz)
+        assert hr.post("/api/hr-foreign/meals/lock", json={
+            **payload, "locked_price_per_meal": 99999,
+        }).status_code == 422
         assert hr.post("/api/hr-foreign/meals/lock", json=payload).status_code == 201
         clock[0] = dt.datetime(2026, 11, 2, 17, 1, tzinfo=vietnam_tz)
         assert hr.post("/api/hr-foreign/meals/lock", json={**payload, "final_meal_count": 2}).status_code == 422

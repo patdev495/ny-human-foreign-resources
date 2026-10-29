@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import datetime
-import os
 from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
@@ -31,6 +30,7 @@ from features.hr_foreign.schemas import (
 
 from .meal_calculation_engine import MealCalculationEngine
 from features.hr_foreign.meal_reporting import rules
+from features.hr_foreign.services.meal_engine.meal_forecast_calculator import uses_meal_reports
 
 
 # --- MEAL PRICE CONFIG CRUD & SEEDING ---
@@ -97,6 +97,7 @@ def get_meal_absence_by_id(db: Session, abs_id: int) -> MealAbsence | None:
 
 
 def create_meal_absence(db: Session, stay_id: int, payload: MealAbsenceCreate) -> MealAbsence:
+    _require_legacy_meal_date(payload.absence_date)
     absence = MealAbsence(stay_id=stay_id, **payload.model_dump())
     db.add(absence)
     db.flush()
@@ -106,6 +107,7 @@ def create_meal_absence(db: Session, stay_id: int, payload: MealAbsenceCreate) -
 
 
 def delete_meal_absence(db: Session, absence: MealAbsence) -> None:
+    _require_legacy_meal_date(absence.absence_date)
     db.delete(absence)
     db.commit()
 
@@ -121,6 +123,7 @@ def get_meal_extra_by_id(db: Session, extra_id: int) -> MealExtra | None:
 
 
 def create_meal_extra(db: Session, stay_id: int, payload: MealExtraCreate) -> MealExtra:
+    _require_legacy_meal_date(payload.extra_date)
     extra = MealExtra(stay_id=stay_id, **payload.model_dump())
     db.add(extra)
     db.flush()
@@ -130,8 +133,14 @@ def create_meal_extra(db: Session, stay_id: int, payload: MealExtraCreate) -> Me
 
 
 def delete_meal_extra(db: Session, extra: MealExtra) -> None:
+    _require_legacy_meal_date(extra.extra_date)
     db.delete(extra)
     db.commit()
+
+
+def _require_legacy_meal_date(meal_date: datetime.date) -> None:
+    if uses_meal_reports(meal_date):
+        raise HTTPException(status_code=422, detail="Bữa sáng/tối ngày này lấy từ Báo cơm; HR chỉ được điều chỉnh tổng suất khi chốt bữa")
 
 
 # --- FORECAST & LOCK ENGINE ---
@@ -151,9 +160,7 @@ def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessio
     if payload.final_meal_count < 0 or payload.locked_price_per_meal <= 0:
         raise HTTPException(status_code=422, detail="Invalid count or price")
 
-    start_text = os.getenv("MEAL_REPORTING_START_DATE")
-    reporting_start = datetime.date.fromisoformat(start_text) if start_text else datetime.date(2026, 10, 29)
-    new_foreign_workflow = payload.meal_session in {"BREAKFAST", "DINNER"} and payload.lock_date >= reporting_start
+    new_foreign_workflow = payload.meal_session in {"BREAKFAST", "DINNER"} and uses_meal_reports(payload.lock_date)
     now = rules.now_vietnam()
     if new_foreign_workflow:
         earliest = datetime.datetime.combine(
@@ -165,6 +172,12 @@ def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessio
         suggested = forecast.breakfast.calculated_meal_count if payload.meal_session == "BREAKFAST" else forecast.dinner.calculated_meal_count
         if payload.calculated_meal_count != suggested:
             raise HTTPException(status_code=422, detail="Số suất đề xuất đã thay đổi; hãy tải lại dự báo")
+        suggested_price = (
+            forecast.suggested_breakfast_price if payload.meal_session == "BREAKFAST"
+            else forecast.suggested_dinner_price
+        )
+        if payload.locked_price_per_meal != suggested_price:
+            raise HTTPException(status_code=422, detail="Đơn giá đã thay đổi; hãy tải lại dự báo")
 
     existing = (
         db.query(MealSessionLock)

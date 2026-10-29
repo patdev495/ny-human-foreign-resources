@@ -59,7 +59,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
     sessionSummary.final_meal_count ?? sessionSummary.calculated_meal_count
   );
   const [lockedPrice, setLockedPrice] = useState<number>(
-    sessionSummary.locked_price_per_meal ?? suggestedPrice ?? 30000
+    isNewForeignLock ? (suggestedPrice ?? 30000) : (sessionSummary.locked_price_per_meal ?? suggestedPrice ?? 30000)
   );
   const [notes, setNotes] = useState<string>(isNewForeignLock && isAlreadyLocked ? "" : sessionSummary.notes || "");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -247,7 +247,8 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           {/* Locked Price Input */}
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Đơn giá chốt (VNĐ / suất) <span className="text-rose-500">*</span>
+              {isNewForeignLock ? "Đơn giá theo cấu hình (VNĐ / suất)" : "Đơn giá chốt (VNĐ / suất)"}
+              {!isNewForeignLock && <span className="text-rose-500">*</span>}
             </label>
             <input
               type="number"
@@ -255,6 +256,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
               min="0"
               value={lockedPrice}
               onChange={(e) => setLockedPrice(parseFloat(e.target.value) || 0)}
+              readOnly={isNewForeignLock}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
               required
             />

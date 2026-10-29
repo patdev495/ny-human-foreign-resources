@@ -3,6 +3,7 @@ import type { ForeignEmployee, MealAbsence, Stay } from "../../types";
 import {
   createMealAbsence,
   deleteMealAbsence,
+  fetchDailyMealForecast,
   fetchMealAbsences,
 } from "../../api";
 
@@ -24,6 +25,31 @@ export const MealAbsencesTab: React.FC<Props> = ({
   const [absDate, setAbsDate] = useState("");
   const [absMealType, setAbsMealType] = useState<"BREAKFAST" | "DINNER" | "ALL_DAY">("ALL_DAY");
   const [absReason, setAbsReason] = useState("");
+  const [usesMealReports, setUsesMealReports] = useState(false);
+  const [checkingDate, setCheckingDate] = useState(false);
+  const [dateCheckFailed, setDateCheckFailed] = useState(false);
+
+  useEffect(() => {
+    if (!absDate) {
+      setUsesMealReports(false);
+      setDateCheckFailed(false);
+      return;
+    }
+    let cancelled = false;
+    setCheckingDate(true);
+    setDateCheckFailed(false);
+    void fetchDailyMealForecast(absDate).then((forecast) => {
+      if (!cancelled) setUsesMealReports(forecast.uses_meal_reports);
+    }).catch(() => {
+      if (!cancelled) {
+        setDateCheckFailed(true);
+        setError("Không thể kiểm tra nguồn dữ liệu ngày ăn. Vui lòng thử lại.");
+      }
+    }).finally(() => {
+      if (!cancelled) setCheckingDate(false);
+    });
+    return () => { cancelled = true; };
+  }, [absDate, setError]);
 
   useEffect(() => {
     if (stays.length > 0 && !selectedStayId) {
@@ -55,6 +81,10 @@ export const MealAbsencesTab: React.FC<Props> = ({
       setError("Vui lòng chọn ngày báo vắng");
       return;
     }
+    if (checkingDate || dateCheckFailed || usesMealReports) {
+      setError("Ngày này lấy trạng thái Sáng/Tối từ cổng Báo cơm 8006. Chỉ điều chỉnh tổng số suất khi chốt bữa.");
+      return;
+    }
 
     try {
       await createMealAbsence(Number(selectedStayId), {
@@ -67,8 +97,8 @@ export const MealAbsencesTab: React.FC<Props> = ({
       setAbsDate("");
       setAbsReason("");
       loadAbsencesForStay(Number(selectedStayId));
-    } catch (err: any) {
-      setError(err.message || "Không thể tạo ngày báo vắng");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Không thể tạo ngày báo vắng");
     }
   };
 
@@ -78,8 +108,8 @@ export const MealAbsencesTab: React.FC<Props> = ({
       await deleteMealAbsence(id);
       setSuccessMsg("✓ Đã xóa ngày báo vắng");
       if (selectedStayId) loadAbsencesForStay(Number(selectedStayId));
-    } catch (err: any) {
-      alert(`Lỗi khi xóa: ${err.message}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Không thể xóa ngày báo vắng");
     }
   };
 
@@ -90,6 +120,7 @@ export const MealAbsencesTab: React.FC<Props> = ({
           🍽️ Đăng ký Báo vắng ăn theo Lượt lưu trú
         </h3>
         <form onSubmit={handleCreateAbsence} className="space-y-4">
+          {usesMealReports && <p role="status" className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-800">Từ ngày này, trạng thái Sáng/Tối chỉ đọc từ Báo cơm 8006. HR có thể điều chỉnh tổng số suất trong lúc chốt bữa và phải ghi lý do.</p>}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -129,7 +160,7 @@ export const MealAbsencesTab: React.FC<Props> = ({
               </label>
               <select
                 value={absMealType}
-                onChange={(e) => setAbsMealType(e.target.value as any)}
+                onChange={(e) => setAbsMealType(e.target.value as "BREAKFAST" | "DINNER" | "ALL_DAY")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-amber-500 focus:border-amber-500 font-medium"
               >
                 <option value="ALL_DAY">Cả ngày (Sáng & Tối)</option>
@@ -155,6 +186,7 @@ export const MealAbsencesTab: React.FC<Props> = ({
           <div className="flex justify-end">
             <button
               type="submit"
+              disabled={checkingDate || dateCheckFailed || usesMealReports}
               className="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium rounded-md shadow transition duration-150"
             >
               ➕ Đăng ký Vắng ăn

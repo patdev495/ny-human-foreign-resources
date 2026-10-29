@@ -66,9 +66,12 @@ def test_meal_report_expense_and_excel_follow_current_locks(
         }).status_code == 201
         assert hr.post(f"/api/hr-foreign/stays/{stays[0]}/meal-absences", json={
             "absence_date": "2026-11-03", "meal_type": "BREAKFAST",
-        }).status_code == 201
+        }).status_code == 422
         assert hr.post(f"/api/hr-foreign/stays/{stays[2]}/meal-extras", json={
             "extra_date": "2026-11-03", "meal_type": "ALL_DAY",
+        }).status_code == 422
+        assert hr.post(f"/api/hr-foreign/stays/{stays[0]}/meal-absences", json={
+            "absence_date": "2026-10-28", "meal_type": "BREAKFAST",
         }).status_code == 201
 
         def lock(date: str, session: str, suggested: int, final: int, price: int, notes: str | None = None) -> None:

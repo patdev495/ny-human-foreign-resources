@@ -38,7 +38,10 @@ export async function createMealAbsence(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("Failed to create meal absence");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(formatApiError(err, "Không thể tạo ngày báo vắng"));
+  }
   return res.json() as Promise<MealAbsence>;
 }
 
