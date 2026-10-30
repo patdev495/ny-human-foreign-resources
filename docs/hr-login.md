@@ -16,7 +16,7 @@ Lệnh hỏi tên tài khoản, tên hiển thị và mật khẩu hai lần. M�
 
 Mật khẩu chỉ cần có ít nhất một ký tự; hệ thống không áp dụng yêu cầu độ dài tối thiểu hay độ phức tạp khác. Giới hạn kỹ thuật là 256 ký tự.
 
-Sau khi đăng nhập cổng 8004, admin mở **Tài khoản** ở thanh trên để tạo tài khoản khác. Người dùng có thể đổi mật khẩu của mình ở **Đổi mật khẩu**. Đổi hoặc đặt lại mật khẩu sẽ vô hiệu hóa mọi phiên cũ của tài khoản đó. Khóa tài khoản cũng vô hiệu hóa phiên hiện có.
+Sau khi đăng nhập cổng 8004, mở **Cài đặt** ở thanh trên. Admin chọn **Quản lý tài khoản** để tạo tài khoản khác; mọi người có thể chọn **Đổi mật khẩu** hoặc **Đăng xuất** tại đây. Đổi hoặc đặt lại mật khẩu sẽ vô hiệu hóa mọi phiên cũ của tài khoản đó. Khóa tài khoản cũng vô hiệu hóa phiên hiện có.
 
 ## Triển khai
 

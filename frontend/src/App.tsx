@@ -18,8 +18,7 @@ import { JanitorDailyAttendance } from "./features/hr-foreign/components/Janitor
 import { Sidebar } from "./components/Sidebar";
 import type { NavTab } from "./components/Sidebar";
 import type { AuthUser } from "./features/auth/types";
-import { UserManagement } from "./features/auth/UserManagement";
-import { ChangePassword } from "./features/auth/ChangePassword";
+import { AccountSettingsMenu } from "./features/auth/AccountSettingsMenu";
 
 const tabMetaMap: Record<NavTab, { section: string; title: string }> = {
   EMPLOYEES: { section: "Nhân sự nước ngoài", title: "Hồ sơ nhân sự" },
@@ -75,8 +74,6 @@ export const App: React.FC<AppProps> = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState<NavTab>(readTabFromHash);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const [showUsers, setShowUsers] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
 
   useEffect(() => {
     const syncTabFromUrl = (): void => setActiveTab(readTabFromHash());
@@ -159,12 +156,7 @@ export const App: React.FC<AppProps> = ({ user, onLogout }) => {
           {/* Right: Date & Status indicator */}
           <div className="flex items-center gap-3">
             <span className="hidden text-xs font-medium text-slate-600 sm:inline">{user.display_name}</span>
-            {user.is_admin && <button type="button" onClick={() => setShowUsers(true)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">Tài khoản</button>}
-            <button type="button" onClick={() => setShowChangePassword(true)}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">Đổi mật khẩu</button>
-            <button type="button" onClick={() => void onLogout()}
-              className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100">Đăng xuất</button>
+            <AccountSettingsMenu user={user} onLogout={onLogout} />
             <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/70 border border-slate-200/60 text-xs text-slate-600 font-medium capitalize">
               <Calendar className="h-3.5 w-3.5 text-slate-500" />
               <span>{todayFormatted}</span>
@@ -220,9 +212,6 @@ export const App: React.FC<AppProps> = ({ user, onLogout }) => {
           </div>
         </main>
       </div>
-      {showUsers && <UserManagement currentUser={user} onClose={() => setShowUsers(false)} />}
-      {showChangePassword && <ChangePassword onClose={() => setShowChangePassword(false)}
-        onChanged={() => { setShowChangePassword(false); void onLogout(); }} />}
     </div>
   );
 };
