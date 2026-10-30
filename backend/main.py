@@ -3,15 +3,19 @@ from __future__ import annotations
 import os
 import sys
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from starlette.middleware.base import RequestResponseEndpoint
+from starlette.responses import Response
 
 from core.config import settings
 from core.database import init_db
 from features.hr_foreign.router import router as hr_foreign_router
 from features.vehicle_management.router import router as vehicle_management_router
+from features.auth.router import router as auth_router, admin_router
+from features.auth.security import require_user
 
 
 import asyncio
@@ -45,14 +49,28 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=[origin for origin in settings.cors_origins if origin != "*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    app.include_router(hr_foreign_router, prefix="/api/hr-foreign", tags=["HR Foreign"])
-    app.include_router(vehicle_management_router)
+    @app.middleware("http")
+    async def reject_cross_origin_writes(request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if request.method not in {"GET", "HEAD", "OPTIONS"}:
+            origin = request.headers.get("origin")
+            own_origin = f"{request.url.scheme}://{request.headers.get('host', '')}"
+            if origin and origin != own_origin and origin not in settings.cors_origins:
+                return JSONResponse(status_code=403, content={"detail": "Cross-origin request denied"})
+        return await call_next(request)
+
+    app.include_router(auth_router)
+    app.include_router(admin_router)
+    app.include_router(
+        hr_foreign_router, prefix="/api/hr-foreign", tags=["HR Foreign"],
+        dependencies=[Depends(require_user)],
+    )
+    app.include_router(vehicle_management_router, dependencies=[Depends(require_user)])
 
 
     # Locate static frontend dist directory

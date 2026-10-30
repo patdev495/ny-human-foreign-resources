@@ -28,6 +28,11 @@ def init_db() -> None:
     from sqlalchemy import text
     from features.hr_foreign import models  # noqa: F401
     from features.vehicle_management import models as vehicle_models  # noqa: F401
+    from features.auth import models as auth_models  # noqa: F401
+
+    # Authentication must be available before serving any HR API.
+    auth_models.User.__table__.create(bind=engine, checkfirst=True)
+    auth_models.UserSession.__table__.create(bind=engine, checkfirst=True)
 
 
     try:

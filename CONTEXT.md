@@ -4,6 +4,12 @@ Hệ thống quản lý nhân sự dành cho công ty có nhân viên mang quố
 
 ## Language
 
+**Tài khoản người dùng**:
+Danh tính đăng nhập riêng của một người sử dụng cổng HR 8004, dùng để xác định người đó được phép làm gì trong hệ thống. Tài khoản này khác với hồ sơ Nhân viên nước ngoài hoặc Tạp vụ được quản lý trong hệ thống.
+
+**Quản trị viên phân quyền**:
+Người sử dụng cổng HR 8004 có quyền tạo và quản lý Tài khoản người dùng khác. Thiết kế quyền theo từng phân hệ sẽ được quyết định ở giai đoạn sau.
+
 **Nhân viên nước ngoài** (Foreign Employee):
 Người nước ngoài có hồ sơ trong hệ thống, bất kể loại visa (LĐ2, DN1, THĂM THÂN, ĐT1…) hay quan hệ với công ty. Người đó có thể đang ở KTX, ở Khách sạn hoặc đã về nước; chỉ người đang ở KTX được Báo cơm.
 _Avoid_: expat, lao động nước ngoài, người nước ngoài, cán bộ nước ngoài
