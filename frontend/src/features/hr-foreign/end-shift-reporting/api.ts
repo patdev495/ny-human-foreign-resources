@@ -4,8 +4,8 @@ const BASE = '/api/end-shift-reporting'
 
 async function read<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const body: { detail?: string } = await response.json().catch(() => ({})) as { detail?: string }
-    throw new Error(body.detail || `Request failed (${response.status})`)
+    const body: { detail?: unknown } = await response.json().catch(() => ({})) as { detail?: unknown }
+    throw new Error(typeof body.detail === 'string' ? body.detail : `Request failed (${response.status})`)
   }
   return response.json() as Promise<T>
 }
