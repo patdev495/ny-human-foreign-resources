@@ -97,6 +97,49 @@ def test_stay_crud_and_single_active_constraint(client: TestClient) -> None:
     assert res_new.status_code == 201
 
 
+def test_legacy_stay_without_start_date_appears_in_room_occupancy(client: TestClient) -> None:
+    arrival_date = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+    employee_response = client.post(
+        "/api/hr-foreign/employees",
+        json={"name_latin": "NIU GENG", "gender": "Nam", "entry_date": arrival_date},
+    )
+    assert employee_response.status_code == 201
+    employee_id = employee_response.json()["id"]
+
+    room_response = client.post("/api/hr-foreign/rooms", json={"room_number": "1607"})
+    assert room_response.status_code == 201
+    room_id = room_response.json()["id"]
+
+    stay_response = client.post(
+        "/api/hr-foreign/stays",
+        json={
+            "employee_id": employee_id,
+            "accommodation_type": "KTX",
+            "room_id": room_id,
+            "stay_type": "CO_DINH",
+            "start_date": arrival_date,
+        },
+    )
+    assert stay_response.status_code == 201
+
+    # Older records can have an assigned room while start_date is still NULL.
+    legacy_response = client.put(
+        f"/api/hr-foreign/stays/{stay_response.json()['id']}",
+        json={"start_date": None},
+    )
+    assert legacy_response.status_code == 200
+    assert legacy_response.json()["start_date"] is None
+
+    profile_response = client.get(f"/api/hr-foreign/employees/{employee_id}")
+    assert profile_response.status_code == 200
+    assert profile_response.json()["current_room_number"] == "1607"
+
+    occupancy_response = client.get("/api/hr-foreign/rooms/occupancy")
+    assert occupancy_response.status_code == 200
+    room = next(item for item in occupancy_response.json() if item["room_number"] == "1607")
+    assert [resident["employee_id"] for resident in room["active_residents"]] == [employee_id]
+
+
 def test_stay_with_expected_end_date(client: TestClient) -> None:
     emp_res = client.post(
         "/api/hr-foreign/employees",

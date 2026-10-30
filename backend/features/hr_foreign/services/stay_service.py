@@ -210,7 +210,10 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     # Single bulk query for all active stays to eliminate N+1 queries
     all_active_stays = (
         db.query(Stay)
-        .filter(Stay.start_date <= today, or_(Stay.end_date.is_(None), Stay.end_date > today))
+        .filter(
+            or_(Stay.start_date.is_(None), Stay.start_date <= today),
+            or_(Stay.end_date.is_(None), Stay.end_date > today),
+        )
         .all()
     )
 
