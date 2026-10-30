@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 import pytest
+from pydantic import ValidationError
 
+from features.auth.schemas import PasswordChange, PasswordReset, UserCreate
 from features.auth.security import hash_password, verify_password
 
 
@@ -13,6 +15,15 @@ def test_password_is_salted_and_verifies() -> None:
     assert first != second
     assert verify_password("mật khẩu đủ dài 123", first)
     assert not verify_password("wrong password", first)
+
+
+@pytest.mark.auth_real
+def test_single_character_password_is_allowed() -> None:
+    assert UserCreate(username="newuser", display_name="New User", password="x").password == "x"
+    assert PasswordReset(password="x").password == "x"
+    assert PasswordChange(current_password="old", new_password="x").new_password == "x"
+    with pytest.raises(ValidationError):
+        UserCreate(username="newuser", display_name="New User", password="")
 
 
 @pytest.mark.auth_real

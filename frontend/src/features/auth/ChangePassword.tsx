@@ -33,8 +33,8 @@ export function ChangePassword({ onClose, onChanged }: Props) {
           onChange={(event) => setCurrentPassword(event.target.value)}
           className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2" />
       </label>
-      <label className="block text-sm font-medium">Mật khẩu mới (từ 12 ký tự)
-        <input type="password" autoComplete="new-password" required minLength={12} maxLength={256}
+      <label className="block text-sm font-medium">Mật khẩu mới
+        <input type="password" autoComplete="new-password" required maxLength={256}
           value={newPassword} onChange={(event) => setNewPassword(event.target.value)}
           className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2" />
       </label>

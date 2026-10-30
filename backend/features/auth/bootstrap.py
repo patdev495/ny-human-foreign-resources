@@ -17,10 +17,10 @@ def main() -> None:
     display_name = input("Display name: ").strip()
     if not display_name:
         raise ValueError("Display name is required")
-    password = getpass.getpass("Password (at least 12 characters): ")
+    password = getpass.getpass("Password: ")
     confirmation = getpass.getpass("Confirm password: ")
-    if len(password) < 12 or password != confirmation:
-        raise ValueError("Passwords must match and contain at least 12 characters")
+    if not password or password != confirmation:
+        raise ValueError("Passwords must match and not be empty")
 
     User.__table__.create(bind=engine, checkfirst=True)
     UserSession.__table__.create(bind=engine, checkfirst=True)

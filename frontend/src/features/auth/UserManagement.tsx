@@ -82,7 +82,7 @@ export function UserManagement({ currentUser, onClose }: Props) {
           onChange={(event) => setUsername(event.target.value)} className="rounded-lg border border-slate-300 px-3 py-2" />
         <input aria-label="Tên hiển thị" placeholder="Tên hiển thị" required value={displayName}
           onChange={(event) => setDisplayName(event.target.value)} className="rounded-lg border border-slate-300 px-3 py-2" />
-        <input aria-label="Mật khẩu ban đầu" placeholder="Mật khẩu ban đầu (từ 12 ký tự)" type="password" required minLength={12}
+        <input aria-label="Mật khẩu ban đầu" placeholder="Mật khẩu ban đầu" type="password" required maxLength={256}
           value={password} onChange={(event) => setPassword(event.target.value)}
           className="rounded-lg border border-slate-300 px-3 py-2" />
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isAdmin}
@@ -104,8 +104,8 @@ export function UserManagement({ currentUser, onClose }: Props) {
           {resetTarget === target.id && <form onSubmit={(event) => { event.preventDefault(); void resetPassword(target); }}
             className="flex w-full gap-2 pt-2">
             <input aria-label={`Mật khẩu mới cho ${target.username}`} type="password" autoComplete="new-password"
-              minLength={12} maxLength={256} required value={resetValue}
-              onChange={(event) => setResetValue(event.target.value)} placeholder="Mật khẩu mới (từ 12 ký tự)"
+              maxLength={256} required value={resetValue}
+              onChange={(event) => setResetValue(event.target.value)} placeholder="Mật khẩu mới"
               className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2" />
             <button type="submit" disabled={busy} className="rounded-lg bg-indigo-700 px-3 py-2 text-sm text-white disabled:opacity-50">Lưu</button>
             <button type="button" onClick={() => { setResetTarget(null); setResetValue(""); }} className="rounded-lg border px-3 py-2 text-sm">Hủy</button>

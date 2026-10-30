@@ -21,7 +21,7 @@ class UserRead(BaseModel):
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=80, pattern=r"^[a-zA-Z0-9._-]+$")
     display_name: str = Field(min_length=1, max_length=150)
-    password: str = Field(min_length=12, max_length=256)
+    password: str = Field(min_length=1, max_length=256)
     is_admin: bool = False
 
 
@@ -32,9 +32,9 @@ class UserUpdate(BaseModel):
 
 
 class PasswordReset(BaseModel):
-    password: str = Field(min_length=12, max_length=256)
+    password: str = Field(min_length=1, max_length=256)
 
 
 class PasswordChange(BaseModel):
     current_password: str = Field(min_length=1, max_length=256)
-    new_password: str = Field(min_length=12, max_length=256)
+    new_password: str = Field(min_length=1, max_length=256)
