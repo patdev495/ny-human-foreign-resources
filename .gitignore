@@ -33,6 +33,7 @@ frontend/portal-dist/
 frontend/.vite/
 zalo_bot/data/
 zalo_bot/dist/
+zalo_bot/runtime/
 .eslintcache
 
 # Logs

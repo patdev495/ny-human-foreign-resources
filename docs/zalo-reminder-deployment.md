@@ -11,7 +11,7 @@ Mốc mặc định là **17:00 giờ Việt Nam**. Admin 8004 có thể đổi 
 
 ## Build và chạy bot
 
-Trong `zalo_bot/`, chạy `npm ci`, `npm run typecheck`, `npm test`, `npm run build`. Sau đó chạy `npm start` với thư mục làm việc là `zalo_bot/` và biến môi trường nêu trên. Trên máy chủ Windows, có thể đặt lệnh này trong NSSM như dịch vụ riêng với `Application` là đường dẫn `node.exe`, `AppDirectory` là thư mục `zalo_bot`, `AppParameters` là `dist/index.mjs`.
+Trong `zalo_bot/`, chạy `npm ci`, `npm run typecheck`, `npm test`, `npm run build`. Sau đó chạy `npm start` với thư mục làm việc là `zalo_bot/` và biến môi trường nêu trên. Trên máy chủ Windows không có npm/Node trong PATH, đặt `runtime/node.exe` và `node_modules/` cạnh bản build `dist/index.mjs`. Dùng NSSM chạy `cmd.exe /c run-production.bat` với `AppDirectory` là thư mục `zalo_bot`; script đọc secret từ `backend/.env` rồi chạy Node. `runtime/` và `data/` không đưa vào Git.
 
 Trong dev, phải đặt `HR_ZALO_BOT_SECRET` trong `backend/.env` **và** môi trường của tiến trình `npm start`; hai giá trị phải giống nhau. Khởi động lại backend 8004 sau khi sửa `.env`. Nếu màn hình báo bot chưa được cấu hình, kiểm tra secret ở backend. Nếu báo không kết nối được bot, kiểm tra tiến trình Node đang lắng nghe `127.0.0.1:8016`. Sau khi bot chạy, trạng thái QR có thể mất vài giây để xuất hiện.
 
@@ -29,4 +29,4 @@ Trong dev, cấu hình một Zalo bot và người nhận thử riêng, khởi �
 4. Đăng xuất hoặc dùng tài khoản không phải admin để kiểm tra phần cấu hình và API Zalo bị chặn.
 5. Xem kết quả theo ngày; kiểm tra `SENT`, `FAILED`, `MISSED`, `UNKNOWN` và xác nhận gửi thử vẫn độc lập với lịch tự động.
 
-Danh sách người nhận, mốc giờ, lịch sử gửi thử và kết quả hằng ngày lưu trong SQL Server đang dùng cho HR. Không gọi Zalo thật trong test tự động. Chưa triển khai production trong giai đoạn tự kiểm thử dev.
+Danh sách người nhận, mốc giờ, lịch sử gửi thử và kết quả hằng ngày lưu trong SQL Server đang dùng cho HR. Không gọi Zalo thật trong test tự động. Sau triển khai, admin cần quét QR bằng tài khoản bot HR riêng trước khi chọn người nhận production.
