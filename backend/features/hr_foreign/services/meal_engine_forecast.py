@@ -4,6 +4,7 @@ import datetime
 from fastapi import HTTPException
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from core.system_settings import get_time_setting
 
 from features.hr_foreign.models import (
     EventDay,
@@ -164,10 +165,11 @@ def lock_meal_session(db: Session, payload: MealSessionLockCreate) -> MealSessio
     now = rules.now_vietnam()
     if new_foreign_workflow:
         earliest = datetime.datetime.combine(
-            payload.lock_date - datetime.timedelta(days=1), datetime.time(17), tzinfo=now.tzinfo
+            payload.lock_date - datetime.timedelta(days=1),
+            get_time_setting(db, "meal_cutoff_time", "17:00"), tzinfo=now.tzinfo
         )
         if now < earliest:
-            raise HTTPException(status_code=422, detail="Chỉ được chốt từ 17h ngày hôm trước")
+            raise HTTPException(status_code=422, detail=f"Chỉ được chốt từ {earliest:%H:%M} ngày hôm trước")
         forecast = get_daily_meal_forecast(db, payload.lock_date)
         suggested = forecast.breakfast.calculated_meal_count if payload.meal_session == "BREAKFAST" else forecast.dinner.calculated_meal_count
         if payload.calculated_meal_count != suggested:

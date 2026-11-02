@@ -5,6 +5,7 @@ import datetime as dt
 from sqlalchemy import or_, text
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from core.system_settings import get_time_setting
 
 from features.hr_foreign.models import ForeignEmployee, Stay, TravelRecord
 from features.hr_foreign.meal_reporting.models import MealReport, MealReportRevision
@@ -85,7 +86,7 @@ def hr_report_view(db: Session, employee_id: int, meal_date: dt.date) -> HrMealR
 
 def submit_report(db: Session, submission: MealReportSubmission) -> MealReportView:
     now = rules.now_vietnam()
-    rules.require_submission_window(submission.meal_date, now)
+    rules.require_submission_window(submission.meal_date, now, get_time_setting(db, "meal_cutoff_time", "17:00"))
     employee = db.get(ForeignEmployee, submission.employee_id)
     if employee is None or employee.employee_type != "FOREIGN":
         raise HTTPException(status_code=404, detail="Person not found")

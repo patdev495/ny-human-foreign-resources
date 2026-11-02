@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, KeyRound, LogOut, Settings, Users } from "lucide-react";
+import { ChevronDown, KeyRound, LogOut, MessageCircle, Settings, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ChangePassword } from "./ChangePassword";
 import { UserManagement } from "./UserManagement";
 import type { AuthUser } from "./types";
+import { ZaloReminderSettings } from "../zalo-reminder/ZaloReminderSettings";
 
 interface Props {
   user: AuthUser;
@@ -20,6 +21,7 @@ interface SettingAction {
 export function AccountSettingsMenu({ user, onLogout }: Props) {
   const [open, setOpen] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [showZalo, setShowZalo] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -50,6 +52,7 @@ export function AccountSettingsMenu({ user, onLogout }: Props) {
 
   const accountActions: SettingAction[] = [
     ...(user.is_admin ? [{ label: "Quản lý tài khoản", icon: Users, onSelect: () => setShowUsers(true) }] : []),
+    ...(user.is_admin ? [{ label: "Thông báo Zalo", icon: MessageCircle, onSelect: () => setShowZalo(true) }] : []),
     { label: "Đổi mật khẩu", icon: KeyRound, onSelect: () => setShowChangePassword(true) },
     { label: "Đăng xuất", icon: LogOut, onSelect: () => void onLogout() },
   ];
@@ -75,6 +78,9 @@ export function AccountSettingsMenu({ user, onLogout }: Props) {
     </div>
     {showUsers && createPortal(
       <UserManagement currentUser={user} onClose={() => setShowUsers(false)} />, document.body,
+    )}
+    {showZalo && createPortal(
+      <ZaloReminderSettings onClose={() => setShowZalo(false)} />, document.body,
     )}
     {showChangePassword && createPortal(
       <ChangePassword onClose={() => setShowChangePassword(false)}

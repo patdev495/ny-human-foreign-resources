@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchDailyMealForecast, lockMealSession } from "../api";
+import { fetchDailyMealForecast, fetchMealCutoff, lockMealSession } from "../api";
 import type { DailyMealForecastResponse, DailyMealSessionSummary } from "../types";
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
@@ -14,6 +14,9 @@ export function MealForecastBoard() {
   const [search, setSearch] = useState("");
   const [lodging, setLodging] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
   const [lockTarget, setLockTarget] = useState<DailyMealSessionSummary | null>(null);
+  const [cutoff, setCutoff] = useState("17:00");
+
+  useEffect(() => { void fetchMealCutoff().then(setCutoff).catch(() => setError("Không thể tải mốc chốt Báo cơm.")); }, []);
 
   async function load(date: string, showLoading = true) {
     if (showLoading) setLoading(true);
@@ -80,7 +83,7 @@ export function MealForecastBoard() {
         lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={forecast.uses_meal_reports} />
     </>}
 
-    {lockTarget && <LockMealSessionModal date={selectedDate} sessionSummary={lockTarget}
+    {lockTarget && <LockMealSessionModal date={selectedDate} sessionSummary={lockTarget} cutoff={cutoff}
       employees={forecast?.employees ?? []} usesMealReports={forecast?.uses_meal_reports ?? false}
       dayTypeName={forecast?.day_type_name} suggestedPrice={suggestedPrice}
       onClose={() => setLockTarget(null)} onConfirm={confirmLock} />}

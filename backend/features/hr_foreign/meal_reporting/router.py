@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from core.database import get_db
+from core.system_settings import get_time_setting
 from features.hr_foreign.models import ForeignEmployee
 from features.hr_foreign.meal_reporting import rules
 from features.hr_foreign.meal_reporting.schemas import MealReportSubmission, MealReportView, PublicPerson
@@ -20,9 +21,11 @@ def get_people(q: str = Query(default=""), db: Session = Depends(get_db)) -> lis
 
 
 @router.get("/dates")
-def get_dates() -> list[dict[str, str | bool]]:
+def get_dates(db: Session = Depends(get_db)) -> list[dict[str, str | bool]]:
     now = rules.now_vietnam()
-    return [{"date": day.isoformat(), "can_submit": rules.can_submit(day, now)} for day in rules.selectable_dates(now)]
+    cutoff = get_time_setting(db, "meal_cutoff_time", "17:00")
+    return [{"date": day.isoformat(), "can_submit": rules.can_submit(day, now, cutoff),
+             "cutoff_time": cutoff.strftime("%H:%M")} for day in rules.selectable_dates(now)]
 
 
 @router.get("/people/{employee_id}/reports/{meal_date}", response_model=MealReportView)

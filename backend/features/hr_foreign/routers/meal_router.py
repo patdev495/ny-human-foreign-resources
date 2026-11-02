@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from core.database import get_db
+from core.system_settings import get_time_setting
 from features.hr_foreign import service
 from features.hr_foreign.excel_exporter import generate_meal_expense_excel
 from features.hr_foreign.exporters.janitor_payroll_exporter import generate_janitor_payroll_excel
@@ -31,6 +32,11 @@ from features.hr_foreign.meal_reporting.schemas import HrMealReportView
 from features.hr_foreign.meal_reporting.service import hr_report_view
 
 router = APIRouter()
+
+
+@router.get("/meals/cutoff")
+def get_meal_cutoff(db: Session = Depends(get_db)) -> dict[str, str]:
+    return {"time": get_time_setting(db, "meal_cutoff_time", "17:00").strftime("%H:%M")}
 
 
 @router.get("/meals/reports/{employee_id}/{meal_date}", response_model=HrMealReportView)

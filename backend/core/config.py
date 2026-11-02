@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
     auth_cookie_secure: bool = False
+    hr_zalo_bot_port: int = 8016
+    hr_zalo_bot_secret: str = ""
 
     # MSSQL via ODBC Driver 18
     db_server: str
@@ -42,4 +44,4 @@ class Settings(BaseSettings):
         )
 
 
-settings = Settings()
+settings = Settings()  # pyright: ignore[reportCallIssue] - required values come from the environment

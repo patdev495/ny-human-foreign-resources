@@ -250,7 +250,7 @@ export function MealReportingApp() {
             <span className="font-semibold">{text[meal]}</span>
             <input type="checkbox" aria-label={meal === 'breakfast' ? text.eatBreakfast : text.eatDinner} checked={selection[meal]} disabled={!day?.can_submit} onChange={event => { setSelection({ ...selection, [meal]: event.target.checked }); setMessage(null) }} className="h-6 w-6 accent-indigo-700" />
           </label>)}
-          {day?.can_submit ? <><p className="text-xs text-slate-600">{text.mealDeadline}</p><button type="button" disabled={saving} onClick={() => void submit()} className={`${button} bg-indigo-700 text-white hover:bg-indigo-800`}>{saving ? text.saving : hasReport ? text.saveChanges : text.submitMeal}</button></> : <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{text.mealClosed}</p>}
+          {day?.can_submit ? <><p className="text-xs text-slate-600">{text.mealDeadline.replace('17:00', day.cutoff_time)}</p><button type="button" disabled={saving} onClick={() => void submit()} className={`${button} bg-indigo-700 text-white hover:bg-indigo-800`}>{saving ? text.saving : hasReport ? text.saveChanges : text.submitMeal}</button></> : <p className="rounded-xl bg-slate-100 p-3 text-sm text-slate-700">{text.mealClosed}</p>}
         </>}
       </section>}
       {!loading && screen === 'end-shift' && person && <EndShiftReporting employeeId={person.id} name={person.name_latin} room={person.room_number} locale={locale} onBack={() => setScreen('menu')} />}

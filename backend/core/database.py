@@ -20,6 +20,9 @@ class Base(DeclarativeBase):
     pass
 
 
+from core import system_settings as _system_settings  # noqa: E402,F401
+
+
 def init_db() -> None:
     import os
     if os.getenv("TESTING") == "1":
@@ -29,10 +32,15 @@ def init_db() -> None:
     from features.hr_foreign import models  # noqa: F401
     from features.vehicle_management import models as vehicle_models  # noqa: F401
     from features.auth import models as auth_models  # noqa: F401
+    from features.zalo_reminder import models as zalo_reminder_models  # noqa: F401
 
     # Authentication must be available before serving any HR API.
-    auth_models.User.__table__.create(bind=engine, checkfirst=True)
-    auth_models.UserSession.__table__.create(bind=engine, checkfirst=True)
+    Base.metadata.tables["hr_users"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["hr_user_sessions"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["system_settings"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["zalo_reminder_recipients"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["zalo_reminder_delivery_logs"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["zalo_reminder_daily_deliveries"].create(bind=engine, checkfirst=True)
 
 
     try:

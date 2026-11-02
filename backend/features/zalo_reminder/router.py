@@ -1,0 +1,133 @@
+from __future__ import annotations
+
+from datetime import date, time
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy.orm import Session
+
+from features.auth.models import User
+from features.auth.security import require_admin
+from core.database import get_db
+from core.system_settings import get_time_setting, set_time_setting
+from features.zalo_reminder.client import BotClient, BotUnavailable, get_bot_client
+from features.zalo_reminder.schemas import CutoffTime, RecipientSelection, TestSendRequest
+from features.zalo_reminder.scheduler import MESSAGE, daily_results, run_due
+from features.zalo_reminder.store import RecipientStore, get_recipient_store
+
+router = APIRouter(prefix="/api/zalo-reminder", tags=["Zalo reminder"])
+
+
+@router.get("/cutoff", response_model=CutoffTime)
+def get_cutoff(_admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> CutoffTime:
+    return CutoffTime(time=get_time_setting(db, "meal_cutoff_time", "17:00").strftime("%H:%M"))
+
+
+@router.put("/cutoff", response_model=CutoffTime)
+def put_cutoff(
+    payload: CutoffTime, _admin: User = Depends(require_admin), db: Session = Depends(get_db),
+) -> CutoffTime:
+    set_time_setting(db, "meal_cutoff_time", time.fromisoformat(payload.time))
+    return payload
+
+
+@router.get("/status")
+def get_status(
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+) -> dict[str, bool]:
+    try:
+        return bot.status()
+    except BotUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.get("/qr", response_class=Response)
+def get_qr(
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+) -> Response:
+    try:
+        image = bot.qr()
+    except BotUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if image is None:
+        raise HTTPException(status_code=404, detail="QR is not available")
+    return Response(content=image, media_type="image/png", headers={"Cache-Control": "no-store"})
+
+
+@router.get("/friends")
+def get_friends(
+    q: str = Query(default="", max_length=100),
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+) -> list[dict[str, str]]:
+    try:
+        friends = bot.friends()
+    except BotUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    term = q.strip().casefold()
+    return [friend for friend in friends if term in friend["name"].casefold()]
+
+
+@router.get("/recipients")
+def get_recipients(
+    _admin: User = Depends(require_admin), store: RecipientStore = Depends(get_recipient_store),
+) -> list[dict[str, str]]:
+    return store.list_recipients()
+
+
+@router.put("/recipients")
+def put_recipients(
+    payload: RecipientSelection,
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+    store: RecipientStore = Depends(get_recipient_store),
+) -> list[dict[str, str]]:
+    try:
+        friends = {friend["id"]: friend for friend in bot.friends()}
+    except BotUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    ids = list(dict.fromkeys(payload.ids))
+    if any(not id or len(id) > 100 or id not in friends for id in ids):
+        raise HTTPException(status_code=422, detail="Select friends of the connected Zalo account")
+    store.replace_recipients([friends[id] for id in ids])
+    return store.list_recipients()
+
+
+TEST_MESSAGE = MESSAGE
+
+
+@router.post("/test-send")
+def send_test(
+    payload: TestSendRequest,
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+    store: RecipientStore = Depends(get_recipient_store),
+) -> dict[str, str]:
+    recipient = next((person for person in store.list_recipients() if person["id"] == payload.id), None)
+    if recipient is None:
+        raise HTTPException(status_code=404, detail="Recipient is not selected")
+    try:
+        bot.send(recipient["id"], TEST_MESSAGE)
+    except BotUnavailable as exc:
+        store.record_delivery(recipient["id"], recipient["name"], "FAILED", str(exc))
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    store.record_delivery(recipient["id"], recipient["name"], "SENT")
+    return {"status": "SENT"}
+
+
+@router.get("/deliveries")
+def get_deliveries(
+    _admin: User = Depends(require_admin), store: RecipientStore = Depends(get_recipient_store),
+) -> list[dict[str, str]]:
+    return store.list_deliveries()
+
+
+@router.get("/daily")
+def get_daily(
+    date: date, _admin: User = Depends(require_admin), db: Session = Depends(get_db),
+) -> list[dict[str, str]]:
+    return daily_results(db, date)
+
+
+@router.post("/run-due")
+def run_due_now(
+    _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
+    db: Session = Depends(get_db),
+) -> dict[str, str | bool]:
+    return run_due(db, bot)

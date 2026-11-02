@@ -17,6 +17,13 @@ import type {
 } from "../types";
 import { BASE, formatApiError } from "./apiUtils";
 
+export async function fetchMealCutoff(): Promise<string> {
+  const response = await fetch(`${BASE}/meals/cutoff`);
+  if (!response.ok) throw new Error("Could not load meal cutoff");
+  const result: { time: string } = await response.json();
+  return result.time;
+}
+
 export async function fetchMealReportHistory(employeeId: number, date: string): Promise<HrMealReportHistory> {
   const response = await fetch(`${BASE}/meals/reports/${employeeId}/${date}`);
   if (!response.ok) throw new Error("Could not load meal report history");

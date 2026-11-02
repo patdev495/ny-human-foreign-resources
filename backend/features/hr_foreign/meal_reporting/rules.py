@@ -19,13 +19,13 @@ def selectable_dates(now: dt.datetime) -> list[dt.date]:
     return [today + dt.timedelta(days=offset) for offset in range((end - today).days + 1)]
 
 
-def can_submit(meal_date: dt.date, now: dt.datetime) -> bool:
+def can_submit(meal_date: dt.date, now: dt.datetime, cutoff: dt.time = dt.time(17)) -> bool:
     if meal_date not in selectable_dates(now) or meal_date.weekday() == 6 or meal_date <= now.date():
         return False
-    deadline = dt.datetime.combine(meal_date - dt.timedelta(days=1), dt.time(17), tzinfo=VIETNAM_TZ)
+    deadline = dt.datetime.combine(meal_date - dt.timedelta(days=1), cutoff, tzinfo=VIETNAM_TZ)
     return now < deadline
 
 
-def require_submission_window(meal_date: dt.date, now: dt.datetime) -> None:
-    if not can_submit(meal_date, now):
+def require_submission_window(meal_date: dt.date, now: dt.datetime, cutoff: dt.time = dt.time(17)) -> None:
+    if not can_submit(meal_date, now, cutoff):
         raise HTTPException(status_code=422, detail="Reporting closed for this date. Contact HR.")

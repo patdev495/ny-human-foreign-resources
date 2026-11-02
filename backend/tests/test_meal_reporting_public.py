@@ -232,9 +232,9 @@ def test_dates_use_vietnam_cutoff(
         2026, 11, 2, hour, minute, tzinfo=dt.timezone(dt.timedelta(hours=7))
     ))
     dates = public_client[0].get("/api/meal-reporting/dates").json()
-    assert dates[0] == {"date": "2026-11-02", "can_submit": False}
-    assert dates[1] == {"date": "2026-11-03", "can_submit": can_submit}
-    assert dates[-1] == {"date": "2026-11-08", "can_submit": False}
+    assert dates[0] == {"date": "2026-11-02", "can_submit": False, "cutoff_time": "17:00"}
+    assert dates[1] == {"date": "2026-11-03", "can_submit": can_submit, "cutoff_time": "17:00"}
+    assert dates[-1] == {"date": "2026-11-08", "can_submit": False, "cutoff_time": "17:00"}
 
 
 def test_sunday_opens_next_week_but_never_accepts_sunday(
@@ -246,9 +246,9 @@ def test_sunday_opens_next_week_but_never_accepts_sunday(
         2026, 11, 1, 10, 0, tzinfo=dt.timezone(dt.timedelta(hours=7))
     ))
     dates = public_client[0].get("/api/meal-reporting/dates").json()
-    assert dates[0] == {"date": "2026-11-01", "can_submit": False}
-    assert dates[1] == {"date": "2026-11-02", "can_submit": True}
-    assert dates[-1] == {"date": "2026-11-08", "can_submit": False}
+    assert dates[0] == {"date": "2026-11-01", "can_submit": False, "cutoff_time": "17:00"}
+    assert dates[1] == {"date": "2026-11-02", "can_submit": True, "cutoff_time": "17:00"}
+    assert dates[-1] == {"date": "2026-11-08", "can_submit": False, "cutoff_time": "17:00"}
 
 
 def test_failed_database_commit_never_confirms_report(
@@ -340,3 +340,50 @@ def test_hr_lock_opens_at_17h_and_relock_preserves_history(
     assert history.status_code == 200, history.text
     assert [item["final_meal_count"] for item in history.json()] == [1, 2]
     assert history.json()[0]["locked_at"] != history.json()[1]["locked_at"]
+
+
+def test_admin_cutoff_controls_employee_deadline_and_hr_lock(
+    public_client: tuple[TestClient, sessionmaker[Session]], monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from features.auth.models import User
+    from features.auth.security import require_user
+    from features.hr_foreign.meal_reporting import rules
+    from main import create_app as create_hr_app
+
+    clock = [dt.datetime(2026, 11, 2, 16, 29, tzinfo=rules.VIETNAM_TZ)]
+    monkeypatch.setattr(rules, "now_vietnam", lambda: clock[0])
+    portal, factory = public_client
+    with factory.begin() as db:
+        room = Room(room_number="1601")
+        person = ForeignEmployee(name_latin="LIN WEI", gender="Nam")
+        db.add_all([room, person])
+        db.flush()
+        db.add(TravelRecord(employee_id=person.id, entry_date=dt.date(2026, 10, 1)))
+        db.add(Stay(employee_id=person.id, room_id=room.id, accommodation_type="KTX", start_date=dt.date(2026, 10, 1)))
+        person_id = person.id
+
+    def database() -> Generator[Session, None, None]:
+        with factory() as db:
+            yield db
+
+    hr = create_hr_app()
+    hr.dependency_overrides[get_db] = database
+    hr.dependency_overrides[require_user] = lambda: User(
+        id=1, username="admin", display_name="Admin", password_hash="unused", is_admin=True, is_active=True,
+    )
+    with TestClient(hr) as admin:
+        assert admin.put("/api/zalo-reminder/cutoff", json={"time": "16:30"}).json() == {"time": "16:30"}
+        assert portal.get("/api/meal-reporting/dates").json()[1]["can_submit"] is True
+        assert portal.post("/api/meal-reporting/reports", json={
+            "employee_id": person_id, "meal_date": "2026-11-03", "breakfast": True, "dinner": True,
+        }).status_code == 200
+        clock[0] = dt.datetime(2026, 11, 2, 16, 30, tzinfo=rules.VIETNAM_TZ)
+        assert portal.get("/api/meal-reporting/dates").json()[1]["can_submit"] is False
+        assert portal.post("/api/meal-reporting/reports", json={
+            "employee_id": person_id, "meal_date": "2026-11-03", "breakfast": True, "dinner": True,
+        }).status_code == 422
+        response = admin.post("/api/hr-foreign/meals/lock", json={
+            "lock_date": "2026-11-03", "meal_session": "BREAKFAST", "calculated_meal_count": 1,
+            "final_meal_count": 1, "locked_price_per_meal": 30000,
+        })
+        assert response.status_code != 422, response.text

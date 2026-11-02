@@ -65,7 +65,7 @@ Thông tin do Nhân viên nước ngoài đang ở KTX tự gửi về ý địn
 Trạng thái của Nhân viên nước ngoài chưa gửi Báo cơm cho một ngày ăn, khác với việc đã gửi Báo cơm và chọn không ăn.
 
 **Hạn báo cơm**:
-Mốc 17h ngày hôm trước ngày ăn, tính theo giờ của máy chủ triển khai tại Việt Nam. Sau mốc này, Nhân viên nước ngoài không thể gửi hoặc sửa Báo cơm cho ngày ăn đó và cần liên hệ HR nếu muốn thay đổi.
+Mốc do admin 8004 cấu hình (mặc định 17:00 giờ Việt Nam) của ngày hôm trước ngày ăn. Sau mốc này, Nhân viên nước ngoài không thể gửi hoặc sửa Báo cơm cho ngày ăn đó và cần liên hệ HR nếu muốn thay đổi.
 
 **Báo giờ tan làm** (End of Shift Reporting):
 Thông tin Nhân viên nước ngoài đang ở KTX tự gửi cho một ngày làm việc về phương án tan làm, điểm đón và điểm đến để HR xác định nhu cầu xe. Ngày làm việc có thể là Chủ nhật; điểm đến hiện tại là KTX và có thể mở rộng về sau. Hai mốc giờ được hiểu là giờ tan làm do nhân viên khai báo.
@@ -81,6 +81,12 @@ Mốc 17h của chính ngày làm việc được khai báo, tính theo giờ Vi
 
 **Nhu cầu xe tan làm**:
 Danh sách trạng thái khai báo của những Nhân viên nước ngoài thuộc diện báo giờ tan làm mà HR tra cứu theo ngày, điểm đón và phương án tan làm để tự sắp xếp xe. Danh sách này bao gồm cả người Chưa báo giờ tan làm, không phải bản phân xe hoặc phân tài xế.
+
+**Thông báo chốt Báo cơm**:
+Lời nhắc ngắn gửi riêng cho từng HR tại mốc chốt Báo cơm do admin 8004 cấu hình (mặc định 17:00 giờ Việt Nam), hằng ngày kể cả Chủ nhật và ngày lễ. Cùng mốc là hạn nhân viên gửi/sửa Báo cơm cho ngày ăn hôm sau và thời điểm sớm nhất HR được chốt bữa Sáng/Tối. Thông báo yêu cầu HR vào hệ thống để tự chốt Báo cơm và sắp xếp xe tan làm; không thay cho các thao tác đó.
+
+**Danh sách HR nhận thông báo**:
+Những người HR được chọn trong cấu hình riêng để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
 
 **Đăng ký ăn thêm** (Extra Meal Request):
 Bản ghi bổ sung suất ăn theo quy trình quản lý hiện tại cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn hoặc khách công tác). Báo cơm là nguồn xác định suất Sáng/Tối của Nhân viên nước ngoài trong quy trình mới.

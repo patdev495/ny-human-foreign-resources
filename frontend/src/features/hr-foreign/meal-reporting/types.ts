@@ -10,6 +10,7 @@ export interface PublicPerson {
 export interface ReportingDate {
   date: string
   can_submit: boolean
+  cutoff_time: string
 }
 
 export interface MealSelection {

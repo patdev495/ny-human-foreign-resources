@@ -10,6 +10,7 @@ interface LockMealSessionModalProps {
   suggestedPrice?: number;
   employees: DailyMealEmployeeItem[];
   usesMealReports: boolean;
+  cutoff: string;
   onClose: () => void;
   onConfirm: (payload: {
     lock_date: string;
@@ -28,6 +29,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   suggestedPrice,
   employees,
   usesMealReports,
+  cutoff,
   onClose,
   onConfirm,
 }) => {
@@ -40,7 +42,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
   const isAlreadyLocked = sessionSummary.is_locked;
   const isNewForeignLock = usesMealReports && sessionSummary.meal_session !== "LUNCH";
-  const deadline = Date.parse(`${date}T00:00:00+07:00`) - 7 * 60 * 60 * 1000;
+  const deadline = Date.parse(`${date}T${cutoff}:00+07:00`) - 24 * 60 * 60 * 1000;
   const [currentTime, setCurrentTime] = useState(Date.now);
   const isBeforeLockWindow = isNewForeignLock && currentTime < deadline;
   useEffect(() => {
@@ -112,7 +114,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isNewForeignLock && Date.now() < deadline) {
-      setErrorMsg("Chỉ được chốt từ 17h ngày hôm trước theo giờ Việt Nam.");
+      setErrorMsg(`Chỉ được chốt từ ${cutoff} ngày hôm trước theo giờ Việt Nam.`);
       return;
     }
     if (isSunday && !confirmedSunday) {
@@ -218,7 +220,7 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           </div>
 
           {/* Final Count Input */}
-          {isBeforeLockWindow && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-800">Chỉ được chốt từ 17h ngày hôm trước theo giờ Việt Nam.</p>}
+          {isBeforeLockWindow && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-800">Chỉ được chốt từ {cutoff} ngày hôm trước theo giờ Việt Nam.</p>}
           {isNewForeignLock && <details className="rounded-xl border border-slate-200 p-3 text-xs">
             <summary className="cursor-pointer font-bold text-slate-700">Xem chi tiết Báo cơm theo bữa</summary>
             <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
