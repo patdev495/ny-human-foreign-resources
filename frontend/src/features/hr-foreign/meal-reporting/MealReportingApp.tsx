@@ -37,7 +37,7 @@ export function MealReportingApp() {
 
   useEffect(() => {
     document.documentElement.lang = locale
-    document.title = locale === 'en' ? 'NY Employee Reporting' : 'NY 員工申報'
+    document.title = 'Nienyi Vietnam宿舍管理'
   }, [locale])
 
   function changeLocale(next: PortalLocale): void {
@@ -172,17 +172,15 @@ export function MealReportingApp() {
 
   return <main className="min-h-dvh bg-slate-50 px-4 py-6 text-slate-900 sm:py-12">
     <div className="mx-auto max-w-lg space-y-6">
-      <header className="rounded-3xl bg-indigo-950 px-6 py-7 text-white shadow-lg">
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-[0.22em] text-indigo-200">{text.portal}</div>
+      <header className="rounded-3xl bg-indigo-950 px-3 py-7 text-white shadow-lg sm:px-6">
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="whitespace-nowrap text-[clamp(9px,2.7vw,16px)] font-bold text-white">Nienyi Vietnam宿舍管理</h1>
           <label className="text-xs font-semibold text-indigo-100">{text.language}
             <select aria-label={text.language} value={locale} onChange={event => changeLocale(event.target.value as PortalLocale)} className="ml-2 rounded-lg border border-indigo-300 bg-indigo-900 px-2 py-1.5 text-white">
               <option value="zh-TW">繁體中文</option><option value="en">English</option>
             </select>
           </label>
         </div>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight">{screen === 'end-shift' ? text.shiftReporting : text.employeeReporting}</h1>
-        <p className="mt-2 text-sm text-indigo-100">{screen === 'end-shift' ? text.shiftDescription : text.portalDescription}</p>
       </header>
 
       {loading && <p className="rounded-2xl bg-white p-6 text-center" role="status">{text.loading}</p>}
