@@ -3,6 +3,7 @@ import { fetchDailyMealForecast, fetchMealCutoff, lockMealSession } from "../api
 import type { DailyMealForecastResponse, DailyMealSessionSummary } from "../types";
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
+import { MealReportingStatus } from "./meal-forecast/MealReportingStatus";
 import { MealEmployeeForecastTable } from "./meal-forecast/MealEmployeeForecastTable";
 import { vietnamDate } from "./meal-forecast/vietnamDate";
 
@@ -78,6 +79,7 @@ export function MealForecastBoard() {
 
     {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</div>}
     {loading ? <p className="p-12 text-center text-slate-500">Đang tải dự báo suất ăn...</p> : forecast && <>
+      {forecast.uses_meal_reports && <MealReportingStatus key={selectedDate} date={selectedDate} employees={forecast.employees} />}
       <MealSessionCards forecast={forecast} onLockSession={setLockTarget} />
       <MealEmployeeForecastTable key={selectedDate} filteredEmployees={employees} searchTerm={search} setSearchTerm={setSearch}
         lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={forecast.uses_meal_reports} />
