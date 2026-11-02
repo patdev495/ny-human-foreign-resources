@@ -14,7 +14,7 @@ class BotUnavailable(Exception):
 class BotClient:
     def status(self) -> dict[str, bool]:
         if not settings.hr_zalo_bot_secret:
-            return {"connected": False, "qr_available": False}
+            raise BotUnavailable("Bot Zalo chưa được cấu hình trên máy chủ")
         request = Request(
             f"http://127.0.0.1:{settings.hr_zalo_bot_port}/status",
             headers={"x-bot-secret": settings.hr_zalo_bot_secret},
@@ -33,7 +33,7 @@ class BotClient:
 
     def qr(self) -> bytes | None:
         if not settings.hr_zalo_bot_secret:
-            return None
+            raise BotUnavailable("Bot Zalo chưa được cấu hình trên máy chủ")
         request = Request(
             f"http://127.0.0.1:{settings.hr_zalo_bot_port}/qr",
             headers={"x-bot-secret": settings.hr_zalo_bot_secret},

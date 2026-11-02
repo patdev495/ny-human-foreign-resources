@@ -50,6 +50,26 @@ def test_admin_can_read_bot_connection_state(monkeypatch: pytest.MonkeyPatch) ->
 
 
 @pytest.mark.auth_real
+def test_admin_sees_configuration_error_when_bot_secret_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TESTING", "1")
+    from core.config import settings
+    from features.auth.models import User
+    from features.auth.security import require_user
+    from main import create_app
+
+    monkeypatch.setattr(settings, "hr_zalo_bot_secret", "")
+    app = create_app()
+    app.dependency_overrides[require_user] = lambda: User(
+        id=1, username="admin", display_name="Admin", password_hash="unused",
+        is_admin=True, is_active=True,
+    )
+    with TestClient(app) as client:
+        response = client.get("/api/zalo-reminder/status")
+    assert response.status_code == 503
+    assert "chưa được cấu hình" in response.json()["detail"]
+
+
+@pytest.mark.auth_real
 def test_non_admin_cannot_read_bot_configuration(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("TESTING", "1")
     from features.auth.models import User

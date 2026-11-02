@@ -18,6 +18,7 @@ export function ZaloReminderSettings({ onClose }: Props) {
   const [testId, setTestId] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [connectionError, setConnectionError] = useState("");
   const [message, setMessage] = useState("");
   const wasConnected = useRef(false);
 
@@ -29,6 +30,7 @@ export function ZaloReminderSettings({ onClose }: Props) {
       try {
         const current = await zaloReminderApi.status();
         if (!live) return;
+        setConnectionError("");
         setStatus(current);
         if (current.connected) {
           setQrUrl(null);
@@ -45,7 +47,11 @@ export function ZaloReminderSettings({ onClose }: Props) {
           if (live) setQrUrl(qr ? URL.createObjectURL(qr) : null);
         }
       } catch (cause) {
-        if (live) setError(cause instanceof Error ? cause.message : "Không kết nối được bot Zalo.");
+        if (live) {
+          setStatus(null);
+          setQrUrl(null);
+          setConnectionError(cause instanceof Error ? cause.message : "Không kết nối được bot Zalo.");
+        }
       }
     };
     void refresh();
@@ -125,6 +131,7 @@ export function ZaloReminderSettings({ onClose }: Props) {
         <button type="button" onClick={onClose} className="rounded-lg px-3 py-1 text-slate-600 hover:bg-slate-100">Đóng</button>
       </div>
       {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+      {connectionError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{connectionError}</p>}
       {message && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold text-slate-900">Mốc chốt Báo cơm và gửi Zalo</h3>
@@ -137,8 +144,8 @@ export function ZaloReminderSettings({ onClose }: Props) {
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold text-slate-900">Kết nối bot</h3>
         <p className={`mt-1 text-sm ${status?.connected ? "text-emerald-700" : "text-amber-700"}`}>
-          {status?.connected ? "Đã kết nối" : "Chưa kết nối — quét mã QR bằng tài khoản Zalo bot HR"}</p>
-        {!status?.connected && (qrUrl ? <img src={qrUrl} alt="Mã QR đăng nhập Zalo bot HR"
+          {status?.connected ? "Đã kết nối" : status ? "Chưa kết nối — quét mã QR bằng tài khoản Zalo bot HR" : "Không lấy được trạng thái bot"}</p>
+        {status && !status.connected && (qrUrl ? <img src={qrUrl} alt="Mã QR đăng nhập Zalo bot HR"
           className="mt-3 h-56 w-56 rounded-lg border border-slate-200 object-contain" />
           : <p className="mt-3 text-sm text-slate-500">Đang chờ bot tạo mã QR…</p>)}
       </section>
