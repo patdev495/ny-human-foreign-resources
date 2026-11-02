@@ -1,5 +1,7 @@
 # Bot Zalo nhắc HR theo mốc chốt Báo cơm
 
+Quy trình cập nhật production cho cả 8004, 8006 và bot nằm tại [production-release-runbook.md](production-release-runbook.md).
+
 Mốc mặc định là **17:00 giờ Việt Nam**. Admin 8004 có thể đổi trong **Cài đặt → Thông báo Zalo**. Cùng mốc này là hạn nhân viên gửi/sửa Báo cơm cho ngày ăn hôm sau, thời điểm sớm nhất HR được chốt bữa Sáng/Tối, và thời điểm bot gửi lời nhắc. Hạn Báo giờ tan làm vẫn là 17:00. Cấu hình lưu trong SQL Server chung để 8004 và 8006 dùng cùng giá trị.
 
 ## Chuẩn bị
