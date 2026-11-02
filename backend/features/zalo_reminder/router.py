@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, time
+from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy.orm import Session
@@ -13,8 +14,30 @@ from features.zalo_reminder.client import BotClient, BotUnavailable, get_bot_cli
 from features.zalo_reminder.schemas import CutoffTime, RecipientSelection, TestSendRequest
 from features.zalo_reminder.scheduler import MESSAGE, daily_results, run_due
 from features.zalo_reminder.store import RecipientStore, get_recipient_store
+from features.bot_reminder.config import channel_enabled, pending_enabled, set_channel_enabled
+from features.zalo_reminder import scheduler
 
 router = APIRouter(prefix="/api/zalo-reminder", tags=["Zalo reminder"])
+
+
+class EnabledSetting(BaseModel):
+    enabled: bool
+    effective_date: date | None = None
+    pending_enabled: bool | None = None
+
+
+@router.get("/enabled", response_model=EnabledSetting)
+def get_enabled(_admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> EnabledSetting:
+    now = scheduler.now_vietnam()
+    return EnabledSetting(enabled=channel_enabled(db, "zalo", now.date()), effective_date=now.date(),
+                          pending_enabled=pending_enabled(db, "zalo", now.date()))
+
+
+@router.put("/enabled", response_model=EnabledSetting)
+def put_enabled(payload: EnabledSetting, _admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> EnabledSetting:
+    now = scheduler.now_vietnam()
+    effective_date = set_channel_enabled(db, "zalo", payload.enabled, now)
+    return EnabledSetting(enabled=payload.enabled, effective_date=effective_date)
 
 
 @router.get("/cutoff", response_model=CutoffTime)

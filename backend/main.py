@@ -17,11 +17,14 @@ from features.vehicle_management.router import router as vehicle_management_rout
 from features.auth.router import router as auth_router, admin_router
 from features.auth.security import require_user
 from features.zalo_reminder.router import router as zalo_reminder_router
+from features.bot_reminder.router import router as bot_reminder_router
+from features.telegram_reminder.router import router as telegram_reminder_router
 
 
 import asyncio
 from features.hr_foreign.services.scheduler import run_email_scheduler_loop
 from features.zalo_reminder.scheduler import run_scheduler_loop
+from features.telegram_reminder.scheduler import tick as telegram_tick
 
 
 @asynccontextmanager
@@ -29,13 +32,23 @@ async def lifespan(app: FastAPI):
     init_db()
     scheduler_task = None
     zalo_task = None
+    telegram_task = None
     if os.getenv("TESTING") != "1":
         scheduler_task = asyncio.create_task(run_email_scheduler_loop())
         zalo_task = asyncio.create_task(run_scheduler_loop())
+        async def telegram_loop() -> None:
+            while True:
+                try:
+                    await asyncio.to_thread(telegram_tick)
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception("Telegram reminder scheduler failed")
+                await asyncio.sleep(15)
+        telegram_task = asyncio.create_task(telegram_loop())
     try:
         yield
     finally:
-        for task in (scheduler_task, zalo_task):
+        for task in (scheduler_task, zalo_task, telegram_task):
             if task:
                 task.cancel()
                 try:
@@ -72,6 +85,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(admin_router)
     app.include_router(zalo_reminder_router)
+    app.include_router(bot_reminder_router)
+    app.include_router(telegram_reminder_router)
     app.include_router(
         hr_foreign_router, prefix="/api/hr-foreign", tags=["HR Foreign"],
         dependencies=[Depends(require_user)],

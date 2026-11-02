@@ -33,6 +33,8 @@ def init_db() -> None:
     from features.vehicle_management import models as vehicle_models  # noqa: F401
     from features.auth import models as auth_models  # noqa: F401
     from features.zalo_reminder import models as zalo_reminder_models  # noqa: F401
+    from features.bot_reminder import models as bot_reminder_models  # noqa: F401
+    from features.telegram_reminder import models as telegram_reminder_models  # noqa: F401
 
     # Authentication must be available before serving any HR API.
     Base.metadata.tables["hr_users"].create(bind=engine, checkfirst=True)
@@ -41,6 +43,11 @@ def init_db() -> None:
     Base.metadata.tables["zalo_reminder_recipients"].create(bind=engine, checkfirst=True)
     Base.metadata.tables["zalo_reminder_delivery_logs"].create(bind=engine, checkfirst=True)
     Base.metadata.tables["zalo_reminder_daily_deliveries"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["bot_reminder_channel_days"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["bot_reminder_channel_changes"].create(bind=engine, checkfirst=True)
+    for table_name in ("telegram_reminder_bot", "telegram_reminder_recipients",
+                       "telegram_reminder_delivery_logs", "telegram_reminder_daily_deliveries"):
+        Base.metadata.tables[table_name].create(bind=engine, checkfirst=True)
 
 
     try:

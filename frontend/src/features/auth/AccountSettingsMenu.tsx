@@ -6,6 +6,7 @@ import { ChangePassword } from "./ChangePassword";
 import { UserManagement } from "./UserManagement";
 import type { AuthUser } from "./types";
 import { ZaloReminderSettings } from "../zalo-reminder/ZaloReminderSettings";
+import { TelegramReminderSettings } from "../telegram-reminder/TelegramReminderSettings";
 
 interface Props {
   user: AuthUser;
@@ -22,6 +23,7 @@ export function AccountSettingsMenu({ user, onLogout }: Props) {
   const [open, setOpen] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
   const [showZalo, setShowZalo] = useState(false);
+  const [showTelegram, setShowTelegram] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -52,7 +54,7 @@ export function AccountSettingsMenu({ user, onLogout }: Props) {
 
   const accountActions: SettingAction[] = [
     ...(user.is_admin ? [{ label: "Quản lý tài khoản", icon: Users, onSelect: () => setShowUsers(true) }] : []),
-    ...(user.is_admin ? [{ label: "Thông báo Zalo", icon: MessageCircle, onSelect: () => setShowZalo(true) }] : []),
+    ...(user.is_admin ? [{ label: "Thông báo (bot)", icon: MessageCircle, onSelect: () => setShowZalo(true) }] : []),
     { label: "Đổi mật khẩu", icon: KeyRound, onSelect: () => setShowChangePassword(true) },
     { label: "Đăng xuất", icon: LogOut, onSelect: () => void onLogout() },
   ];
@@ -80,7 +82,10 @@ export function AccountSettingsMenu({ user, onLogout }: Props) {
       <UserManagement currentUser={user} onClose={() => setShowUsers(false)} />, document.body,
     )}
     {showZalo && createPortal(
-      <ZaloReminderSettings onClose={() => setShowZalo(false)} />, document.body,
+      <ZaloReminderSettings onClose={() => setShowZalo(false)} onTelegram={() => { setShowZalo(false); setShowTelegram(true); }} />, document.body,
+    )}
+    {showTelegram && createPortal(
+      <TelegramReminderSettings onClose={() => setShowTelegram(false)} onZalo={() => { setShowTelegram(false); setShowZalo(true); }} />, document.body,
     )}
     {showChangePassword && createPortal(
       <ChangePassword onClose={() => setShowChangePassword(false)}

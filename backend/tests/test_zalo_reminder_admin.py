@@ -21,6 +21,7 @@ def test_zalo_cutoff_and_daily_results_require_admin(monkeypatch: pytest.MonkeyP
 
     with TestClient(create_app()) as client:
         assert client.get("/api/zalo-reminder/cutoff").status_code == 401
+        assert client.get("/api/bot-reminder/cutoff").status_code == 401
         assert client.put("/api/zalo-reminder/cutoff", json={"time": "16:30"}).status_code == 401
         assert client.get("/api/zalo-reminder/daily?date=2026-11-02").status_code == 401
         assert client.post("/api/zalo-reminder/run-due").status_code == 401
@@ -84,6 +85,29 @@ def test_non_admin_cannot_read_bot_configuration(monkeypatch: pytest.MonkeyPatch
     with TestClient(app) as client:
         response = client.get("/api/zalo-reminder/status")
     assert response.status_code == 403
+
+
+@pytest.mark.auth_real
+def test_telegram_admin_endpoints_require_admin_and_webhook_requires_secret(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TESTING", "1")
+    from features.auth.models import User
+    from features.auth.security import require_user
+    from main import create_app
+
+    app = create_app()
+    with TestClient(app) as client:
+        assert client.get("/api/telegram-reminder/bot").status_code == 401
+        assert client.post("/api/telegram-reminder/bot", json={"token": "12345678:validtoken"}).status_code == 401
+        assert client.post("/api/telegram-reminder/bot/check").status_code == 401
+        assert client.put("/api/telegram-reminder/enabled", json={"enabled": True}).status_code == 401
+    app.dependency_overrides[require_user] = lambda: User(
+        id=2, username="hr", display_name="HR", password_hash="unused", is_admin=False, is_active=True,
+    )
+    with TestClient(app) as client:
+        assert client.get("/api/telegram-reminder/bot").status_code == 403
+        assert client.post("/api/telegram-reminder/bot/check").status_code == 403
+        assert client.get("/api/telegram-reminder/recipients").status_code == 403
+        assert client.post("/api/telegram-reminder/test-send", json={"id": "70"}).status_code == 403
 
 
 @pytest.mark.auth_real

@@ -86,7 +86,13 @@ Danh sách trạng thái khai báo của những Nhân viên nước ngoài thu�
 Lời nhắc ngắn gửi riêng cho từng HR tại mốc chốt Báo cơm do admin 8004 cấu hình (mặc định 17:00 giờ Việt Nam), hằng ngày kể cả Chủ nhật và ngày lễ. Cùng mốc là hạn nhân viên gửi/sửa Báo cơm cho ngày ăn hôm sau và thời điểm sớm nhất HR được chốt bữa Sáng/Tối. Thông báo yêu cầu HR vào hệ thống để tự chốt Báo cơm và sắp xếp xe tan làm; không thay cho các thao tác đó.
 
 **Danh sách HR nhận thông báo**:
-Những người HR được chọn trong cấu hình riêng để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
+Những người HR được chọn riêng theo từng kênh để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
+
+**Kênh thông báo chốt Báo cơm**:
+Một trong hai nền tảng Zalo và Telegram mà admin có thể bật hoặc tắt độc lập ở mức toàn hệ thống để gửi Thông báo chốt Báo cơm. Mỗi kênh có danh sách người nhận và kết quả gửi riêng; có thể tắt cả hai kênh, và thay đổi sau mốc chốt có hiệu lực từ ngày hôm sau.
+
+**Lượt gửi thông báo chốt Báo cơm**:
+Một lần gửi thông báo cho một người nhận trên một kênh vào một ngày chốt Báo cơm. Cùng một HR có thể có một lượt trên Zalo và một lượt trên Telegram trong ngày đó.
 
 **Đăng ký ăn thêm** (Extra Meal Request):
 Bản ghi bổ sung suất ăn theo quy trình quản lý hiện tại cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn hoặc khách công tác). Báo cơm là nguồn xác định suất Sáng/Tối của Nhân viên nước ngoài trong quy trình mới.

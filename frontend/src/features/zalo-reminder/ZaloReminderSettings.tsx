@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { zaloReminderApi } from "./api";
+import { botReminderApi } from "../bot-reminder/api";
 import type { ZaloBotStatus, ZaloDailyDelivery, ZaloDelivery, ZaloPerson } from "./types";
 
-interface Props { onClose: () => void }
+interface Props { onClose: () => void; onTelegram: () => void }
 
-export function ZaloReminderSettings({ onClose }: Props) {
+export function ZaloReminderSettings({ onClose, onTelegram }: Props) {
   const [status, setStatus] = useState<ZaloBotStatus | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [friends, setFriends] = useState<ZaloPerson[]>([]);
@@ -13,6 +14,9 @@ export function ZaloReminderSettings({ onClose }: Props) {
   const [deliveries, setDeliveries] = useState<ZaloDelivery[]>([]);
   const [daily, setDaily] = useState<ZaloDailyDelivery[]>([]);
   const [cutoff, setCutoff] = useState("17:00");
+  const [enabled, setEnabled] = useState(false);
+  const [pendingState, setPendingState] = useState("");
+  const [pendingDesired, setPendingDesired] = useState<boolean | null>(null);
   const [dailyDate, setDailyDate] = useState(() => new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [search, setSearch] = useState("");
   const [testId, setTestId] = useState("");
@@ -56,11 +60,13 @@ export function ZaloReminderSettings({ onClose }: Props) {
     };
     void refresh();
     const timer = window.setInterval(() => void refresh(), 5000);
-    void Promise.all([zaloReminderApi.recipients(), zaloReminderApi.deliveries(), zaloReminderApi.cutoff()])
-      .then(([recipients, history, currentCutoff]) => {
+    void Promise.all([zaloReminderApi.recipients(), zaloReminderApi.deliveries(), botReminderApi.cutoff(), zaloReminderApi.enabled()])
+      .then(([recipients, history, currentCutoff, channel]) => {
         if (!live) return;
         const ids = recipients.map((person) => person.id);
-        setSelectedIds(ids); setSavedIds(ids); setDeliveries(history); setCutoff(currentCutoff.time);
+        setSelectedIds(ids); setSavedIds(ids); setDeliveries(history); setCutoff(currentCutoff.time); setEnabled(channel.enabled);
+        setPendingDesired(channel.pending_enabled);
+        if (channel.pending_enabled !== null) setPendingState(`Từ ngày mai sẽ ${channel.pending_enabled ? "bật" : "tắt"} gửi tự động Zalo.`);
       }).catch((cause: unknown) => { if (live) setError(String(cause)); });
     return () => { live = false; window.clearInterval(timer); };
   }, []);
@@ -91,10 +97,22 @@ export function ZaloReminderSettings({ onClose }: Props) {
   async function saveCutoff(): Promise<void> {
     setBusy(true); setError(""); setMessage("");
     try {
-      const result = await zaloReminderApi.saveCutoff(cutoff);
+      const result = await botReminderApi.saveCutoff(cutoff);
       setCutoff(result.time);
-      setMessage(`Đã lưu mốc ${result.time} giờ Việt Nam cho hạn Báo cơm, chốt cơm và thông báo Zalo.`);
+      setMessage(`Đã lưu mốc ${result.time} giờ Việt Nam cho hạn Báo cơm, chốt cơm và các kênh thông báo.`);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Không lưu được mốc giờ."); }
+    finally { setBusy(false); }
+  }
+
+  async function saveEnabled(value: boolean): Promise<void> {
+    setBusy(true); setError("");
+    try {
+      const result = await zaloReminderApi.saveEnabled(value);
+      const today = new Date(Date.now() + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      if (result.effective_date === today) setEnabled(value);
+      setPendingDesired(result.effective_date === today ? null : value === enabled ? null : value);
+      setPendingState(result.effective_date === today || value === enabled ? "" : `Thay đổi có hiệu lực từ ${result.effective_date}. Lượt hôm nay vẫn theo trạng thái đã chốt.`);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "Không lưu được công tắc Zalo."); }
     finally { setBusy(false); }
   }
 
@@ -126,20 +144,29 @@ export function ZaloReminderSettings({ onClose }: Props) {
     <div role="dialog" aria-modal="true" aria-label="Cấu hình thông báo Zalo"
       className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
       <div className="mb-5 flex items-start justify-between gap-3">
-        <div><h2 className="text-xl font-bold text-slate-900">Thông báo chốt qua Zalo</h2>
-          <p className="mt-1 text-sm text-slate-500">Bot HR dùng tài khoản riêng. Chọn người nhận rồi gửi thử trước khi dùng lịch hằng ngày.</p></div>
+        <div><h2 className="text-xl font-bold text-slate-900">Thông báo (bot)</h2>
+          <div className="mt-2 flex gap-2 text-sm"><span className="rounded-lg bg-indigo-100 px-3 py-1 font-semibold text-indigo-800">Zalo</span>
+            <button type="button" onClick={onTelegram} className="rounded-lg px-3 py-1 text-slate-600 hover:bg-slate-100">Telegram</button></div></div>
         <button type="button" onClick={onClose} className="rounded-lg px-3 py-1 text-slate-600 hover:bg-slate-100">Đóng</button>
       </div>
       {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {connectionError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{connectionError}</p>}
       {message && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
-        <h3 className="font-semibold text-slate-900">Mốc chốt Báo cơm và gửi Zalo</h3>
+        <h3 className="font-semibold text-slate-900">Mốc chốt Báo cơm và thông báo (dùng chung)</h3>
         <p className="mt-1 text-sm text-slate-600">Giờ Việt Nam. Nhân viên hết hạn gửi Báo cơm, HR bắt đầu được chốt bữa Sáng/Tối và bot gửi lời nhắc cùng mốc này. Hạn Báo giờ tan làm giữ 17:00.</p>
         <div className="mt-3 flex gap-2"><input type="time" aria-label="Mốc chốt Báo cơm" value={cutoff} onChange={(event) => setCutoff(event.target.value)}
           className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
           <button type="button" disabled={busy} onClick={() => void saveCutoff()}
             className="rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Lưu mốc giờ</button></div>
+      </section>
+      <section className="mb-5 rounded-xl border border-slate-200 p-4">
+        <h3 className="font-semibold text-slate-900">Gửi tự động qua Zalo</h3>
+        <p className="mt-1 text-sm text-slate-600">Trạng thái hiệu lực hôm nay: {enabled ? "Bật" : "Tắt"}. Tắt vẫn cho phép gửi thử và giữ nguyên người nhận, lịch sử.</p>
+        {pendingState && <p className="mt-1 text-sm text-amber-700">{pendingState}</p>}
+        <button type="button" disabled={busy} onClick={() => void saveEnabled(!(pendingDesired ?? enabled))}
+          className="mt-3 rounded-lg bg-indigo-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          {(pendingDesired ?? enabled) ? "Tắt gửi tự động Zalo" : "Bật gửi tự động Zalo"}</button>
       </section>
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold text-slate-900">Kết nối bot</h3>

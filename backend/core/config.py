@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     auth_cookie_secure: bool = False
     hr_zalo_bot_port: int = 8016
     hr_zalo_bot_secret: str = ""
+    telegram_webhook_base_url: str = "https://ns.nienyi.vn"
 
     # MSSQL via ODBC Driver 18
     db_server: str

@@ -12,14 +12,12 @@ from sqlalchemy.orm import Session
 
 from core.database import SessionLocal
 from core.system_settings import get_time_setting
+from features.bot_reminder.config import channel_enabled, snapshot_channel
+from features.bot_reminder.message import MESSAGE
 from features.zalo_reminder.client import BotClient, BotUnavailable
 from features.zalo_reminder.models import ZaloDailyDelivery, ZaloRecipient
 
 VIETNAM_TZ = dt.timezone(dt.timedelta(hours=7))
-MESSAGE = (
-    "Đã đến giờ chốt báo cơm cho ngày mai và sắp xếp xe tan làm hôm nay. "
-    "Vui lòng truy cập https://ns.nienyi.vn để thực hiện."
-)
 logger = logging.getLogger(__name__)
 
 
@@ -89,15 +87,18 @@ def run_due(db: Session, bot: BotClient) -> dict[str, str | bool]:
     previous_day = now.date() - dt.timedelta(days=1)
     previous_start = dt.datetime.combine(previous_day, cutoff, tzinfo=VIETNAM_TZ)
     previous_start_utc = previous_start.astimezone(dt.timezone.utc).replace(tzinfo=None)
-    for person in db.scalars(select(ZaloRecipient).where(
-        ZaloRecipient.selected_at <= previous_start_utc,
-    )).all():
-        try:
-            _expire(db, previous_day, person)
-        except Exception:
-            db.rollback()
-            logger.exception("Could not record yesterday's missed Zalo reminder")
+    if channel_enabled(db, "zalo", previous_day):
+        for person in db.scalars(select(ZaloRecipient).where(
+            ZaloRecipient.selected_at <= previous_start_utc,
+        )).all():
+            try:
+                _expire(db, previous_day, person)
+            except Exception:
+                db.rollback()
+                logger.exception("Could not record yesterday's missed Zalo reminder")
     if now < start:
+        return result
+    if not snapshot_channel(db, "zalo", now.date()):
         return result
     end = start + dt.timedelta(minutes=30)
     people = db.scalars(select(ZaloRecipient).order_by(ZaloRecipient.zalo_id)).all()

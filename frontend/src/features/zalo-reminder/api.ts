@@ -12,6 +12,10 @@ async function json<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const zaloReminderApi = {
+  enabled: (): Promise<{ enabled: boolean; effective_date: string; pending_enabled: boolean | null }> => json("/enabled"),
+  saveEnabled: (enabled: boolean): Promise<{ enabled: boolean; effective_date: string }> => json("/enabled", {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ enabled }),
+  }),
   cutoff: (): Promise<{ time: string }> => json<{ time: string }>("/cutoff"),
   saveCutoff: (time: string): Promise<{ time: string }> => json<{ time: string }>("/cutoff", {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ time }),
