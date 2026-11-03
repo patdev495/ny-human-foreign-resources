@@ -56,7 +56,7 @@ try {
     $stage = Join-Path $repo ".scratch\deploy-$release"
     if (Test-Path -LiteralPath $stage) { throw 'Local staging folder already exists.' }
     New-Item -ItemType Directory -Path $stage | Out-Null
-    git bundle create (Join-Path $stage 'source.bundle') "$old..$new"
+    git bundle create (Join-Path $stage 'source.bundle') "$old..master"
     if ($LASTEXITCODE -ne 0) { throw 'Cannot create Git bundle.' }
     git bundle verify (Join-Path $stage 'source.bundle')
     if ($LASTEXITCODE -ne 0) { throw 'Git bundle is invalid.' }

@@ -58,7 +58,7 @@ New-Item -ItemType Directory -Path $stage | Out-Null
 $old = (ssh -o BatchMode=yes Admin@192.168.209.62 'git -C D:/projects_production/NY_hr_sys_new rev-parse HEAD').Trim()
 git merge-base --is-ancestor $old HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Production HEAD không nằm trong lịch sử master hiện tại' }
-git bundle create (Join-Path $stage 'source.bundle') "$old..HEAD"
+git bundle create (Join-Path $stage 'source.bundle') "$old..master"
 git bundle verify (Join-Path $stage 'source.bundle')
 Compress-Archive -Path 'frontend\portal-dist\*' -DestinationPath (Join-Path $stage 'portal-dist.zip')
 ```
