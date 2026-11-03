@@ -8,7 +8,6 @@ import { ConfirmDeleteModal } from "./ConfirmDeleteModal";
 import { getEmployeeDocStatuses } from "./employee-list/DocBadge";
 import { EmployeeTable } from "./employee-list/EmployeeTable";
 import { EmployeeStatCards } from "./employee-list/EmployeeStatCards";
-import { MealReportingOverview } from "./meal-forecast/MealReportingOverview";
 import { ModuleHeader } from "../../../shared/components/ModuleHeader";
 
 interface EmployeeListProps {
@@ -110,7 +109,6 @@ export const EmployeeList: React.FC<EmployeeListProps> = ({ onSelectEmployee }) 
 
   return (
     <div className="space-y-6">
-      <MealReportingOverview />
       <ModuleHeader
         title="Hồ sơ nhân sự nước ngoài"
         subtitle="Quản lý tập trung hồ sơ nhân sự, tình trạng hiện diện lưu trú và hạn giấy tờ pháp lý."
