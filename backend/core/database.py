@@ -73,6 +73,12 @@ def init_db() -> None:
             )
             conn.execute(
                 text(
+                    "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'rooms') AND name = N'capacity') "
+                    "ALTER TABLE rooms ADD capacity INT NULL;"
+                )
+            )
+            conn.execute(
+                text(
                     "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'stays') AND name = N'hotel_room_number') "
                     "ALTER TABLE stays ADD hotel_room_number NVARCHAR(100) NULL;"
                 )

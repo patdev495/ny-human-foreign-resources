@@ -75,6 +75,7 @@ class Room(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     room_number = Column(Unicode(100), nullable=False, unique=True, index=True)
+    capacity = Column(Integer, nullable=True)
     notes = Column(UnicodeText, nullable=True)
 
     stays = relationship("Stay", back_populates="room")

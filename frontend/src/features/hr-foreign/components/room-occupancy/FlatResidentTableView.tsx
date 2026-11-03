@@ -15,11 +15,10 @@ export const FlatResidentTableView: React.FC<Props> = ({
   const allResidentsWithUnit = filteredOccupancy.flatMap((unit) => {
     const isHotel = unit.accommodation_type === "HOTEL";
     const unitTitle = isHotel ? unit.unit_name : `Phòng ${unit.unit_name}`;
-    return unit.active_residents.map((res) => ({
-      ...res,
-      unitTitle,
-      accommodation_type: unit.accommodation_type,
-    }));
+    return [
+      ...unit.active_residents.map((res) => ({ ...res, scheduled: false })),
+      ...unit.scheduled_residents.map((res) => ({ ...res, scheduled: true })),
+    ].map((res) => ({ ...res, unitTitle, accommodation_type: unit.accommodation_type }));
   });
 
   return (
@@ -37,14 +36,15 @@ export const FlatResidentTableView: React.FC<Props> = ({
               <th className="py-3.5 px-4">Tên phòng / Khách sạn</th>
               <th className="py-3.5 px-4">Vị trí giường</th>
               <th className="py-3.5 px-4">Loại hình</th>
+              <th className="py-3.5 px-4">Trạng thái</th>
               <th className="py-3.5 px-4 text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-xs">
             {allResidentsWithUnit.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-8 text-center text-slate-400 italic">
-                  Không tìm thấy nhân sự đang lưu trú nào phù hợp.
+                <td colSpan={11} className="py-8 text-center text-slate-400 italic">
+                  Không tìm thấy người đã xếp chỗ phù hợp.
                 </td>
               </tr>
             ) : (
@@ -90,13 +90,20 @@ export const FlatResidentTableView: React.FC<Props> = ({
                         </span>
                       )}
                     </td>
+                    <td className="py-3 px-4">
+                      {res.scheduled ? (
+                        <span className="text-sky-800 font-semibold">Sắp đến {res.start_date}</span>
+                      ) : (
+                        <span className="text-emerald-700 font-semibold">Đang ở</span>
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-right">
-                      <button
+                      {!res.scheduled && <button
                         onClick={() => onCheckOut(res, res.unitTitle)}
                         className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                       >
                         Trả phòng
-                      </button>
+                      </button>}
                     </td>
                   </tr>
                 );

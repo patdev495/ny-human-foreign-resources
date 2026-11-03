@@ -1,6 +1,6 @@
 from __future__ import annotations
 import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # --- STAY SCHEMAS ---
@@ -77,6 +77,10 @@ class RoomOccupancyRead(BaseModel):
     unit_name: str                  # room_number or hotel_name
     room_id: int | None = None      # backward compatibility for KTX
     room_number: str | None = None  # backward compatibility for KTX
+    capacity: int | None = None
     address: str | None = None
     notes: str | None = None
     active_residents: list[ResidentInfo]
+    scheduled_residents: list[ResidentInfo] = Field(default_factory=list)
+    active_count: int = 0
+    scheduled_count: int = 0

@@ -207,11 +207,10 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     today = datetime.date.today()
     result: list[RoomOccupancyRead] = []
 
-    # Single bulk query for all active stays to eliminate N+1 queries
-    all_active_stays = (
+    # Include future assignments so the room board can show reserved places.
+    all_open_stays = (
         db.query(Stay)
         .filter(
-            or_(Stay.start_date.is_(None), Stay.start_date <= today),
             or_(Stay.end_date.is_(None), Stay.end_date > today),
         )
         .all()
@@ -220,7 +219,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     ktx_stays_by_room: dict[int, list[Stay]] = defaultdict(list)
     hotel_stays_by_hotel: dict[int, list[Stay]] = defaultdict(list)
 
-    for stay in all_active_stays:
+    for stay in all_open_stays:
         if stay.accommodation_type == "KTX" and stay.room_id:
             ktx_stays_by_room[stay.room_id].append(stay)
         elif stay.accommodation_type == "HOTEL" and stay.hotel_id:
@@ -231,11 +230,11 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     for room in rooms:
         active_stays = ktx_stays_by_room.get(room.id, [])
         residents: list[ResidentInfo] = []
+        scheduled_residents: list[ResidentInfo] = []
         for stay in active_stays:
             emp = stay.employee
             if emp:
-                residents.append(
-                    ResidentInfo(
+                resident = ResidentInfo(
                         employee_id=emp.id,
                         name_latin=emp.name_latin,
                         name_chinese=emp.name_chinese,
@@ -247,8 +246,11 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                         bed_location=stay.bed_location,
                         start_date=stay.start_date,
                         end_date=stay.end_date,
-                    )
                 )
+                if stay.start_date and stay.start_date > today:
+                    scheduled_residents.append(resident)
+                else:
+                    residents.append(resident)
 
         result.append(
             RoomOccupancyRead(
@@ -257,8 +259,12 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                 unit_name=room.room_number,
                 room_id=room.id,
                 room_number=room.room_number,
+                capacity=room.capacity,
                 notes=room.notes,
                 active_residents=residents,
+                scheduled_residents=scheduled_residents,
+                active_count=len(residents),
+                scheduled_count=len(scheduled_residents),
             )
         )
 
@@ -267,6 +273,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
     for hotel in hotels:
         active_stays = hotel_stays_by_hotel.get(hotel.id, [])
         hotel_residents: list[ResidentInfo] = []
+        scheduled_hotel_residents: list[ResidentInfo] = []
         for stay in active_stays:
             emp = stay.employee
             if emp:
@@ -275,8 +282,7 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                     if stay.hotel_room_number and stay.bed_location
                     else (stay.hotel_room_number or stay.bed_location)
                 )
-                hotel_residents.append(
-                    ResidentInfo(
+                resident = ResidentInfo(
                         employee_id=emp.id,
                         name_latin=emp.name_latin,
                         name_chinese=emp.name_chinese,
@@ -288,8 +294,11 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                         bed_location=bed_loc,
                         start_date=stay.start_date,
                         end_date=stay.end_date,
-                    )
                 )
+                if stay.start_date and stay.start_date > today:
+                    scheduled_hotel_residents.append(resident)
+                else:
+                    hotel_residents.append(resident)
 
         result.append(
             RoomOccupancyRead(
@@ -299,6 +308,9 @@ def get_room_occupancy(db: Session) -> list[RoomOccupancyRead]:
                 address=hotel.address,
                 notes=hotel.notes,
                 active_residents=hotel_residents,
+                scheduled_residents=scheduled_hotel_residents,
+                active_count=len(hotel_residents),
+                scheduled_count=len(scheduled_hotel_residents),
             )
         )
 

@@ -12,7 +12,7 @@ export const RoomOccupancyBoard: React.FC = () => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
-  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("LIST");
+  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
@@ -84,7 +84,7 @@ export const RoomOccupancyBoard: React.FC = () => {
         (item.address && item.address.toLowerCase().includes(q)) ||
         (item.notes && item.notes.toLowerCase().includes(q));
 
-      const matchingResidents = item.active_residents.filter((res) => {
+      const matchesResident = (res: ResidentInfo) => {
         if (unitMatches) return true;
         const emp = employees.find((e) => e.id === res.employee_id);
         return (
@@ -94,9 +94,13 @@ export const RoomOccupancyBoard: React.FC = () => {
           (emp?.employee_code && emp.employee_code.toLowerCase().includes(q)) ||
           (res.bed_location && res.bed_location.toLowerCase().includes(q))
         );
-      });
+      };
 
-      return { ...item, active_residents: matchingResidents };
+      return {
+        ...item,
+        active_residents: item.active_residents.filter(matchesResident),
+        scheduled_residents: item.scheduled_residents.filter(matchesResident),
+      };
     })
     .filter((item) => {
       if (!searchQuery.trim()) return true;
@@ -108,7 +112,7 @@ export const RoomOccupancyBoard: React.FC = () => {
         (item.address && item.address.toLowerCase().includes(q)) ||
         (item.notes && item.notes.toLowerCase().includes(q));
 
-      return unitMatches || item.active_residents.length > 0;
+      return unitMatches || item.active_residents.length > 0 || item.scheduled_residents.length > 0;
     });
 
   return (
@@ -118,7 +122,7 @@ export const RoomOccupancyBoard: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-slate-800">Sơ đồ Hiện trạng Chỗ ở (KTX & Khách sạn)</h2>
           <p className="text-sm text-slate-500">
-            Xem trực quan nhân sự đang lưu trú active tại từng phòng KTX và Khách sạn.
+            Xem người đang ở và người đã xếp chỗ sắp đến tại từng phòng KTX và Khách sạn.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">

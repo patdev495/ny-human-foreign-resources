@@ -1,11 +1,12 @@
 from __future__ import annotations
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # --- ROOM SCHEMAS ---
 
 class RoomBase(BaseModel):
     room_number: str
+    capacity: int | None = Field(default=None, ge=1)
     notes: str | None = None
 
 

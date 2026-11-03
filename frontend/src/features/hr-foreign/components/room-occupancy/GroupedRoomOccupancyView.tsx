@@ -23,7 +23,14 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
       {filteredOccupancy.map((room) => {
         const isHotel = room.accommodation_type === "HOTEL";
         const unitTitle = isHotel ? room.unit_name : `Phòng ${room.unit_name}`;
-        const hasResidents = room.active_residents.length > 0;
+        const hasResidents = room.active_count + room.scheduled_count > 0;
+        const remaining = room.capacity == null
+          ? null
+          : room.capacity - room.active_count - room.scheduled_count;
+        const visibleResidents = [
+          ...room.active_residents.map((resident) => ({ resident, scheduled: false })),
+          ...room.scheduled_residents.map((resident) => ({ resident, scheduled: true })),
+        ];
 
         return (
           <div
@@ -61,15 +68,25 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
                     : "bg-slate-200 text-slate-600"
                 }`}
               >
-                {room.active_residents.length} người
+                {room.active_count} đang ở · {room.scheduled_count} sắp đến
               </span>
             </div>
 
+            {!isHotel && (
+              <div className="px-4 py-2 text-xs font-semibold text-slate-700 border-b border-slate-100 bg-white">
+                {remaining === null
+                  ? `${room.active_count + room.scheduled_count} đã xếp · Chưa khai báo sức chứa`
+                  : remaining < 0
+                    ? `${room.active_count + room.scheduled_count}/${room.capacity} đã xếp · Vượt sức chứa ${-remaining}`
+                    : `${room.active_count + room.scheduled_count}/${room.capacity} đã xếp · ${remaining} chỗ chưa xếp`}
+              </div>
+            )}
+
             <div className="p-4 flex-1 divide-y divide-slate-100 space-y-3">
-              {!hasResidents ? (
-                <div className="py-6 text-center text-xs text-slate-400 italic">Phòng đang trống</div>
+              {visibleResidents.length === 0 ? (
+                <div className="py-6 text-center text-xs text-slate-400 italic">Chưa có người phù hợp</div>
               ) : (
-                room.active_residents.map((res) => (
+                visibleResidents.map(({ resident: res, scheduled }) => (
                   <div key={res.stay_id} className="pt-3 first:pt-0 flex items-start justify-between gap-2">
                     <div className="space-y-0.5 min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -79,6 +96,11 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
                         {res.stay_type === "CONG_TAC" && (
                           <span className="px-1.5 py-0.2 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">
                             Công tác
+                          </span>
+                        )}
+                        {scheduled && (
+                          <span className="px-1.5 py-0.5 bg-sky-100 text-sky-800 text-[10px] font-bold rounded">
+                            Sắp đến
                           </span>
                         )}
                       </div>
@@ -91,11 +113,11 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
                             🛏️ {res.bed_location}
                           </span>
                         )}
-                        <span>Vào: {res.start_date || "N/A"}</span>
+                        <span>{scheduled ? "Dự kiến vào" : "Vào"}: {res.start_date || "N/A"}</span>
                       </div>
                     </div>
 
-                    <button
+                    {!scheduled && <button
                       onClick={() => onCheckOut(res, unitTitle)}
                       title="Trả phòng / Chuyển đi"
                       className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer transition-colors shrink-0"
@@ -103,7 +125,7 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
-                    </button>
+                    </button>}
                   </div>
                 ))
               )}

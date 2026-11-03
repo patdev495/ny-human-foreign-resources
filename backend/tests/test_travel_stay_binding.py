@@ -77,7 +77,7 @@ def test_schedule_stay_from_future_arrival(client: TestClient) -> None:
         json={"entry_date": arrival.isoformat()},
     )
     assert trip.status_code == 201
-    room = client.post("/api/hr-foreign/rooms", json={"room_number": "1701"})
+    room = client.post("/api/hr-foreign/rooms", json={"room_number": "1701", "capacity": 3})
     payload = {
         "employee_id": emp_id,
         "accommodation_type": "KTX",
@@ -96,6 +96,28 @@ def test_schedule_stay_from_future_arrival(client: TestClient) -> None:
     employee = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
     assert employee["is_in_vietnam"] is False
     assert employee["current_room_number"] == "1701"
+
+    second = client.post("/api/hr-foreign/employees", json={"name_latin": "ZHOU LIN", "gender": "Nam"})
+    second_id = second.json()["id"]
+    second_trip = client.post(
+        f"/api/hr-foreign/employees/{second_id}/travel-records",
+        json={"entry_date": arrival.isoformat()},
+    )
+    assert second_trip.status_code == 201
+    second_stay = client.post(
+        "/api/hr-foreign/stays",
+        json={**payload, "employee_id": second_id},
+    )
+    assert second_stay.status_code == 201
+
+    occupancy = client.get("/api/hr-foreign/rooms/occupancy")
+    assert occupancy.status_code == 200
+    planned_room = next(unit for unit in occupancy.json() if unit["room_id"] == room.json()["id"])
+    assert planned_room["capacity"] == 3
+    assert planned_room["active_count"] == 0
+    assert planned_room["scheduled_count"] == 2
+    assert planned_room["active_residents"] == []
+    assert {resident["employee_id"] for resident in planned_room["scheduled_residents"]} == {emp_id, second_id}
 
     changed_arrival = client.put(
         f"/api/hr-foreign/employees/{emp_id}/travel-records/{trip.json()['id']}",

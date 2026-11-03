@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { fetchEmployees, fetchRooms, fetchHotels, createStay } from "../api";
-import type { ForeignEmployee, Room, Hotel } from "../types";
+import { fetchEmployees, fetchRooms, fetchHotels, fetchRoomOccupancy, createStay } from "../api";
+import type { ForeignEmployee, Room, Hotel, RoomOccupancy } from "../types";
 import { CheckInFormFields } from "./check-in/CheckInFormFields";
 
 interface CheckInModalProps {
@@ -23,6 +23,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [roomOccupancy, setRoomOccupancy] = useState<RoomOccupancy[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | "">(
@@ -58,14 +59,16 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       try {
         setLoading(true);
         setError(null);
-        const [empData, roomData, hotelData] = await Promise.all([
+        const [empData, roomData, hotelData, occupancyData] = await Promise.all([
           fetchEmployees(),
           fetchRooms(),
           fetchHotels(),
+          fetchRoomOccupancy(),
         ]);
         setEmployees(empData);
         setRooms(roomData);
         setHotels(hotelData);
+        setRoomOccupancy(occupancyData);
 
         if (defaultEmployeeId) {
           setSelectedEmployeeId(defaultEmployeeId);
@@ -206,6 +209,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
             <CheckInFormFields
               employees={employees}
               rooms={rooms}
+              roomOccupancy={roomOccupancy}
               hotels={hotels}
               selectedEmployeeId={selectedEmployeeId}
               setSelectedEmployeeId={setSelectedEmployeeId}

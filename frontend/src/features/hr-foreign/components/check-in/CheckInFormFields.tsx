@@ -1,9 +1,10 @@
 import React from "react";
-import type { ForeignEmployee, Hotel, Room } from "../../types";
+import type { ForeignEmployee, Hotel, Room, RoomOccupancy } from "../../types";
 
 interface Props {
   employees: ForeignEmployee[];
   rooms: Room[];
+  roomOccupancy: RoomOccupancy[];
   hotels: Hotel[];
   selectedEmployeeId: number | "";
   setSelectedEmployeeId: (id: number | "") => void;
@@ -34,6 +35,7 @@ interface Props {
 export const CheckInFormFields: React.FC<Props> = ({
   employees,
   rooms,
+  roomOccupancy,
   hotels,
   selectedEmployeeId,
   setSelectedEmployeeId,
@@ -140,11 +142,15 @@ export const CheckInFormFields: React.FC<Props> = ({
             className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           >
             <option value="">-- Chọn phòng KTX --</option>
-            {rooms.map((r) => (
-              <option key={r.id} value={r.id}>
-                Phòng {r.room_number}
-              </option>
-            ))}
+            {rooms.map((r) => {
+              const occupancy = roomOccupancy.find((unit) => unit.accommodation_type === "KTX" && unit.room_id === r.id);
+              const assigned = (occupancy?.active_count || 0) + (occupancy?.scheduled_count || 0);
+              return (
+                <option key={r.id} value={r.id}>
+                  Phòng {r.room_number} · {assigned} đã xếp{r.capacity == null ? "" : ` · ${Math.max(0, r.capacity - assigned)} chỗ chưa xếp`}
+                </option>
+              );
+            })}
           </select>
         </div>
       ) : (

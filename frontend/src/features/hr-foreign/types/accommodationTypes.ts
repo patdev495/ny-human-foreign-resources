@@ -1,11 +1,13 @@
 export interface Room {
   id: number;
   room_number: string;
+  capacity?: number | null;
   notes?: string | null;
 }
 
 export interface RoomCreate {
   room_number: string;
+  capacity?: number | null;
   notes?: string | null;
 }
 
@@ -47,7 +49,11 @@ export interface RoomOccupancy {
   unit_name: string;
   room_id?: number | null;
   room_number?: string | null;
+  capacity?: number | null;
   address?: string | null;
   notes?: string | null;
   active_residents: ResidentInfo[];
+  scheduled_residents: ResidentInfo[];
+  active_count: number;
+  scheduled_count: number;
 }

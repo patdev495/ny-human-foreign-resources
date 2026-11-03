@@ -8,6 +8,7 @@ export const RoomList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [roomNumber, setRoomNumber] = useState("");
+  const [capacity, setCapacity] = useState("");
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +31,7 @@ export const RoomList: React.FC = () => {
   const openCreateModal = () => {
     setEditingRoom(null);
     setRoomNumber("");
+    setCapacity("");
     setNotes("");
     setError(null);
     setIsModalOpen(true);
@@ -38,6 +40,7 @@ export const RoomList: React.FC = () => {
   const openEditModal = (room: Room) => {
     setEditingRoom(room);
     setRoomNumber(room.room_number);
+    setCapacity(room.capacity?.toString() || "");
     setNotes(room.notes || "");
     setError(null);
     setIsModalOpen(true);
@@ -53,6 +56,7 @@ export const RoomList: React.FC = () => {
     try {
       const payload: RoomCreate = {
         room_number: roomNumber.trim(),
+        capacity: capacity ? Number(capacity) : null,
         notes: notes.trim() || null,
       };
       if (editingRoom) {
@@ -108,10 +112,11 @@ export const RoomList: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold text-slate-800">Phòng {r.room_number}</span>
                   <span className="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-700 rounded-full">
-                    Sẵn sàng
+                    Đã tạo
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-slate-500 line-clamp-2">{r.notes || "Không có ghi chú"}</p>
+                <p className="mt-1 text-xs text-slate-600">Sức chứa: {r.capacity ?? "Chưa khai báo"}</p>
               </div>
               <div className="mt-4 pt-2 border-t border-slate-100 flex justify-end gap-2">
                 <button
@@ -165,6 +170,16 @@ export const RoomList: React.FC = () => {
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="VD: Tầng 1, phòng 2 giường..."
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sức chứa (số người)</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={capacity}
+                  onChange={(e) => setCapacity(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-800"
                 />
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
