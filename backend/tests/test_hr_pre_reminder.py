@@ -5,6 +5,7 @@ from typing import cast
 
 import pytest
 from sqlalchemy import create_engine, select
+from sqlalchemy.dialects.mssql import dialect as mssql_dialect
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
@@ -15,9 +16,14 @@ from features.hr_foreign.end_shift_reporting.models import EndShiftReport
 from features.hr_foreign.meal_reporting.models import MealReport
 from features.hr_foreign.models import ForeignEmployee, Room, Stay, TravelRecord
 from features.telegram_reminder.client import TelegramClient, TelegramRejected
-from features.telegram_reminder.models import TelegramBot, TelegramRecipient
+from features.telegram_reminder.models import TelegramBot, TelegramRecipient, selected_recipients_query
 from features.zalo_reminder.client import BotClient
 from features.zalo_reminder.models import ZaloRecipient
+
+
+def test_selected_telegram_recipients_use_sql_server_2008_boolean_syntax() -> None:
+    sql = str(selected_recipients_query().compile(dialect=mssql_dialect()))
+    assert "telegram_reminder_recipients.selected = 1" in sql
 
 
 def test_pre_reminder_sends_counts_once_and_retries_definite_failure(monkeypatch: pytest.MonkeyPatch) -> None:

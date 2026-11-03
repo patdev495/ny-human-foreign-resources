@@ -3,7 +3,8 @@ from __future__ import annotations
 from datetime import date, datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Date, DateTime, String, Unicode, UnicodeText
+from sqlalchemy import Boolean, Date, DateTime, String, Unicode, UnicodeText, select, true
+from sqlalchemy.sql import Select
 from sqlalchemy.orm import Mapped, mapped_column
 
 from core.database import Base
@@ -29,6 +30,10 @@ class TelegramRecipient(Base):
     username: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     selected: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     selected_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+def selected_recipients_query() -> Select[tuple[TelegramRecipient]]:
+    return select(TelegramRecipient).where(TelegramRecipient.selected == true())
 
 
 class TelegramDeliveryLog(Base):

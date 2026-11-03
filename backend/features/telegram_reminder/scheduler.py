@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from core.database import SessionLocal
 from features.bot_reminder.config import VIETNAM_TZ, channel_enabled, cutoff_at, snapshot_channel
 from features.telegram_reminder.client import TelegramClient, TelegramRejected, TelegramUnavailable
-from features.telegram_reminder.models import TelegramBot, TelegramDailyDelivery, TelegramRecipient
+from features.telegram_reminder.models import TelegramBot, TelegramDailyDelivery, TelegramRecipient, selected_recipients_query
 from features.bot_reminder.message import MESSAGE
 
 logger = logging.getLogger(__name__)
@@ -77,8 +77,8 @@ def run_due(db: Session, client: TelegramClient) -> dict[str, str | bool]:
     yesterday = day - dt.timedelta(days=1)
     if channel_enabled(db, "telegram", yesterday):
         previous_cutoff = cutoff_at(db, yesterday).astimezone(dt.timezone.utc).replace(tzinfo=None)
-        for person in db.scalars(select(TelegramRecipient).where(
-            TelegramRecipient.selected.is_(True), TelegramRecipient.selected_at <= previous_cutoff,
+        for person in db.scalars(selected_recipients_query().where(
+            TelegramRecipient.selected_at <= previous_cutoff,
         )).all():
             try:
                 _expire(db, yesterday, bot, person)
@@ -88,8 +88,7 @@ def run_due(db: Session, client: TelegramClient) -> dict[str, str | bool]:
     if now < start or not snapshot_channel(db, "telegram", day):
         return result
     end = start + dt.timedelta(minutes=30)
-    people = db.scalars(select(TelegramRecipient).where(TelegramRecipient.selected.is_(True))
-                        .order_by(TelegramRecipient.user_id)).all()
+    people = db.scalars(selected_recipients_query().order_by(TelegramRecipient.user_id)).all()
     for person in people:
         try:
             if now >= end:

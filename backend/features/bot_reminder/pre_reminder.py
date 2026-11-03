@@ -18,7 +18,7 @@ from features.hr_foreign.end_shift_reporting.service import demand_view, is_elig
 from features.hr_foreign.meal_reporting.models import MealReport
 from features.hr_foreign.models import ForeignEmployee
 from features.telegram_reminder.client import TelegramClient, TelegramRejected, TelegramUnavailable
-from features.telegram_reminder.models import TelegramBot, TelegramRecipient
+from features.telegram_reminder.models import TelegramBot, selected_recipients_query
 from features.zalo_reminder.client import BotClient, BotUnavailable
 from features.zalo_reminder.models import ZaloRecipient
 
@@ -123,7 +123,7 @@ def run_due(db: Session, now: dt.datetime, zalo: BotClient, telegram: TelegramCl
                 logger.exception("Pre-reminder Zalo delivery failed")
     bot = db.get(TelegramBot, "current")
     if channels["telegram"] and bot is not None:
-        for person in db.scalars(select(TelegramRecipient).where(TelegramRecipient.selected.is_(True))).all():
+        for person in db.scalars(selected_recipients_query()).all():
             try:
                 _deliver(db, "telegram", day, person.user_id, person.name, message,
                          lambda content, recipient=person: telegram.send(bot.token, recipient.chat_id, content),
