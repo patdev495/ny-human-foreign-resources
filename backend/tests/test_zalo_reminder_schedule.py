@@ -245,7 +245,7 @@ def test_telegram_start_selection_test_send_and_bot_replacement(
     assert [(row["message_type"], row["status"]) for row in failed.json()["results"]] == [
         ("PRE", "FAILED"), ("CUTOFF", "FAILED"),
     ]
-    assert client.get("/api/telegram-reminder/deliveries").json()[0]["status"] == "FAILED"
+    assert sum(row["status"] == "FAILED" for row in client.get("/api/telegram-reminder/deliveries").json()) == 2
     fail_send[0] = False
     assert client.post("/api/telegram-reminder/bot", json={"token": "12345678:samebot2"}).status_code == 200
     assert client.get("/api/telegram-reminder/recipients").json()[0]["selected"] is True
