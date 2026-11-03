@@ -18,8 +18,14 @@ export interface TelegramDelivery {
   bot_id: string;
   name: string;
   status: "SENT" | "FAILED";
+  message_type: "PRE" | "CUTOFF";
   error: string;
   created_at: string;
+}
+
+export interface TestSendResult {
+  status: "SENT" | "FAILED";
+  results: { message_type: "PRE" | "CUTOFF"; status: "SENT" | "FAILED"; error: string }[];
 }
 
 export interface TelegramDailyDelivery {

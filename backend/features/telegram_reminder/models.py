@@ -44,6 +44,7 @@ class TelegramDeliveryLog(Base):
     user_id: Mapped[str] = mapped_column(String(50), nullable=False)
     name: Mapped[str] = mapped_column(Unicode(150), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False)
+    message_type: Mapped[str] = mapped_column(String(16), nullable=False, default="CUTOFF")
     error: Mapped[str] = mapped_column(UnicodeText, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 

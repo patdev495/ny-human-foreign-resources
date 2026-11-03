@@ -1,4 +1,4 @@
-import type { ZaloBotStatus, ZaloDailyDelivery, ZaloDelivery, ZaloPerson } from "./types";
+import type { TestSendResult, ZaloBotStatus, ZaloDailyDelivery, ZaloDelivery, ZaloPerson } from "./types";
 
 async function json<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api/zalo-reminder${path}`, options);
@@ -29,7 +29,7 @@ export const zaloReminderApi = {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids }),
   }),
   deliveries: (): Promise<ZaloDelivery[]> => json<ZaloDelivery[]>("/deliveries"),
-  sendTest: (id: string): Promise<{ status: string }> => json<{ status: string }>("/test-send", {
+  sendTest: (id: string): Promise<TestSendResult> => json<TestSendResult>("/test-send", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
   }),
   qr: async (): Promise<Blob | null> => {

@@ -14,7 +14,13 @@ export interface ZaloDelivery {
   status: "SENT" | "FAILED";
   error: string;
   trigger_type: "TEST";
+  message_type: "PRE" | "CUTOFF";
   created_at?: string;
+}
+
+export interface TestSendResult {
+  status: "SENT" | "FAILED";
+  results: { message_type: "PRE" | "CUTOFF"; status: "SENT" | "FAILED"; error: string }[];
 }
 
 export interface ZaloDailyDelivery {

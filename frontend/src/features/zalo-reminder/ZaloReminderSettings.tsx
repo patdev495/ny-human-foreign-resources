@@ -132,8 +132,9 @@ export function ZaloReminderSettings({ onClose, onTelegram }: Props) {
     if (!testId) return;
     setBusy(true); setError(""); setMessage("");
     try {
-      await zaloReminderApi.sendTest(testId);
-      setMessage("Đã gửi tin thử.");
+      const result = await zaloReminderApi.sendTest(testId);
+      if (result.status === "SENT") setMessage("Đã gửi cả hai tin thử.");
+      else setError("Có tin gửi thử thất bại; xem kết quả từng tin bên dưới.");
       setDeliveries(await zaloReminderApi.deliveries());
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Gửi thử thất bại.");
@@ -195,6 +196,7 @@ export function ZaloReminderSettings({ onClose, onTelegram }: Props) {
       </section>
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold text-slate-900">Gửi thử cho một HR</h3>
+        <p className="mt-1 text-sm text-slate-600">Gửi hai tin riêng: nhắc trước hạn với số liệu hiện tại, rồi nhắc chốt báo cơm.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <select aria-label="Chọn HR để gửi thử" value={testId} onChange={(event) => setTestId(event.target.value)}
             className="min-w-52 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm">
@@ -210,7 +212,7 @@ export function ZaloReminderSettings({ onClose, onTelegram }: Props) {
         <h3 className="font-semibold text-slate-900">Lịch sử gửi thử</h3>
         <div className="mt-3 space-y-2 text-sm">
           {deliveries.map((delivery, index) => <div key={`${delivery.id}-${index}`} className="flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2">
-            <span>{delivery.name}{delivery.created_at && <small className="ml-2 text-slate-500">{new Date(delivery.created_at).toLocaleString("vi-VN")}</small>}</span>
+            <span>{delivery.name} · {delivery.message_type === "PRE" ? "Nhắc trước hạn" : "Nhắc chốt báo cơm"}{delivery.created_at && <small className="ml-2 text-slate-500">{new Date(delivery.created_at).toLocaleString("vi-VN")}</small>}</span>
             <span className={delivery.status === "SENT" ? "text-emerald-700" : "text-rose-700"}>
               {delivery.status === "SENT" ? "Đã gửi" : `Thất bại: ${delivery.error}`}</span>
           </div>)}

@@ -25,6 +25,7 @@ class ZaloDeliveryLog(Base):
     zalo_id: Mapped[str] = mapped_column(String(100), nullable=False)
     display_name: Mapped[str] = mapped_column(Unicode(150), nullable=False)
     trigger_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    message_type: Mapped[str] = mapped_column(String(16), nullable=False, default="CUTOFF")
     status: Mapped[str] = mapped_column(String(16), nullable=False)
     error: Mapped[str] = mapped_column(UnicodeText, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)

@@ -206,6 +206,7 @@ def test_admin_sends_test_reminder_to_one_selected_hr(monkeypatch: pytest.Monkey
     from features.auth.security import require_user
     from features.zalo_reminder.client import get_bot_client
     from features.zalo_reminder.store import get_recipient_store
+    from features.zalo_reminder import router as zalo_router
     from main import create_app
 
     sent: list[tuple[str, str]] = []
@@ -220,13 +221,16 @@ def test_admin_sends_test_reminder_to_one_selected_hr(monkeypatch: pytest.Monkey
         def list_recipients(self) -> list[dict[str, str]]:
             return [{"id": "uid-1", "name": "HR Lan"}]
 
-        def record_delivery(self, id: str, name: str, status: str, error: str = "") -> None:
-            self.deliveries.append({"id": id, "name": name, "status": status, "error": error, "trigger_type": "TEST"})
+        def record_delivery(self, id: str, name: str, status: str, error: str = "",
+                            message_type: str = "CUTOFF") -> None:
+            self.deliveries.append({"id": id, "name": name, "status": status, "error": error,
+                                    "trigger_type": "TEST", "message_type": message_type})
 
         def list_deliveries(self) -> list[dict[str, str]]:
             return self.deliveries
 
     store = FakeStore()
+    monkeypatch.setattr(zalo_router, "message_for", lambda db, today: "Nhắc HR trước giờ chốt.")
     app = create_app()
     app.dependency_overrides[require_user] = lambda: User(
         id=1, username="admin", display_name="Admin", password_hash="unused",
@@ -240,8 +244,11 @@ def test_admin_sends_test_reminder_to_one_selected_hr(monkeypatch: pytest.Monkey
         history = client.get("/api/zalo-reminder/deliveries")
     assert response.status_code == 200
     assert unselected.status_code == 404
-    assert sent == [("uid-1", "Đã đến giờ chốt báo cơm cho ngày mai và sắp xếp xe tan làm hôm nay. Vui lòng truy cập https://ns.nienyi.vn để thực hiện.")]
-    assert history.json() == [{"id": "uid-1", "name": "HR Lan", "status": "SENT", "error": "", "trigger_type": "TEST"}]
+    assert [message for _id, message in sent][0] == "Nhắc HR trước giờ chốt."
+    assert all(recipient_id == "uid-1" for recipient_id, _message in sent)
+    assert len(sent) == 2
+    assert response.json()["status"] == "SENT"
+    assert [row["message_type"] for row in history.json()] == ["PRE", "CUTOFF"]
 
 
 @pytest.mark.auth_real
@@ -251,6 +258,7 @@ def test_failed_test_send_is_visible_to_admin(monkeypatch: pytest.MonkeyPatch) -
     from features.auth.security import require_user
     from features.zalo_reminder.client import BotUnavailable, get_bot_client
     from features.zalo_reminder.store import get_recipient_store
+    from features.zalo_reminder import router as zalo_router
     from main import create_app
 
     class FailingBot:
@@ -263,13 +271,16 @@ def test_failed_test_send_is_visible_to_admin(monkeypatch: pytest.MonkeyPatch) -
         def list_recipients(self) -> list[dict[str, str]]:
             return [{"id": "uid-1", "name": "HR Lan"}]
 
-        def record_delivery(self, id: str, name: str, status: str, error: str = "") -> None:
-            self.deliveries.append({"id": id, "name": name, "status": status, "error": error, "trigger_type": "TEST"})
+        def record_delivery(self, id: str, name: str, status: str, error: str = "",
+                            message_type: str = "CUTOFF") -> None:
+            self.deliveries.append({"id": id, "name": name, "status": status, "error": error,
+                                    "trigger_type": "TEST", "message_type": message_type})
 
         def list_deliveries(self) -> list[dict[str, str]]:
             return self.deliveries
 
     store = FakeStore()
+    monkeypatch.setattr(zalo_router, "message_for", lambda db, today: "Nhắc HR trước giờ chốt.")
     app = create_app()
     app.dependency_overrides[require_user] = lambda: User(
         id=1, username="admin", display_name="Admin", password_hash="unused",
@@ -280,5 +291,8 @@ def test_failed_test_send_is_visible_to_admin(monkeypatch: pytest.MonkeyPatch) -
     with TestClient(app) as client:
         response = client.post("/api/zalo-reminder/test-send", json={"id": "uid-1"})
         history = client.get("/api/zalo-reminder/deliveries")
-    assert response.status_code == 503
-    assert history.json()[0]["status"] == "FAILED"
+    assert response.status_code == 200
+    assert response.json()["status"] == "FAILED"
+    assert [(row["message_type"], row["status"]) for row in history.json()] == [
+        ("PRE", "FAILED"), ("CUTOFF", "FAILED"),
+    ]

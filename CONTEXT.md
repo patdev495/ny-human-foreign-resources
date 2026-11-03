@@ -85,6 +85,12 @@ Danh sách trạng thái khai báo của những Nhân viên nước ngoài thu�
 **Thông báo chốt Báo cơm**:
 Lời nhắc ngắn gửi riêng cho từng HR tại mốc chốt Báo cơm do admin 8004 cấu hình (mặc định 17:00 giờ Việt Nam), hằng ngày kể cả Chủ nhật và ngày lễ. Cùng mốc là hạn nhân viên gửi/sửa Báo cơm cho ngày ăn hôm sau và thời điểm sớm nhất HR được chốt bữa Sáng/Tối. Thông báo yêu cầu HR vào hệ thống để tự chốt Báo cơm và sắp xếp xe tan làm; không thay cho các thao tác đó.
 
+**Thông báo nhắc HR trước giờ chốt**:
+Lời nhắc gửi riêng cho từng HR trước hạn báo cơm và báo giờ tan làm, nêu số nhân viên còn chưa báo theo dữ liệu của ngày gửi để HR nhắc họ hoàn tất.
+
+**Gửi thử thông báo cho HR**:
+Thao tác của admin gửi cả Thông báo nhắc HR trước giờ chốt và Thông báo chốt Báo cơm cho một HR đã chọn trên một kênh, bất kể thời điểm gửi và trạng thái gửi tự động của kênh.
+
 **Danh sách HR nhận thông báo**:
 Những người HR được chọn riêng theo từng kênh để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
 

@@ -1,4 +1,4 @@
-import type { TelegramBotState, TelegramDailyDelivery, TelegramDelivery, TelegramRecipient } from "./types";
+import type { TelegramBotState, TelegramDailyDelivery, TelegramDelivery, TelegramRecipient, TestSendResult } from "./types";
 
 async function json<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`/api/telegram-reminder${path}`, options);
@@ -23,7 +23,7 @@ export const telegramReminderApi = {
   saveEnabled: (enabled: boolean): Promise<{ enabled: boolean; effective_date: string }> => json("/enabled", body("PUT", { enabled })),
   recipients: (q = ""): Promise<TelegramRecipient[]> => json(`/recipients?q=${encodeURIComponent(q)}`),
   saveRecipients: (ids: string[]): Promise<TelegramRecipient[]> => json("/recipients", body("PUT", { ids })),
-  sendTest: (id: string): Promise<{ status: string }> => json("/test-send", body("POST", { id })),
+  sendTest: (id: string): Promise<TestSendResult> => json("/test-send", body("POST", { id })),
   deliveries: (): Promise<TelegramDelivery[]> => json("/deliveries"),
   daily: (date: string): Promise<TelegramDailyDelivery[]> => json(`/daily?date=${encodeURIComponent(date)}`),
   runDue: (): Promise<{ date: string; due: boolean }> => json("/run-due", { method: "POST" }),

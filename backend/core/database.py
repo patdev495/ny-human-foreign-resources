@@ -56,6 +56,15 @@ def init_db() -> None:
     except Exception:
         pass
 
+    if engine.dialect.name == "mssql":
+        with engine.begin() as conn:
+            for table_name in ("zalo_reminder_delivery_logs", "telegram_reminder_delivery_logs"):
+                conn.execute(text(
+                    f"IF COL_LENGTH('{table_name}', 'message_type') IS NULL "
+                    f"ALTER TABLE {table_name} ADD message_type VARCHAR(16) NOT NULL "
+                    "CONSTRAINT DF_" + table_name + "_message_type DEFAULT 'CUTOFF';"
+                ))
+
 
 
     try:

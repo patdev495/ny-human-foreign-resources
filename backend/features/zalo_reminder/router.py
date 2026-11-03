@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, time
+from typing import Literal
 from pydantic import BaseModel
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
@@ -15,6 +16,8 @@ from features.zalo_reminder.schemas import CutoffTime, RecipientSelection, TestS
 from features.zalo_reminder.scheduler import MESSAGE, daily_results, run_due
 from features.zalo_reminder.store import RecipientStore, get_recipient_store
 from features.bot_reminder.config import channel_enabled, pending_enabled, set_channel_enabled
+from features.bot_reminder.pre_reminder import message_for
+from features.bot_reminder.schemas import TestMessageResult, TestSendResponse
 from features.zalo_reminder import scheduler
 
 router = APIRouter(prefix="/api/zalo-reminder", tags=["Zalo reminder"])
@@ -115,25 +118,32 @@ def put_recipients(
     return store.list_recipients()
 
 
-TEST_MESSAGE = MESSAGE
-
-
-@router.post("/test-send")
+@router.post("/test-send", response_model=TestSendResponse)
 def send_test(
     payload: TestSendRequest,
     _admin: User = Depends(require_admin), bot: BotClient = Depends(get_bot_client),
     store: RecipientStore = Depends(get_recipient_store),
-) -> dict[str, str]:
+    db: Session = Depends(get_db),
+) -> TestSendResponse:
     recipient = next((person for person in store.list_recipients() if person["id"] == payload.id), None)
     if recipient is None:
         raise HTTPException(status_code=404, detail="Recipient is not selected")
-    try:
-        bot.send(recipient["id"], TEST_MESSAGE)
-    except BotUnavailable as exc:
-        store.record_delivery(recipient["id"], recipient["name"], "FAILED", str(exc))
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
-    store.record_delivery(recipient["id"], recipient["name"], "SENT")
-    return {"status": "SENT"}
+    results: list[TestMessageResult] = []
+    messages: tuple[tuple[Literal["PRE", "CUTOFF"], str], ...] = (
+        ("PRE", message_for(db, scheduler.now_vietnam().date())), ("CUTOFF", MESSAGE),
+    )
+    for message_type, content in messages:
+        status: Literal["SENT", "FAILED"] = "SENT"
+        error = ""
+        try:
+            bot.send(recipient["id"], content)
+        except BotUnavailable as exc:
+            status, error = "FAILED", str(exc)
+        store.record_delivery(recipient["id"], recipient["name"], status, error,
+                              message_type=message_type)
+        results.append(TestMessageResult(message_type=message_type, status=status, error=error))
+    return TestSendResponse(status="SENT" if all(result.status == "SENT" for result in results) else "FAILED",
+                            results=results)
 
 
 @router.get("/deliveries")

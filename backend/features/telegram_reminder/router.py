@@ -4,6 +4,7 @@ import datetime as dt
 import re
 import secrets
 from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -19,6 +20,8 @@ from features.telegram_reminder.client import TelegramClient, TelegramUnavailabl
 from features.telegram_reminder.models import TelegramBot, TelegramDeliveryLog, TelegramRecipient
 from features.telegram_reminder.scheduler import daily_results, now_vietnam, run_due
 from features.bot_reminder.message import MESSAGE
+from features.bot_reminder.pre_reminder import message_for
+from features.bot_reminder.schemas import TestMessageResult, TestSendResponse
 
 router = APIRouter(prefix="/api/telegram-reminder", tags=["Telegram reminder"])
 
@@ -157,24 +160,30 @@ def select_recipients(payload: Selection, _admin: User = Depends(require_admin),
     return recipients(q="", _admin=_admin, db=db)
 
 
-@router.post("/test-send")
+@router.post("/test-send", response_model=TestSendResponse)
 def send_test(payload: TestInput, _admin: User = Depends(require_admin),
-              db: Session = Depends(get_db), client: TelegramClient = Depends(get_telegram_client)) -> dict[str, str]:
+              db: Session = Depends(get_db), client: TelegramClient = Depends(get_telegram_client)) -> TestSendResponse:
     bot = db.get(TelegramBot, "current")
     person = db.get(TelegramRecipient, payload.id)
     if bot is None or person is None or not person.selected:
         raise HTTPException(404, "Người nhận Telegram chưa được chọn")
-    status, error = "SENT", ""
-    try:
-        client.send(bot.token, person.chat_id, MESSAGE)
-    except TelegramUnavailable:
-        status, error = "FAILED", "Không gửi được tin Telegram"
-    db.add(TelegramDeliveryLog(bot_id=bot.bot_id, user_id=person.user_id, name=person.name,
-                               status=status, error=error))
-    db.commit()
-    if status == "FAILED":
-        raise HTTPException(503, error)
-    return {"status": status}
+    results: list[TestMessageResult] = []
+    messages: tuple[tuple[Literal["PRE", "CUTOFF"], str], ...] = (
+        ("PRE", message_for(db, now_vietnam().date())), ("CUTOFF", MESSAGE),
+    )
+    for message_type, content in messages:
+        status: Literal["SENT", "FAILED"] = "SENT"
+        error = ""
+        try:
+            client.send(bot.token, person.chat_id, content)
+        except TelegramUnavailable:
+            status, error = "FAILED", "Không gửi được tin Telegram"
+        db.add(TelegramDeliveryLog(bot_id=bot.bot_id, user_id=person.user_id, name=person.name,
+                                   status=status, error=error, message_type=message_type))
+        db.commit()
+        results.append(TestMessageResult(message_type=message_type, status=status, error=error))
+    return TestSendResponse(status="SENT" if all(result.status == "SENT" for result in results) else "FAILED",
+                            results=results)
 
 
 @router.get("/deliveries")
@@ -182,7 +191,8 @@ def deliveries(_admin: User = Depends(require_admin), db: Session = Depends(get_
     rows = db.scalars(select(TelegramDeliveryLog).order_by(TelegramDeliveryLog.created_at.desc(),
                                                             TelegramDeliveryLog.id.desc()).limit(30)).all()
     return [{"id": row.user_id, "bot_id": row.bot_id, "name": row.name, "status": row.status,
-             "error": row.error, "created_at": row.created_at.isoformat() + "Z"} for row in rows]
+             "error": row.error, "message_type": row.message_type,
+             "created_at": row.created_at.isoformat() + "Z"} for row in rows]
 
 
 @router.get("/enabled")

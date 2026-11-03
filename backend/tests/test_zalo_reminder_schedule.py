@@ -76,9 +76,38 @@ def test_sunday_cutoff_sends_once_per_hr_and_test_send_stays_separate(
     assert client.post("/api/zalo-reminder/run-due").status_code == 200
     assert sent == ["hr-1", "hr-2"]
     assert client.post("/api/zalo-reminder/test-send", json={"id": "hr-1"}).status_code == 200
-    assert sent == ["hr-1", "hr-2", "hr-1"]
+    assert sent == ["hr-1", "hr-2", "hr-1", "hr-1"]
     daily = client.get("/api/zalo-reminder/daily?date=2026-11-01").json()
     assert [(row["id"], row["status"]) for row in daily] == [("hr-1", "SENT"), ("hr-2", "SENT")]
+
+
+def test_zalo_test_send_still_sends_cutoff_when_pre_reminder_fails(
+    schedule_app: tuple[TestClient, list[dt.datetime], list[str], dict[str, object]],
+) -> None:
+    from features.zalo_reminder.client import BotUnavailable, get_bot_client
+
+    client, _clock, _sent, _state = schedule_app
+    assert client.put("/api/zalo-reminder/recipients", json={"ids": ["hr-1"]}).status_code == 200
+    attempts: list[str] = []
+
+    class FirstSendFails:
+        def send(self, id: str, message: str) -> None:
+            attempts.append(message)
+            if len(attempts) == 1:
+                raise BotUnavailable("First message failed")
+
+    client.app.dependency_overrides[get_bot_client] = lambda: FirstSendFails()
+    response = client.post("/api/zalo-reminder/test-send", json={"id": "hr-1"})
+    assert response.status_code == 200
+    assert [(row["message_type"], row["status"]) for row in response.json()["results"]] == [
+        ("PRE", "FAILED"), ("CUTOFF", "SENT"),
+    ]
+    assert len(attempts) == 2
+    assert "Nhắc HR trước giờ chốt" in attempts[0]
+    assert "Đã đến giờ chốt báo cơm" in attempts[1]
+    assert {(row["message_type"], row["status"]) for row in client.get("/api/zalo-reminder/deliveries").json()} == {
+        ("PRE", "FAILED"), ("CUTOFF", "SENT"),
+    }
 
 
 def test_unavailable_bot_retries_before_deadline_and_never_sends_after_it(
@@ -209,9 +238,13 @@ def test_telegram_start_selection_test_send_and_bot_replacement(
     assert client.put("/api/telegram-reminder/recipients", json={"ids": ["71"]}).status_code == 422
     assert client.put("/api/telegram-reminder/recipients", json={"ids": ["70"]}).status_code == 200
     assert client.post("/api/telegram-reminder/test-send", json={"id": "70"}).status_code == 200
-    assert len(client.get("/api/telegram-reminder/deliveries").json()) == 1
+    assert {row["message_type"] for row in client.get("/api/telegram-reminder/deliveries").json()} == {"PRE", "CUTOFF"}
     fail_send[0] = True
-    assert client.post("/api/telegram-reminder/test-send", json={"id": "70"}).status_code == 503
+    failed = client.post("/api/telegram-reminder/test-send", json={"id": "70"})
+    assert failed.json()["status"] == "FAILED"
+    assert [(row["message_type"], row["status"]) for row in failed.json()["results"]] == [
+        ("PRE", "FAILED"), ("CUTOFF", "FAILED"),
+    ]
     assert client.get("/api/telegram-reminder/deliveries").json()[0]["status"] == "FAILED"
     fail_send[0] = False
     assert client.post("/api/telegram-reminder/bot", json={"token": "12345678:samebot2"}).status_code == 200
@@ -220,7 +253,7 @@ def test_telegram_start_selection_test_send_and_bot_replacement(
     assert client.get("/api/telegram-reminder/recipients").json()[0]["selected"] is True
     assert client.post("/api/telegram-reminder/bot", json={"token": "12345678:newsecond"}).status_code == 200
     assert client.get("/api/telegram-reminder/recipients").json() == []
-    assert len(client.get("/api/telegram-reminder/deliveries").json()) == 2
+    assert len(client.get("/api/telegram-reminder/deliveries").json()) == 4
 
 
 def test_telegram_and_zalo_send_independently_at_shared_cutoff(
@@ -299,7 +332,7 @@ def test_zalo_switch_after_cutoff_keeps_today_and_applies_tomorrow(
     assert client.get("/api/zalo-reminder/daily?date=2026-11-02").json() == []
     assert client.get("/api/zalo-reminder/recipients").json() == [{"id": "hr-1", "name": "HR Lan"}]
     assert client.post("/api/zalo-reminder/test-send", json={"id": "hr-1"}).status_code == 200
-    assert sent == ["hr-1", "hr-1"]
+    assert sent == ["hr-1", "hr-1", "hr-1"]
 
 
 def test_telegram_definite_failure_retries_until_thirty_minute_boundary(

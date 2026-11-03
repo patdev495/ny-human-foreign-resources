@@ -1,5 +1,9 @@
 # Thông báo (bot) — Zalo và Telegram
 
+## Gửi thử cho HR
+
+Trong từng tab Zalo hoặc Telegram, chọn một HR đã lưu rồi bấm **Gửi thử ngay**. Một lần bấm gửi hai tin riêng trên kênh đó: tin nhắc trước hạn (số người chưa báo lấy từ dữ liệu ngày hiện tại), tiếp theo là tin nhắc HR chốt Báo cơm. Có thể gửi thử ngoài mốc giờ và khi kênh tắt gửi tự động. Nếu một tin lỗi, hệ thống vẫn thử tin còn lại; lịch sử hiển thị kết quả của từng tin.
+
 ## Chuẩn bị triển khai
 
 - Build giao diện HR bằng `npm run build` trong `frontend/`. Đồng bộ mã backend và `frontend/dist/` lên dịch vụ HR 8004.

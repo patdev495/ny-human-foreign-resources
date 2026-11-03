@@ -117,17 +117,21 @@ export function TelegramReminderSettings({ onClose, onZalo }: Props) {
       </section>
       <section className="mb-4 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold">Gửi thử cho một HR đã chọn</h3>
+        <p className="mt-1 text-sm text-slate-600">Gửi hai tin riêng: nhắc trước hạn với số liệu hiện tại, rồi nhắc chốt báo cơm.</p>
         <div className="mt-2 flex gap-2"><select aria-label="Chọn HR Telegram để gửi thử" value={testId} onChange={(event) => setTestId(event.target.value)}
           className="min-w-40 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"><option value="">Chọn người nhận</option>
           {people.filter((person) => saved.includes(person.id)).map((person) => <option key={person.id} value={person.id}>{person.name} · {person.id}</option>)}</select>
           <button type="button" disabled={busy || !testId} onClick={() => void perform(async () => {
-            try { await api.sendTest(testId); setMessage("Đã gửi thử Telegram."); }
-            finally { setHistory(await api.deliveries()); }
+            try {
+              const result = await api.sendTest(testId);
+              if (result.status === "SENT") setMessage("Đã gửi cả hai tin thử Telegram.");
+              else setError("Có tin gửi thử thất bại; xem kết quả từng tin bên dưới.");
+            } finally { setHistory(await api.deliveries()); }
           })} className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50">Gửi thử ngay</button></div>
       </section>
       <section className="mb-4 rounded-xl border border-slate-200 p-4"><h3 className="font-semibold">Lịch sử gửi thử Telegram</h3>
         <div className="mt-2 space-y-1 text-sm">{history.map((row, index) => <p key={`${row.id}-${index}`} className="rounded-lg bg-slate-50 px-3 py-2">
-          {row.name} · {row.status} · {new Date(row.created_at).toLocaleString("vi-VN")} {row.error}</p>)}
+          {row.name} · {row.message_type === "PRE" ? "Nhắc trước hạn" : "Nhắc chốt báo cơm"} · {row.status} · {new Date(row.created_at).toLocaleString("vi-VN")} {row.error}</p>)}
           {history.length === 0 && <p className="text-slate-500">Chưa có lượt gửi thử.</p>}</div></section>
       <section className="rounded-xl border border-slate-200 p-4"><div className="flex items-center justify-between gap-2">
         <h3 className="font-semibold">Lịch gửi tự động theo ngày</h3><input type="date" aria-label="Ngày gửi Telegram" value={date}

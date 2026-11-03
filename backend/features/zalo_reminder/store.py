@@ -30,9 +30,11 @@ class RecipientStore:
                 row.display_name = person["name"]
         self.db.commit()
 
-    def record_delivery(self, id: str, name: str, status: str, error: str = "") -> None:
+    def record_delivery(self, id: str, name: str, status: str, error: str = "",
+                        message_type: str = "CUTOFF") -> None:
         self.db.add(ZaloDeliveryLog(
             zalo_id=id, display_name=name, trigger_type="TEST", status=status, error=error,
+            message_type=message_type,
         ))
         self.db.commit()
 
@@ -42,7 +44,7 @@ class RecipientStore:
         ).limit(30)).all()
         return [
             {"id": row.zalo_id, "name": row.display_name, "status": row.status,
-             "error": row.error, "trigger_type": row.trigger_type,
+             "error": row.error, "trigger_type": row.trigger_type, "message_type": row.message_type,
              "created_at": row.created_at.isoformat() + "Z"}
             for row in rows
         ]
