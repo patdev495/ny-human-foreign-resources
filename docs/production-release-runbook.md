@@ -116,7 +116,7 @@ if (Test-Path "$root\zalo_bot\dist\index.mjs") {
 if (Test-Path "$stage\bot-deps.zip") {
     Compress-Archive -Path "$root\zalo_bot\node_modules" -DestinationPath "$backup\bot-deps.zip"
 }
-git -C $root fetch "$stage\source.bundle" HEAD
+git -C $root fetch "$stage\source.bundle" refs/heads/master
 if ($LASTEXITCODE -ne 0) { throw 'Không đọc được Git bundle' }
 git -C $root merge-base --is-ancestor $old FETCH_HEAD
 if ($LASTEXITCODE -ne 0) { throw 'Bundle không tiếp nối bản production hiện tại' }

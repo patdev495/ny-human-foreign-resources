@@ -42,7 +42,7 @@ if ($hasBotDeps) {
     }
     Compress-Archive -Path "$root\zalo_bot\node_modules" -DestinationPath "$backup\bot-deps.zip"
 }
-git -C $root fetch "$stage\source.bundle" HEAD
+git -C $root fetch "$stage\source.bundle" refs/heads/master
 if ($LASTEXITCODE -ne 0) { throw 'Cannot fetch bundle.' }
 if ((git -C $root rev-parse FETCH_HEAD).Trim() -ne $New) { throw 'Bundle target mismatch.' }
 git -C $root merge-base --is-ancestor $Old FETCH_HEAD
