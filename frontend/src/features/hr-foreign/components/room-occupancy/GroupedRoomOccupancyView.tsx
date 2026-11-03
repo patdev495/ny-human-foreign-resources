@@ -6,6 +6,8 @@ interface Props {
   onCheckOut: (res: ResidentInfo, unitName: string) => void;
 }
 
+const roomNumberCollator = new Intl.Collator("vi", { numeric: true, sensitivity: "base" });
+
 export const GroupedRoomOccupancyView: React.FC<Props> = ({
   filteredOccupancy,
   onCheckOut,
@@ -18,9 +20,19 @@ export const GroupedRoomOccupancyView: React.FC<Props> = ({
     );
   }
 
+  const orderedOccupancy = [...filteredOccupancy].sort((first, second) => {
+    if (first.accommodation_type !== second.accommodation_type) {
+      return first.accommodation_type === "KTX" ? -1 : 1;
+    }
+    return roomNumberCollator.compare(
+      first.room_number || first.unit_name,
+      second.room_number || second.unit_name,
+    );
+  });
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredOccupancy.map((room) => {
+      {orderedOccupancy.map((room) => {
         const isHotel = room.accommodation_type === "HOTEL";
         const unitTitle = isHotel ? room.unit_name : `Phòng ${room.unit_name}`;
         const hasResidents = room.active_count + room.scheduled_count > 0;
