@@ -14,6 +14,10 @@ Default label vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `read
 
 Single-context repo — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+### Production deployment
+
+When asked to deploy or invoked with `/deploy`, use the project skill at `.agents/skills/deploy/SKILL.md`.
+
 ## Tech Stack
 
 ### Backend
