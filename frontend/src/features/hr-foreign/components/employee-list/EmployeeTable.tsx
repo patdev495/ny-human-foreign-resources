@@ -9,11 +9,11 @@ interface Props {
   onDelete: (emp: ForeignEmployee) => void;
 }
 
-const columns = "2xl:grid 2xl:grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_auto]";
+const columns = "@min-[56rem]:grid @min-[56rem]:grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_auto]";
 
 export function EmployeeTable({ filtered, thresholdDays, onOpenProfile, onEdit, onDelete }: Props) {
   return (
-    <section className="executive-card min-w-0 border border-slate-200/85 shadow-sm" aria-label="Danh sách hồ sơ nhân sự">
+    <section className="executive-card @container min-w-0 border border-slate-200/85 shadow-sm" aria-label="Danh sách hồ sơ nhân sự">
       <div className={`hidden ${columns} gap-5 border-b border-slate-200/90 bg-slate-50/90 px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500`} aria-hidden="true">
         <span>Nhân sự & định danh</span>
         <span>Tình trạng & chỗ ở</span>

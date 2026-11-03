@@ -33,7 +33,7 @@ export function EmployeeListRow({ employee, thresholdDays, columns, onOpenProfil
   const name = employee.name_latin || "Chưa có tên";
 
   return (
-    <li className={`grid min-w-0 gap-4 px-5 py-5 transition-colors hover:bg-slate-50/70 ${columns} 2xl:items-center 2xl:gap-5`}>
+    <li className={`grid min-w-0 gap-4 px-5 py-5 transition-colors hover:bg-slate-50/70 ${columns} @min-[56rem]:items-center @min-[56rem]:gap-5`}>
       <div className="flex min-w-0 items-start gap-3">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-xs font-black shadow-xs ${avatarColors[Math.abs(employee.id) % avatarColors.length]}`} aria-hidden="true">
           {initials(name)}
@@ -53,7 +53,7 @@ export function EmployeeListRow({ employee, thresholdDays, columns, onOpenProfil
       </div>
 
       <div className="min-w-0 space-y-2">
-        <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 2xl:hidden">Tình trạng & chỗ ở</span>
+        <span className="block text-[11px] font-bold uppercase tracking-wide text-slate-500 @min-[56rem]:hidden">Tình trạng & chỗ ở</span>
         <StatusBadge
           label={employee.is_in_vietnam ? "Đang ở VN" : "Đã về nước"}
           status={employee.is_in_vietnam ? "success" : "neutral"}
@@ -66,7 +66,7 @@ export function EmployeeListRow({ employee, thresholdDays, columns, onOpenProfil
       </div>
 
       <div className="min-w-0">
-        <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-500 2xl:hidden">Giấy tờ pháp lý</span>
+        <span className="mb-2 block text-[11px] font-bold uppercase tracking-wide text-slate-500 @min-[56rem]:hidden">Giấy tờ pháp lý</span>
         <div className="flex flex-wrap gap-1.5">
           <PassportBadge emp={employee} threshold={thresholdDays} />
           <DocBadge dateStr={employee.latest_gpld_expiry} label="GPLĐ" threshold={thresholdDays} />
@@ -74,7 +74,7 @@ export function EmployeeListRow({ employee, thresholdDays, columns, onOpenProfil
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 2xl:justify-end">
+      <div className="flex items-center gap-1.5 @min-[56rem]:justify-end">
         <button type="button" onClick={() => onOpenProfile(employee)} className="inline-flex min-h-10 items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-indigo-600">
           <Eye className="h-4 w-4" aria-hidden="true" /> Hồ sơ
         </button>
