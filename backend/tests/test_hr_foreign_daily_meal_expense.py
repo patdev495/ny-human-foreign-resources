@@ -120,3 +120,12 @@ def test_generate_daily_meal_expense_excel(client: TestClient) -> None:
     assert "hoa quả" in str(sheet.cell(6, 9).value)
     assert "Suất ăn tạp vụ" in str(sheet.cell(6, 10).value)
     assert "Tổng tiền" in str(sheet.cell(6, 13).value)
+
+    # Cost groups have clear vertical boundaries; the grand total stands out.
+    for column in (3, 6, 9, 10, 13):
+        assert sheet.cell(8, column).border.left.style == "medium"
+    assert sheet.cell(8, 4).border.left.style == "thin"
+    assert sheet.cell(6, 3).fill.fgColor.rgb.endswith("E7F0FA")
+    assert sheet.cell(6, 13).fill.fgColor.rgb.endswith("FFF0BF")
+    assert sheet.cell(sheet.max_row, 13).border.top.style == "medium"
+    assert sheet.cell(sheet.max_row, 13).fill.fgColor.rgb.endswith("E4EBF2")
