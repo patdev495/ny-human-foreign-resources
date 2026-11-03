@@ -49,6 +49,8 @@ def get_cutoff(_admin: User = Depends(require_admin), db: Session = Depends(get_
 def put_cutoff(
     payload: CutoffTime, _admin: User = Depends(require_admin), db: Session = Depends(get_db),
 ) -> CutoffTime:
+    if time.fromisoformat(payload.time) <= get_time_setting(db, "hr_pre_reminder_time", "16:00"):
+        raise HTTPException(422, "Giờ nhắc HR sớm phải trước giờ chốt cơm")
     set_time_setting(db, "meal_cutoff_time", time.fromisoformat(payload.time))
     return payload
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { telegramReminderApi as api } from "./api";
 import { botReminderApi } from "../bot-reminder/api";
+import { PreReminderTimeSetting } from "../bot-reminder/PreReminderTimeSetting";
 import type { TelegramBotState, TelegramDailyDelivery, TelegramDelivery, TelegramRecipient } from "./types";
 
 interface Props { onClose: () => void; onZalo: () => void }
@@ -60,6 +61,7 @@ export function TelegramReminderSettings({ onClose, onZalo }: Props) {
       </div>
       {error && <p role="alert" className="mb-3 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {message && <p role="status" className="mb-3 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+      <PreReminderTimeSetting />
       <section className="mb-4 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold">Mốc chốt Báo cơm và thông báo (dùng chung)</h3>
         <p className="mt-1 text-sm text-slate-600">Giờ Việt Nam. Mốc này cũng là hạn Báo cơm và thời điểm HR bắt đầu chốt bữa.</p>

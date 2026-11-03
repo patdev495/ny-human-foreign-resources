@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { zaloReminderApi } from "./api";
 import { botReminderApi } from "../bot-reminder/api";
+import { PreReminderTimeSetting } from "../bot-reminder/PreReminderTimeSetting";
 import type { ZaloBotStatus, ZaloDailyDelivery, ZaloDelivery, ZaloPerson } from "./types";
 
 interface Props { onClose: () => void; onTelegram: () => void }
@@ -152,6 +153,7 @@ export function ZaloReminderSettings({ onClose, onTelegram }: Props) {
       {error && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
       {connectionError && <p role="alert" className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{connectionError}</p>}
       {message && <p role="status" className="mb-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{message}</p>}
+      <PreReminderTimeSetting />
       <section className="mb-5 rounded-xl border border-slate-200 p-4">
         <h3 className="font-semibold text-slate-900">Mốc chốt Báo cơm và thông báo (dùng chung)</h3>
         <p className="mt-1 text-sm text-slate-600">Giờ Việt Nam. Nhân viên hết hạn gửi Báo cơm, HR bắt đầu được chốt bữa Sáng/Tối và bot gửi lời nhắc cùng mốc này. Hạn Báo giờ tan làm giữ 17:00.</p>

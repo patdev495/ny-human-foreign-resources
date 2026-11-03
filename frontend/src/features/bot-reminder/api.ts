@@ -14,4 +14,8 @@ export const botReminderApi = {
   saveCutoff: (time: string): Promise<{ time: string }> => json("/cutoff", {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ time }),
   }),
+  preReminder: (): Promise<{ time: string }> => json("/pre-reminder"),
+  savePreReminder: (time: string): Promise<{ time: string }> => json("/pre-reminder", {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ time }),
+  }),
 };
