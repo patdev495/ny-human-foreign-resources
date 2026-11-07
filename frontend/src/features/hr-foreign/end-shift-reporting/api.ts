@@ -1,4 +1,4 @@
-import type { ReportingDate, ShiftReportView, ShiftSelection } from './types'
+import type { DemandView, ReportingDate, ShiftReportView, ShiftSelection } from './types'
 
 const BASE = '/api/end-shift-reporting'
 
@@ -12,6 +12,10 @@ async function read<T>(response: Response): Promise<T> {
 
 export function getShiftDates(): Promise<ReportingDate[]> {
   return fetch(`${BASE}/dates`).then(read<ReportingDate[]>)
+}
+
+export function getTodayShiftDemand(signal: AbortSignal): Promise<DemandView> {
+  return fetch(`${BASE}/demand/today`, { signal, cache: 'no-store' }).then(read<DemandView>)
 }
 
 export function getShiftReport(employeeId: number, date: string): Promise<ShiftReportView> {

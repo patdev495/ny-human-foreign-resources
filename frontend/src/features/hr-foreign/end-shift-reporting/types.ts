@@ -17,3 +17,23 @@ export interface ShiftReportView {
   report_date: string
   current: ShiftSelection | null
 }
+
+export type DemandKey = 'CN09_1730' | 'CN09_2000' | 'CN15_1730' | 'CN15_2000' | 'SELF_TRAVEL' | 'NOT_REPORTED'
+
+export interface DemandPerson {
+  employee_id: number
+  name_latin: string
+  name_chinese: string | null
+  room_number: string | null
+}
+
+export interface DemandGroup {
+  key: DemandKey
+  count: number
+  people: DemandPerson[]
+}
+
+export interface DemandView {
+  date: string
+  groups: DemandGroup[]
+}

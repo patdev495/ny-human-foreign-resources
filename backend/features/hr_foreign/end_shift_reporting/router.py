@@ -7,12 +7,17 @@ from sqlalchemy.orm import Session
 
 from core.database import get_db
 from features.hr_foreign.end_shift_reporting import rules
-from features.hr_foreign.end_shift_reporting.schemas import EndShiftReportView, EndShiftSubmission
-from features.hr_foreign.end_shift_reporting.service import is_eligible, report_view, submit_report
+from features.hr_foreign.end_shift_reporting.schemas import EndShiftDemandView, EndShiftReportView, EndShiftSubmission
+from features.hr_foreign.end_shift_reporting.service import demand_view, is_eligible, report_view, submit_report
 from features.hr_foreign.meal_reporting import rules as meal_rules
 from features.hr_foreign.models import ForeignEmployee
 
 router = APIRouter(prefix="/api/end-shift-reporting")
+
+
+@router.get("/demand/today", response_model=EndShiftDemandView)
+def get_today_demand(db: Session = Depends(get_db)) -> EndShiftDemandView:
+    return demand_view(db, meal_rules.now_vietnam().date())
 
 
 @router.get("/dates")

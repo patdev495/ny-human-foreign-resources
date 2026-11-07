@@ -153,6 +153,10 @@ def test_hr_sees_six_end_shift_groups_including_unreported(
 
     result = hr.get("/api/hr-foreign/end-shift/demand?date=2026-11-01")
     assert result.status_code == 200, result.text
+    today = public.get("/api/end-shift-reporting/demand/today")
+    assert today.status_code == 200, today.text
+    assert today.json() == result.json()
+    assert public.get("/api/hr-foreign/end-shift/demand?date=2026-11-01").status_code == 404
     groups = {group["key"]: group for group in result.json()["groups"]}
     assert set(groups) == {"CN09_1730", "CN09_2000", "CN15_1730", "CN15_2000", "SELF_TRAVEL", "NOT_REPORTED"}
     assert groups["CN09_1730"]["count"] == 1
@@ -166,3 +170,17 @@ def test_hr_sees_six_end_shift_groups_including_unreported(
     revised_groups = {group["key"]: group for group in revised["groups"]}
     assert revised_groups["CN09_1730"]["count"] == 0
     assert [person["name_latin"] for person in revised_groups["CN15_2000"]["people"]] == ["LIN WEI"]
+    assert public.get("/api/end-shift-reporting/demand/today").json() == revised
+
+    monkeypatch.setattr(meal_rules, "now_vietnam", lambda: dt.datetime(
+        2026, 11, 1, 20, 0, tzinfo=dt.timezone(dt.timedelta(hours=7)),
+    ))
+    assert public.get("/api/end-shift-reporting/demand/today").json() == revised
+
+    monkeypatch.setattr(meal_rules, "now_vietnam", lambda: dt.datetime(
+        2026, 11, 2, 0, 1, tzinfo=dt.timezone(dt.timedelta(hours=7)),
+    ))
+    tomorrow = public.get("/api/end-shift-reporting/demand/today").json()
+    assert tomorrow["date"] == "2026-11-02"
+    assert all(group["count"] == 0 for group in tomorrow["groups"] if group["key"] != "NOT_REPORTED")
+    assert next(group["count"] for group in tomorrow["groups"] if group["key"] == "NOT_REPORTED") == 3

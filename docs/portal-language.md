@@ -4,6 +4,15 @@
 
 Cổng nhân viên trên cổng 8006 gồm luồng chọn/xác nhận nhân viên, Báo cơm và Báo giờ tan làm. Bộ chọn ngôn ngữ có **繁體中文** (`zh-TW`, cách viết Đài Loan) và **English** (`en`). Không thay đổi giao diện HR trên cổng 8004.
 
+## Xe về KTX hôm nay
+
+- Trên màn chọn chức năng, bên dưới thẻ chào nhân viên và hai nút khai báo, có thẻ riêng **今日返回宿舍搭車人數** / **Today’s rides to the dormitory**.
+- Thẻ hiển thị ngày hôm nay theo giờ Việt Nam và tổng số đã đăng ký cần xe. Sáu nhóm giống màn HR: CN09/CN15 lúc 17:30/20:00, Tự di chuyển và Chưa báo. Hai nhóm cuối không cộng vào tổng người cần xe.
+- Bấm từng hàng để mở/đóng danh sách tên Latin, tên Trung nếu có và phòng KTX. Nhóm cần xe của người đang chọn được đánh dấu và mở sẵn; có thể mở nhiều nhóm cùng lúc.
+- Số lượng thể hiện đăng ký theo giờ tan làm, không phải xác nhận đã có mặt hoặc lịch xe chạy. Mọi người tự đối chiếu khi tập trung.
+- Dữ liệu tự làm mới mỗi phút khi trang hiển thị, khi quay lại thẻ trình duyệt và khi bấm nút làm mới. Hiển thị thời điểm tải thành công gần nhất; nếu cập nhật thất bại, báo rõ dữ liệu đang giữ là dữ liệu lần trước.
+- Cổng nhân viên chỉ tra cứu ngày hiện tại qua API riêng; màn tra cứu theo ngày của HR vẫn giữ nguyên.
+
 ## Hành vi đã thống nhất
 
 - Khi trình duyệt chưa lưu lựa chọn, toàn bộ giao diện mở bằng `zh-TW`, bất kể ngôn ngữ trình duyệt hoặc nhân viên được chọn.

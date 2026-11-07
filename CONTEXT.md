@@ -82,6 +82,9 @@ Mốc 17h của chính ngày làm việc được khai báo, tính theo giờ Vi
 **Nhu cầu xe tan làm**:
 Danh sách trạng thái khai báo của những Nhân viên nước ngoài thuộc diện báo giờ tan làm mà HR tra cứu theo ngày, điểm đón và phương án tan làm để tự sắp xếp xe. Danh sách này bao gồm cả người Chưa báo giờ tan làm, không phải bản phân xe hoặc phân tài xế.
 
+**Nhóm đi xe tan làm**:
+Những Nhân viên nước ngoài đã báo cần xe về KTX cùng ngày, cùng điểm đón tại xưởng và cùng giờ tan làm. Số người trong nhóm được công khai cho mọi người trên cổng nhân viên để đối chiếu lúc tập trung và chờ nhau; số đã đăng ký không đồng nghĩa với số đã có mặt.
+
 **Thông báo chốt Báo cơm**:
 Lời nhắc ngắn gửi riêng cho từng HR tại mốc chốt Báo cơm do admin 8004 cấu hình (mặc định 17:00 giờ Việt Nam), hằng ngày kể cả Chủ nhật và ngày lễ. Cùng mốc là hạn nhân viên gửi/sửa Báo cơm cho ngày ăn hôm sau và thời điểm sớm nhất HR được chốt bữa Sáng/Tối. Thông báo yêu cầu HR vào hệ thống để tự chốt Báo cơm và sắp xếp xe tan làm; không thay cho các thao tác đó.
 

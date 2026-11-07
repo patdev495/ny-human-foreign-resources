@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { getDates, getPeople, getReport, saveReport } from './api'
 import type { MealSelection, PublicPerson, ReportingDate } from './types'
 import { EndShiftReporting } from '../end-shift-reporting/EndShiftReporting'
+import { TodayShuttleDemand } from '../end-shift-reporting/TodayShuttleDemand'
 import { formatPortalDate, getPortalText, localizePortalError, readPortalLocale, savePortalLocale } from '../portal-localization'
 import type { PortalLocale, PortalText } from '../portal-localization'
 
 type Screen = 'choose' | 'confirm' | 'menu' | 'report' | 'end-shift'
 const STORAGE_KEY = 'ny-meal-person-id'
 const button = 'w-full rounded-2xl px-5 py-4 font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50'
+const menuButton = 'w-full rounded-2xl px-4 py-3 text-left font-semibold transition-colors bg-indigo-700 text-white hover:bg-indigo-800'
 
 export function MealReportingApp() {
   const [locale, setLocale] = useState<PortalLocale>(readPortalLocale)
@@ -170,9 +172,9 @@ export function MealReportingApp() {
     }
   }
 
-  return <main className="min-h-dvh bg-slate-50 px-4 py-6 text-slate-900 sm:py-12">
-    <div className="mx-auto max-w-lg space-y-6">
-      <header className="rounded-3xl bg-indigo-950 px-3 py-7 text-white shadow-lg sm:px-6">
+  return <main className="min-h-dvh bg-slate-50 px-4 py-3 text-slate-900 sm:py-6">
+    <div className="mx-auto max-w-lg space-y-3">
+      <header className="rounded-3xl bg-indigo-950 px-3 py-3 text-white shadow-lg sm:px-5">
         <div className="flex items-center justify-between gap-2">
           <h1 className="whitespace-nowrap text-[clamp(9px,2.7vw,16px)] font-bold text-white">Nienyi Vietnam宿舍管理</h1>
           <label className="text-xs font-semibold text-indigo-100">{text.language}
@@ -226,12 +228,14 @@ export function MealReportingApp() {
         <button type="button" onClick={() => setScreen('choose')} className={`${button} bg-slate-100 text-slate-800 hover:bg-slate-200`}>{text.chooseAnother}</button>
       </section>}
 
-      {!loading && screen === 'menu' && person && <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      {!loading && screen === 'menu' && person && <section className="space-y-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
         <div><p className="text-sm text-slate-600">{text.welcome}</p><h2 className="text-xl font-bold">{person.name_latin}</h2><p className="text-sm text-slate-600">{text.room} {person.room_number}</p></div>
-        <button type="button" onClick={() => setScreen('report')} className={`${button} bg-indigo-700 text-left text-white hover:bg-indigo-800`}>🍽️ {text.mealReporting} <span className="block text-sm font-normal text-indigo-100">{text.breakfastAndDinner}</span></button>
-        <button type="button" onClick={() => setScreen('end-shift')} className={`${button} bg-indigo-700 text-left text-white hover:bg-indigo-800`}>🕒 {text.shiftReporting} <span className="block text-sm font-normal text-indigo-100">{text.shiftMenuDetail}</span></button>
-        <button type="button" onClick={signOut} className="w-full py-3 text-sm font-semibold text-slate-600 underline">{text.signOut}</button>
+        <button type="button" onClick={() => setScreen('report')} className={menuButton}>🍽️ {text.mealReporting} <span className="block text-sm font-normal text-indigo-100">{text.breakfastAndDinner}</span></button>
+        <button type="button" onClick={() => setScreen('end-shift')} className={menuButton}>🕒 {text.shiftReporting} <span className="block text-sm font-normal text-indigo-100">{text.shiftMenuDetail}</span></button>
+        <button type="button" onClick={signOut} className="min-h-11 w-full py-2 text-sm font-semibold text-slate-600 underline">{text.signOut}</button>
       </section>}
+
+      {!loading && screen === 'menu' && person && <TodayShuttleDemand employeeId={person.id} locale={locale} />}
 
       {!loading && screen === 'report' && person && <section className="space-y-5 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <button type="button" onClick={() => setScreen('menu')} className="text-sm font-semibold text-indigo-700">← {text.functions}</button>
