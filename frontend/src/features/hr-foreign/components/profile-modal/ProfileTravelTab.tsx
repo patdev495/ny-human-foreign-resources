@@ -36,7 +36,8 @@ export const ProfileTravelTab: React.FC<Props> = ({
           const isOpenTrip = !tr.actual_exit_date;
           const entryStr = tr.entry_date ? String(tr.entry_date).trim() : "";
           const hasEntryDate = entryStr.length > 0 && entryStr !== "null" && entryStr !== "None";
-          const isMissingEntryDate = !hasEntryDate && (Boolean(tr.actual_exit_date) || Boolean(tr.expected_exit_date));
+          const isPlanned = !hasEntryDate && !tr.actual_exit_date && Boolean(tr.expected_entry_date || tr.expected_exit_date);
+          const isMissingEntryDate = !hasEntryDate && Boolean(tr.actual_exit_date);
 
           return (
             <div
@@ -52,7 +53,11 @@ export const ProfileTravelTab: React.FC<Props> = ({
                   <span className="font-bold text-slate-900">
                     Đợt #{travelRecords.length - index}
                   </span>
-                  {isOpenTrip ? (
+                  {isPlanned ? (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">
+                      Dự kiến
+                    </span>
+                  ) : isOpenTrip ? (
                     <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
                       Đang ở Việt Nam
                     </span>
@@ -67,11 +72,19 @@ export const ProfileTravelTab: React.FC<Props> = ({
                     </span>
                   )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-slate-700 font-mono text-[11px] pt-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-slate-700 font-mono text-[11px] pt-1">
+                  <div>
+                    ⏳ Dự kiến sang:{" "}
+                    <span className="font-medium text-amber-700">
+                      {tr.expected_entry_date || "-"}
+                    </span>
+                  </div>
                   <div>
                     📅 Đến:{" "}
                     {hasEntryDate ? (
                       <span className="font-bold">{entryStr}</span>
+                    ) : isPlanned ? (
+                      <span className="text-slate-500">Chưa có ngày thực tế</span>
                     ) : (
                       <span className="font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded border border-amber-300">
                         ⚠️ Chưa nhập ngày sang
@@ -88,7 +101,7 @@ export const ProfileTravelTab: React.FC<Props> = ({
                   <div>
                     ✈️ Thực tế về:{" "}
                     <span className="font-bold text-rose-700">
-                      {tr.actual_exit_date || "Chưa về nước"}
+                      {tr.actual_exit_date || (isPlanned ? "Chưa có ngày thực tế" : "Chưa về nước")}
                     </span>
                   </div>
                 </div>

@@ -70,7 +70,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
 
   const hasMissingEntryDate = Boolean(
     data?.travel_records?.some(
-      (tr: any) => !tr.entry_date && (Boolean(tr.actual_exit_date) || Boolean(tr.expected_exit_date))
+      (tr) => !tr.entry_date && Boolean(tr.actual_exit_date)
     )
   );
 
