@@ -16,7 +16,7 @@ Hai cổng Python dùng `C:\Users\Admin\.local\bin\uv.exe` và cùng `backend/.e
 
 ## 1. Hoàn tất mã trên máy phát triển
 
-1. Chạy kiểm thử và build liên quan, tối thiểu:
+1. Hoàn tất kiểm thử và build liên quan trong quá trình phát triển. Khi người dùng ra lệnh deploy, hiểu rằng các bước này đã thành công; dùng lại artifact đã chuẩn bị, không chạy lại trước commit hoặc trong deploy mặc định. Các lệnh dưới đây là hướng dẫn chuẩn bị ở dev, không phải các bước lặp lại mỗi lần deploy:
 
    ```powershell
    cd backend
@@ -45,7 +45,14 @@ Hai cổng Python dùng `C:\Users\Admin\.local\bin\uv.exe` và cùng `backend/.e
    ```
 
    Nếu merge không thể fast-forward, giải quyết trên nhánh tính năng rồi kiểm thử lại; không dùng `--force` với `master`.
-   Sau khi merge, build lại portal từ `master`; nếu bản `frontend/dist/` thay đổi thì commit bản build đó trước khi push.
+   Nếu chỉ fast-forward đúng commit đã kiểm tra/build, dùng lại artifact đã chuẩn bị. Nếu tích hợp upstream hoặc sửa mã làm thay đổi đầu vào build, chỉ kiểm tra/build lại phần bị ảnh hưởng; nếu `frontend/dist/` thay đổi thì commit bản build đó trước khi push.
+
+### Script phát hành
+
+Chạy `.agents/skills/deploy/deploy.ps1` để dùng artifact đã chuẩn bị. Mặc định không chạy lại test, typecheck hoặc build. Script kiểm tra Git và artifact, push, đóng gói, kiểm tra SHA-256, sao lưu, cập nhật dịch vụ và kiểm tra HTTP. Artifact còn thiếu sẽ dừng với thông báo tên thành phần cần build ở dev.
+
+- `-CheckOnly`: chỉ kiểm tra trước phát hành; không push hoặc thay production.
+- `-Validate`: chạy lại toàn bộ test/build khi người dùng yêu cầu rõ; có thể kết hợp `-CheckOnly`.
 
 ## 2. Đóng gói từ máy phát triển
 

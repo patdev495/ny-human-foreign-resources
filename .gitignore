@@ -35,6 +35,7 @@ zalo_bot/data/
 zalo_bot/dist/
 zalo_bot/runtime/
 .eslintcache
+temp/
 
 # Logs
 *.log

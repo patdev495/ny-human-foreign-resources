@@ -1,4 +1,4 @@
-param([switch]$CheckOnly)
+param([switch]$CheckOnly, [switch]$Validate)
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -26,23 +26,33 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Production HEAD is not an ancestor of local master.' }
     if ($old -eq $new -and -not $CheckOnly) { throw 'Production already runs this commit.' }
 
-    Push-Location (Join-Path $repo 'backend')
-    try { uv run pytest -q --disable-warnings; if ($LASTEXITCODE -ne 0) { throw 'Backend tests failed.' } }
-    finally { Pop-Location }
-    Push-Location (Join-Path $repo 'frontend')
-    try {
-        npm run build; if ($LASTEXITCODE -ne 0) { throw 'HR frontend build failed.' }
-        npm run build:portal; if ($LASTEXITCODE -ne 0) { throw 'Portal build failed.' }
-    } finally { Pop-Location }
-    Push-Location (Join-Path $repo 'zalo_bot')
-    try {
-        npm test; if ($LASTEXITCODE -ne 0) { throw 'Bot tests failed.' }
-        npm run typecheck; if ($LASTEXITCODE -ne 0) { throw 'Bot typecheck failed.' }
-        npm run build; if ($LASTEXITCODE -ne 0) { throw 'Bot build failed.' }
-    } finally { Pop-Location }
+    # A deploy request means validation and builds have already passed in dev.
+    # Re-run them only when explicitly requested.
+    if ($Validate) {
+        Push-Location (Join-Path $repo 'backend')
+        try { uv run pytest -q --disable-warnings; if ($LASTEXITCODE -ne 0) { throw 'Backend tests failed.' } }
+        finally { Pop-Location }
+        Push-Location (Join-Path $repo 'frontend')
+        try {
+            npm run build; if ($LASTEXITCODE -ne 0) { throw 'HR frontend build failed.' }
+            npm run build:portal; if ($LASTEXITCODE -ne 0) { throw 'Portal build failed.' }
+        } finally { Pop-Location }
+        Push-Location (Join-Path $repo 'zalo_bot')
+        try {
+            npm test; if ($LASTEXITCODE -ne 0) { throw 'Bot tests failed.' }
+            npm run typecheck; if ($LASTEXITCODE -ne 0) { throw 'Bot typecheck failed.' }
+            npm run build; if ($LASTEXITCODE -ne 0) { throw 'Bot build failed.' }
+        } finally { Pop-Location }
+        Assert-ReleaseFilesClean
+        git restore --worktree -- frontend/dist
+        if ($LASTEXITCODE -ne 0) { throw 'Cannot clear build-only line-ending changes.' }
+    }
+    foreach ($artifact in @('frontend/dist/index.html', 'frontend/portal-dist/portal.html', 'zalo_bot/dist/index.mjs')) {
+        if (-not (Test-Path -LiteralPath (Join-Path $repo $artifact) -PathType Leaf)) {
+            throw "Prepared artifact missing: $artifact. Build the affected component in dev before deploying."
+        }
+    }
     Assert-ReleaseFilesClean
-    git restore --worktree -- frontend/dist
-    if ($LASTEXITCODE -ne 0) { throw 'Cannot clear build-only line-ending changes.' }
     git diff --check HEAD -- backend frontend zalo_bot
     if ($LASTEXITCODE -ne 0) { throw 'Whitespace check failed.' }
     if ($CheckOnly) { Write-Output "CHECK_OK old=$old target=$new"; exit 0 }

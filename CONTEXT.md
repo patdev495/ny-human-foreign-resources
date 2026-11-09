@@ -98,10 +98,10 @@ Thao tác của admin gửi cả Thông báo nhắc HR trước giờ chốt và
 Những người HR được chọn riêng theo từng kênh để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
 
 **Kênh thông báo chốt Báo cơm**:
-Một trong hai nền tảng Zalo và Telegram mà admin có thể bật hoặc tắt độc lập ở mức toàn hệ thống để gửi Thông báo chốt Báo cơm. Mỗi kênh có danh sách người nhận và kết quả gửi riêng; có thể tắt cả hai kênh, và thay đổi sau mốc chốt có hiệu lực từ ngày hôm sau.
+Một trong ba nền tảng Zalo, Telegram và WeChat mà admin có thể bật hoặc tắt độc lập ở mức toàn hệ thống để gửi Thông báo chốt Báo cơm. Mỗi kênh có danh sách người nhận và kết quả gửi riêng; có thể tắt tất cả kênh, và thay đổi sau mốc chốt có hiệu lực từ ngày hôm sau.
 
 **Lượt gửi thông báo chốt Báo cơm**:
-Một lần gửi thông báo cho một người nhận trên một kênh vào một ngày chốt Báo cơm. Cùng một HR có thể có một lượt trên Zalo và một lượt trên Telegram trong ngày đó.
+Một lần gửi thông báo cho một người nhận trên một kênh vào một ngày chốt Báo cơm. Cùng một HR có thể có một lượt trên mỗi kênh Zalo, Telegram và WeChat trong ngày đó.
 
 **Đăng ký ăn thêm** (Extra Meal Request):
 Bản ghi bổ sung suất ăn theo quy trình quản lý hiện tại cho nhân sự không thuộc diện mặc định ăn KTX (ví dụ: nhân sự ở Khách sạn hoặc khách công tác). Báo cơm là nguồn xác định suất Sáng/Tối của Nhân viên nước ngoài trong quy trình mới.
