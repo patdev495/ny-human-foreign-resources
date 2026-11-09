@@ -72,9 +72,9 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
         if (!entryDate && !expectedEntryDate && !expectedExitDate) {
           throw new Error("Vui lòng nhập/cập nhật ít nhất 1 mốc ngày (Dự kiến sang, Thực tế đến VN, hoặc Dự kiến về)");
         }
-        if (entryDate) {
+        if (entryDate || expectedEntryDate) {
           await createTravelRecord(employee.id, {
-            entry_date: entryDate,
+            entry_date: entryDate || undefined,
             expected_entry_date: expectedEntryDate || undefined,
             expected_exit_date: expectedExitDate || undefined,
             notes: notes.trim() || undefined,
@@ -89,7 +89,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
       }
       onSuccess();
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi lưu dữ liệu");
     } finally {
       setSaving(false);

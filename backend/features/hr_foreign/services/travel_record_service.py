@@ -59,7 +59,11 @@ def list_travel_records(db: Session, emp_id: int) -> list[TravelRecord]:
         .filter(TravelRecord.employee_id == emp_id)
         .all()
     )
-    return sorted(records, key=lambda r: r.entry_date or datetime.date.min, reverse=True)
+    return sorted(
+        records,
+        key=lambda r: (r.entry_date or r.expected_entry_date or datetime.date.min, r.id),
+        reverse=True,
+    )
 
 
 def create_travel_record(
