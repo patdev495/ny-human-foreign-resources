@@ -292,25 +292,25 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          <div className="sticky bottom-0 -mx-5 -mb-5 flex flex-col-reverse gap-2 border-t border-slate-200 bg-white px-5 py-3 sm:static sm:mx-0 sm:mb-0 sm:flex-row sm:items-center sm:justify-end sm:gap-3 sm:border-0 sm:px-0 sm:pt-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className={systemSecondaryButton}
+              className={`${systemSecondaryButton} min-h-12 sm:min-h-9`}
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isBeforeLockWindow}
-              className={systemPrimaryButton}
+              className={`${systemPrimaryButton} min-h-12 sm:min-h-9`}
             >
               {isSubmitting
                 ? "Đang lưu..."
                 : isAlreadyLocked
-                ? " Cập Nhật Chốt Suất Ăn"
-                : " Xác Nhận Chốt Suất Ăn"}
+                ? "Cập nhật chốt"
+                : "Xác nhận chốt"}
             </button>
           </div>
         </form>

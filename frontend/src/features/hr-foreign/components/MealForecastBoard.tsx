@@ -68,6 +68,7 @@ export function MealForecastBoard() {
     {cutoffError && <div role="alert" className="rounded-sm border border-amber-200 bg-white p-3 text-sm text-amber-900">{cutoffError}<button type="button" onClick={() => void loadCutoff()} className={`${systemSecondaryButton} ml-2`}>Thử lại mốc chốt</button></div>}
     {error ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-4 text-sm"><p className="text-red-800">{error}</p><button type="button" onClick={() => void load(selectedDate)} className={`${systemSecondaryButton} mt-2`}>Thử lại</button></div>
       : !currentForecast ? <p role="status" className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải dự báo suất ăn…</p> : <>
+        <MealSessionCards forecast={currentForecast} onLockSession={setLockTarget} foreignLockDisabled={currentForecast.uses_meal_reports && cutoff === null} />
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
           <span>Loại ngày: {currentForecast.day_type_name ?? currentForecast.day_type}</span>
           <span>Sáng: {currentForecast.suggested_breakfast_price?.toLocaleString("vi-VN") ?? "—"} đ</span>
@@ -76,7 +77,6 @@ export function MealForecastBoard() {
           {currentForecast.event_notes && <span>{currentForecast.event_notes}</span>}
         </div>
         {currentForecast.uses_meal_reports && <MealReportingStatus key={selectedDate} date={selectedDate} employees={currentForecast.employees} />}
-        <MealSessionCards forecast={currentForecast} onLockSession={setLockTarget} foreignLockDisabled={currentForecast.uses_meal_reports && cutoff === null} />
         <MealEmployeeForecastTable key={selectedDate} filteredEmployees={employees} searchTerm={search} setSearchTerm={setSearch}
           lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={currentForecast.uses_meal_reports} />
       </>}
