@@ -18,7 +18,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
   onSuccess,
 }) => {
   const [entryDate, setEntryDate] = useState("");
-  const [expectedEntryDate, setExpectedEntryDate] = useState("");
   const [expectedExitDate, setExpectedExitDate] = useState("");
   const [actualExitDate, setActualExitDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -30,7 +29,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
       setError(null);
       setSaving(false);
       setEntryDate(travelRecord.entry_date || "");
-      setExpectedEntryDate(travelRecord.expected_entry_date || "");
       setExpectedExitDate(travelRecord.expected_exit_date || "");
       setActualExitDate(travelRecord.actual_exit_date || "");
       setNotes(travelRecord.notes || "");
@@ -55,7 +53,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
 
       await updateTravelRecord(employeeId, travelRecord.id, {
         entry_date: entryDate || undefined,
-        expected_entry_date: expectedEntryDate || null,
         expected_exit_date: expectedExitDate || undefined,
         actual_exit_date: actualExitDate || undefined,
         notes: notes.trim() || undefined,
@@ -63,7 +60,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
 
       onSuccess();
       onClose();
-    } catch (err: unknown) {
+    } catch (err: any) {
       setError(err instanceof Error ? err.message : "Có lỗi xảy ra khi lưu đợt lưu trú");
     } finally {
       setSaving(false);
@@ -103,18 +100,6 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
               <span>⚠️ Đợt này đang thiếu Ngày đến VN. Vui lòng bổ sung để chính xác hóa số ngày lưu trú.</span>
             </div>
           )}
-
-          <div>
-            <label className="block text-slate-700 font-bold mb-1">
-              ⏳ Ngày dự kiến sang Việt Nam
-            </label>
-            <input
-              type="date"
-              value={expectedEntryDate}
-              onChange={(e) => setExpectedEntryDate(e.target.value)}
-              className="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono font-medium bg-amber-50/30"
-            />
-          </div>
 
           <div>
             <label className="block text-slate-700 font-bold mb-1">
