@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import type { DailyMealEmployeeItem, DailyMealSessionSummary, MealSessionLock } from "../types";
 import { fetchMealLockHistory } from "../api";
+import { SystemDialog } from "../../../shared/components/SystemDialog";
+import { systemField, systemPrimaryButton, systemSecondaryButton } from "../../../shared/components/systemStyles";
 import { vietnamDate } from "./meal-forecast/vietnamDate";
 
 interface LockMealSessionModalProps {
@@ -35,10 +37,10 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 }) => {
   const sessionLabel =
     sessionSummary.meal_session === "BREAKFAST"
-      ? "Bữa Sáng (Nước ngoài) 🍳"
+      ? "Bữa Sáng (Nước ngoài) "
       : sessionSummary.meal_session === "LUNCH"
-      ? "Bữa Trưa (Lao công) ☀️"
-      : "Bữa Tối (Nước ngoài) 🌙";
+      ? "Bữa Trưa (Tạp vụ) "
+      : "Bữa Tối (Nước ngoài) ";
 
   const isAlreadyLocked = sessionSummary.is_locked;
   const isNewForeignLock = usesMealReports && sessionSummary.meal_session !== "LUNCH";
@@ -75,50 +77,14 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Dragging logic
-  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    // Only trigger drag if not clicking interactive elements like button or input
-    const target = e.target as HTMLElement;
-    if (target.closest("button") || target.closest("input") || target.closest("textarea")) return;
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-      setPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
-    }
-    return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging, dragStart]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (isNewForeignLock && Date.now() < deadline) {
       setErrorMsg(`Chỉ được chốt từ ${cutoff} ngày hôm trước theo giờ Việt Nam.`);
       return;
     }
     if (isSunday && !confirmedSunday) {
-      setErrorMsg("⚠️ Cảnh báo: Ngày được chọn chốt là Chủ Nhật (ngày Chủ Nhật thực tế không tính suất ăn). Vui lòng tích chọn ô xác nhận đồng ý bên dưới.");
+      setErrorMsg(" Cảnh báo: Ngày được chọn chốt là Chủ Nhật (ngày Chủ Nhật thực tế không tính suất ăn). Vui lòng tích chọn ô xác nhận đồng ý bên dưới.");
       return;
     }
     if (isPastDate && !confirmedPast) {
@@ -163,67 +129,36 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
 
   const delta = finalCount - sessionSummary.calculated_meal_count;
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-hidden">
-      <div
-        style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
-        className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150 transition-shadow"
-      >
-        {/* Draggable Modal Header */}
-        <div
-          onMouseDown={handleMouseDown}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-white flex items-center justify-between cursor-grab active:cursor-grabbing select-none shrink-0"
-          title="Kéo rê thanh tiêu đề này để di chuyển cửa sổ"
-        >
-          <div className="flex items-center gap-2 pointer-events-none">
-            <span className="text-xl">{isAlreadyLocked ? "✏️" : "🔒"}</span>
-            <div>
-              <h2 className="font-bold text-lg leading-tight">
-                {isAlreadyLocked ? "Cập nhật Chốt Suất ăn" : "Chốt Suất ăn"} {sessionLabel}
-              </h2>
-              <p className="text-amber-100 text-xs mt-0.5 font-medium">
-                Ngày <strong>{date}</strong> — {dayTypeName || "Ngày bình thường"} <span className="opacity-75">✋ (Kéo di chuyển)</span>
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-amber-100 hover:text-white hover:bg-amber-700/50 p-1.5 rounded-lg transition-colors cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Scrollable Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-70px)]">
+  return <SystemDialog isOpen onClose={onClose} title={`${isAlreadyLocked ? "Chốt lại" : "Chốt suất ăn"} · ${sessionLabel}`} wide>
+    <p className="mb-4 text-sm text-slate-600">Ngày {date} · {dayTypeName || "Ngày bình thường"}</p>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
-              ⚠️ {errorMsg}
+            <div role="alert" className="p-3 bg-rose-50 border border-rose-200 rounded-sm text-xs text-rose-700 font-medium">
+               {errorMsg}
             </div>
           )}
 
           {/* Stat summary */}
-          <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-2 text-xs">
+          <div className="bg-slate-50 border border-slate-200 rounded-sm p-3.5 space-y-2 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-amber-800 font-medium">Loại ngày áp dụng:</span>
-              <span className="font-extrabold text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-200">
-                🏷️ {dayTypeName || "Ngày bình thường"}
+              <span className="text-slate-700 font-medium">Loại ngày áp dụng:</span>
+              <span className="font-semibold text-slate-900 px-2.5 py-0.5">
+                 {dayTypeName || "Ngày bình thường"}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-amber-800 font-medium">Số suất tính toán tự động:</span>
-              <span className="font-bold text-amber-900 text-sm">
+              <span className="text-slate-700 font-medium">Số suất tính toán tự động:</span>
+              <span className="font-medium text-slate-900 text-sm">
                 {sessionSummary.calculated_meal_count} suất
               </span>
             </div>
           </div>
 
           {/* Final Count Input */}
-          {isBeforeLockWindow && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-xs font-semibold text-rose-800">Chỉ được chốt từ {cutoff} ngày hôm trước theo giờ Việt Nam.</p>}
-          {isNewForeignLock && <details className="rounded-xl border border-slate-200 p-3 text-xs">
-            <summary className="cursor-pointer font-bold text-slate-700">Xem chi tiết Báo cơm theo bữa</summary>
-            <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+          {isBeforeLockWindow && <p role="alert" className="rounded-sm bg-rose-50 p-3 text-xs font-semibold text-rose-800">Chỉ được chốt từ {cutoff} ngày hôm trước theo giờ Việt Nam.</p>}
+          {isNewForeignLock && <details className="rounded-sm border border-slate-200 p-3 text-xs">
+            <summary className="cursor-pointer font-medium text-slate-700">Xem chi tiết Báo cơm theo bữa</summary>
+            <div className="mt-2 space-y-1">
               {employees.filter(employee => employee.accommodation_type === "KTX").map(employee => {
                 const status = sessionSummary.meal_session === "BREAKFAST" ? employee.breakfast_report_status : employee.dinner_report_status;
                 const label = status === "EATING" ? "Có ăn" : status === "NOT_EATING" ? "Không ăn" : status === "NOT_REPORTED" ? "Chưa báo cơm" : "Không đủ điều kiện";
@@ -231,75 +166,75 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
               })}
             </div>
           </details>}
-          {history.length > 0 && <details className="rounded-xl border border-slate-200 p-3 text-xs">
-            <summary className="cursor-pointer font-bold text-slate-700">Lịch sử chốt ({history.length})</summary>
+          {history.length > 0 && <details className="rounded-sm border border-slate-200 p-3 text-xs">
+            <summary className="cursor-pointer font-medium text-slate-700">Lịch sử chốt ({history.length})</summary>
             <ol className="mt-2 space-y-1">{history.map(item => <li key={item.id}>{new Date(item.locked_at).toLocaleString("vi-VN")}: {item.final_meal_count} suất · {item.locked_price_per_meal.toLocaleString("vi-VN")}đ{item.notes ? ` · ${item.notes}` : ""}</li>)}</ol>
           </details>}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label htmlFor="meal-final-count" className="block text-xs font-medium text-slate-700 mb-1">
               Số suất thực tế chốt báo Nhà bếp <span className="text-rose-500">*</span>
             </label>
-            <input
+            <input id="meal-final-count"
               type="number"
               min="0"
               value={finalCount}
               onChange={(e) => setFinalCount(parseInt(e.target.value) || 0)}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+              className={systemField}
               required
             />
             {delta !== 0 && (
-              <p className={`text-xs font-bold mt-1 ${delta > 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                {delta > 0 ? `▲ Điều chỉnh tăng +${delta} suất` : `▼ Điều chỉnh giảm ${delta} suất`}
+              <p className={`text-xs font-medium mt-1 ${delta > 0 ? "text-slate-700" : "text-rose-600"}`}>
+                {delta > 0 ? `Điều chỉnh tăng +${delta} suất` : `Điều chỉnh giảm ${delta} suất`}
               </p>
             )}
           </div>
 
           {/* Locked Price Input */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label htmlFor="meal-lock-price" className="block text-xs font-medium text-slate-700 mb-1">
               {isNewForeignLock ? "Đơn giá theo cấu hình (VNĐ / suất)" : "Đơn giá chốt (VNĐ / suất)"}
               {!isNewForeignLock && <span className="text-rose-500">*</span>}
             </label>
-            <input
+            <input id="meal-lock-price"
               type="number"
               step="1000"
               min="0"
               value={lockedPrice}
               onChange={(e) => setLockedPrice(parseFloat(e.target.value) || 0)}
               readOnly={isNewForeignLock}
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all"
+              className={systemField}
               required
             />
-            <p className="text-slate-400 text-[11px] mt-1">
+            <p className="text-slate-600 text-xs mt-1">
               Thành tiền đóng băng: <strong className="text-slate-700">{(finalCount * lockedPrice).toLocaleString()} VNĐ</strong>
             </p>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label htmlFor="meal-lock-notes" className="block text-xs font-medium text-slate-700 mb-1">
               Lý do điều chỉnh {isNewForeignLock && (isAlreadyLocked || finalCount !== sessionSummary.calculated_meal_count) ? "*" : "(nếu có)"}
             </label>
-            <textarea
+            <textarea id="meal-lock-notes"
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="VD: +1 suất do nhân sự Khách sạn ăn đột xuất, hoặc ông X đi công tác..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none transition-all resize-none"
+              className={systemField}
             />
           </div>
 
           {/* Prioritized Warnings & Confirmations */}
           {isSunday && (
-            <div className="bg-rose-50 border-2 border-rose-400 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-rose-800 font-bold text-xs">
-                <span className="text-sm">🚨</span>
-                <span>CẢNH BÁO THỰC TẾ: NGÀY ĐƯỢC CHỌN LÀ CHỦ NHẬT</span>
+            <div className="bg-white border border-red-200 rounded-sm p-3.5 space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-rose-800 font-medium text-xs">
+                <span className="text-sm"></span>
+                <span>Ngày được chọn là Chủ nhật</span>
               </div>
-              <p className="text-[11px] text-rose-700 leading-relaxed font-medium">
+              <p className="text-xs text-rose-700 leading-relaxed font-medium">
                 Ngày <strong>{date}</strong> là <strong>Chủ Nhật</strong>. Theo quy định báo cáo thực tế, ngày Chủ Nhật mặc định <strong>không phục vụ suất ăn</strong> (trừ khi có sự kiện đột xuất).
               </p>
-              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-bold text-rose-900 bg-white p-2 rounded-lg border border-rose-300 hover:bg-rose-100/50 transition-colors">
+              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-medium text-rose-900 bg-white p-2 rounded-sm border border-rose-300 hover:bg-rose-100/50 transition-colors">
                 <input
                   type="checkbox"
                   checked={confirmedSunday}
@@ -312,15 +247,15 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           )}
 
           {isPastDate ? (
-            /* 🔴 ƯU TIÊN 1: Cảnh báo Ngày trong Quá khứ */
-            <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-rose-800 font-bold text-xs">
-                <span>⚠️ CẢNH BÁO: ĐANG CHỐT NGÀY TRONG QUÁ KHỨ</span>
+            /*  ƯU TIÊN 1: Cảnh báo Ngày trong Quá khứ */
+            <div className="bg-white border border-red-200 rounded-sm p-3.5 space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-rose-800 font-medium text-xs">
+                <span> Đang chốt ngày trong quá khứ</span>
               </div>
-              <p className="text-[11px] text-rose-700 leading-relaxed">
+              <p className="text-xs text-rose-700 leading-relaxed">
                 Ngày bạn chọn (<strong>{date}</strong>) trước ngày hôm nay (<strong>{today}</strong>). Thao tác này sẽ ghi đè dữ liệu chốt suất ăn đối soát của ngày đã qua.
               </p>
-              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-bold text-rose-900 bg-white p-2 rounded-lg border border-rose-200 hover:bg-rose-100/50 transition-colors">
+              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-medium text-rose-900 bg-white p-2 rounded-sm border border-rose-200 hover:bg-rose-100/50 transition-colors">
                 <input
                   type="checkbox"
                   checked={confirmedPast}
@@ -331,15 +266,15 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
               </label>
             </div>
           ) : isAlreadyLocked ? (
-            /* 🟡 ƯU TIÊN 2: Cảnh báo Chốt lại bữa ăn đã chốt */
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3.5 space-y-2 animate-in fade-in duration-150">
-              <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
-                <span>⚠️ XÁC NHẬN CẬP NHẬT: BỮA ĂN NÀY ĐÃ ĐƯỢC CHỐT TRƯỚC ĐÓ</span>
+            /*  ƯU TIÊN 2: Cảnh báo Chốt lại bữa ăn đã chốt */
+            <div className="bg-white border border-amber-200 rounded-sm p-3.5 space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-center gap-2 text-slate-700 font-medium text-xs">
+                <span> Xác nhận chốt lại bữa ăn</span>
               </div>
-              <p className="text-[11px] text-amber-800 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed">
                 {sessionLabel} ngày <strong>{date}</strong> đã được chốt chính thức 1 lần trước đó. Thao tác này sẽ cập nhật lại số suất ăn và đơn giá chốt mới.
               </p>
-              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-bold text-amber-900 bg-white p-2 rounded-lg border border-amber-200 hover:bg-amber-100/50 transition-colors">
+              <label className="flex items-center gap-2 pt-1 cursor-pointer text-xs font-medium text-slate-900 bg-white p-2 rounded-sm border border-amber-200 hover:bg-amber-100/50 transition-colors">
                 <input
                   type="checkbox"
                   checked={confirmedRelock}
@@ -352,8 +287,8 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
           ) : null}
 
           {/* Notice Banner */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-[11px] text-amber-800 leading-relaxed">
-            💡 <strong>Lưu ý:</strong> Bản chốt mới nhất được dùng để đối soát chi phí. Mỗi lần chốt lại bữa Sáng/Tối được lưu trong lịch sử.
+          <div className="bg-white border border-slate-200 rounded-sm p-3 text-xs text-slate-700 leading-relaxed">
+             <strong>Lưu ý:</strong> Bản chốt mới nhất được dùng để đối soát chi phí. Mỗi lần chốt lại bữa Sáng/Tối được lưu trong lịch sử.
           </div>
 
           {/* Action Buttons */}
@@ -362,24 +297,22 @@ export const LockMealSessionModal: React.FC<LockMealSessionModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all cursor-pointer"
+              className={systemSecondaryButton}
             >
               Hủy bỏ
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isBeforeLockWindow}
-              className="px-5 py-2 text-xs font-bold text-white bg-amber-600 enabled:hover:bg-amber-700 enabled:active:scale-95 rounded-xl shadow-xs transition-all enabled:cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-60 flex items-center gap-1.5"
+              className={systemPrimaryButton}
             >
               {isSubmitting
                 ? "Đang lưu..."
                 : isAlreadyLocked
-                ? "🔄 Cập Nhật Chốt Suất Ăn"
-                : "🔒 Xác Nhận Chốt Suất Ăn"}
+                ? " Cập Nhật Chốt Suất Ăn"
+                : " Xác Nhận Chốt Suất Ăn"}
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  );
+  </SystemDialog>;
 };

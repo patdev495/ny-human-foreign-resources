@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { RotateCcw } from "lucide-react";
 import { fetchDailyMealForecast, fetchMealCutoff, lockMealSession } from "../api";
-import type { DailyMealForecastResponse, DailyMealSessionSummary } from "../types";
+import type { DailyMealForecastResponse, DailyMealSessionSummary, MealSessionLockCreate } from "../types";
 import { LockMealSessionModal } from "./LockMealSessionModal";
 import { MealSessionCards } from "./meal-forecast/MealSessionCards";
 import { MealReportingStatus } from "./meal-forecast/MealReportingStatus";
 import { MealEmployeeForecastTable } from "./meal-forecast/MealEmployeeForecastTable";
 import { vietnamDate } from "./meal-forecast/vietnamDate";
+import { systemField, systemSecondaryButton } from "../../../shared/components/systemStyles";
 
 export function MealForecastBoard() {
   const [selectedDate, setSelectedDate] = useState(() => vietnamDate(1));
@@ -15,79 +17,71 @@ export function MealForecastBoard() {
   const [search, setSearch] = useState("");
   const [lodging, setLodging] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
   const [lockTarget, setLockTarget] = useState<DailyMealSessionSummary | null>(null);
-  const [cutoff, setCutoff] = useState("17:00");
+  const [cutoff, setCutoff] = useState<string | null>(null);
+  const [cutoffError, setCutoffError] = useState<string | null>(null);
+  const requestSequence = useRef(0);
 
-  useEffect(() => { void fetchMealCutoff().then(setCutoff).catch(() => setError("Không thể tải mốc chốt Báo cơm.")); }, []);
+  const loadCutoff = useCallback(async (): Promise<void> => {
+    setCutoffError(null);
+    try { setCutoff(await fetchMealCutoff()); }
+    catch { setCutoffError("Không thể tải mốc chốt Báo cơm. Vui lòng thử lại trước khi chốt Sáng/Tối."); }
+  }, []);
+  useEffect(() => { void loadCutoff(); }, [loadCutoff]);
 
-  async function load(date: string, showLoading = true) {
+  const load = useCallback(async (date: string, showLoading = true): Promise<void> => {
+    const sequence = ++requestSequence.current;
     if (showLoading) setLoading(true);
     setError(null);
     try {
-      setForecast(await fetchDailyMealForecast(date));
+      const result = await fetchDailyMealForecast(date);
+      if (sequence === requestSequence.current) setForecast(result);
     } catch {
-      setError("Không thể tải dự báo suất ăn. Kiểm tra kết nối rồi thử lại.");
+      if (sequence === requestSequence.current) setError("Không thể tải dự báo suất ăn. Kiểm tra kết nối rồi thử lại.");
     } finally {
-      setLoading(false);
+      if (sequence === requestSequence.current) setLoading(false);
     }
-  }
+  }, []);
+  useEffect(() => {
+    void load(selectedDate);
+    return () => { requestSequence.current += 1; };
+  }, [selectedDate, load]);
 
-  useEffect(() => { void load(selectedDate); }, [selectedDate]);
-
-  async function confirmLock(payload: {
-    lock_date: string;
-    meal_session: "BREAKFAST" | "LUNCH" | "DINNER";
-    calculated_meal_count: number;
-    final_meal_count: number;
-    locked_price_per_meal: number;
-    notes?: string;
-  }) {
+  async function confirmLock(payload: MealSessionLockCreate): Promise<void> {
     await lockMealSession(payload);
     await load(selectedDate, false);
   }
-
-  const employees = forecast?.employees.filter(employee => {
+  const currentForecast = !loading && !error && forecast?.date === selectedDate ? forecast : null;
+  const employees = currentForecast?.employees.filter((employee) => {
     if (lodging !== "ALL" && employee.accommodation_type !== lodging) return false;
-    const term = search.toLocaleLowerCase();
-    return !term || employee.name_latin.toLocaleLowerCase().includes(term)
-      || (employee.name_chinese ?? "").toLocaleLowerCase().includes(term)
-      || (employee.employee_code ?? "").toLocaleLowerCase().includes(term)
-      || employee.location_name.toLocaleLowerCase().includes(term);
+    const term = search.trim().toLocaleLowerCase();
+    return !term || [employee.name_latin, employee.name_chinese, employee.employee_code, employee.location_name].some((value) => value?.toLocaleLowerCase().includes(term));
   }) ?? [];
+  const suggestedPrice = lockTarget?.meal_session === "BREAKFAST" ? currentForecast?.suggested_breakfast_price
+    : lockTarget?.meal_session === "LUNCH" ? currentForecast?.suggested_janitor_price : currentForecast?.suggested_dinner_price;
 
-  const suggestedPrice = lockTarget?.meal_session === "BREAKFAST"
-    ? forecast?.suggested_breakfast_price
-    : lockTarget?.meal_session === "LUNCH"
-      ? forecast?.suggested_janitor_price
-      : forecast?.suggested_dinner_price;
-
-  return <div className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-      <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700">
-        📅 Chọn ngày xem & chốt:
-        <input type="date" value={selectedDate} onChange={event => setSelectedDate(event.target.value)} className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-800" />
-      </label>
-      <button type="button" onClick={() => void load(selectedDate)} className="rounded-xl bg-slate-100 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200">🔄 Làm mới</button>
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div><label htmlFor="meal-date" className="mb-1.5 block text-sm text-slate-600">Ngày xem và chốt suất ăn</label>
+        <input id="meal-date" type="date" required value={selectedDate} onChange={(event) => { if (event.target.value) setSelectedDate(event.target.value); }} className={`${systemField} w-auto`} /></div>
+      <button type="button" onClick={() => void load(selectedDate)} disabled={loading} className={systemSecondaryButton}><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Làm mới</button>
     </div>
-
-    {forecast && <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
-      <span className="rounded-xl bg-blue-50 px-3 py-2">Loại ngày: {forecast.day_type_name ?? forecast.day_type}</span>
-      <span className="rounded-xl bg-blue-50 px-3 py-2">Sáng: {(forecast.suggested_breakfast_price ?? 30000).toLocaleString("vi-VN")}đ</span>
-      <span className="rounded-xl bg-blue-50 px-3 py-2">Tối: {(forecast.suggested_dinner_price ?? 40000).toLocaleString("vi-VN")}đ</span>
-      <span className="rounded-xl bg-blue-50 px-3 py-2">Lao công: {(forecast.suggested_janitor_price ?? 25000).toLocaleString("vi-VN")}đ</span>
-      {forecast.event_notes && <span className="rounded-xl bg-slate-100 px-3 py-2">{forecast.event_notes}</span>}
-    </div>}
-
-    {error && <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</div>}
-    {loading ? <p className="p-12 text-center text-slate-500">Đang tải dự báo suất ăn...</p> : forecast && <>
-      {forecast.uses_meal_reports && <MealReportingStatus key={selectedDate} date={selectedDate} employees={forecast.employees} />}
-      <MealSessionCards forecast={forecast} onLockSession={setLockTarget} />
-      <MealEmployeeForecastTable key={selectedDate} filteredEmployees={employees} searchTerm={search} setSearchTerm={setSearch}
-        lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={forecast.uses_meal_reports} />
-    </>}
-
-    {lockTarget && <LockMealSessionModal date={selectedDate} sessionSummary={lockTarget} cutoff={cutoff}
-      employees={forecast?.employees ?? []} usesMealReports={forecast?.uses_meal_reports ?? false}
-      dayTypeName={forecast?.day_type_name} suggestedPrice={suggestedPrice}
+    {cutoffError && <div role="alert" className="rounded-sm border border-amber-200 bg-white p-3 text-sm text-amber-900">{cutoffError}<button type="button" onClick={() => void loadCutoff()} className={`${systemSecondaryButton} ml-2`}>Thử lại mốc chốt</button></div>}
+    {error ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-4 text-sm"><p className="text-red-800">{error}</p><button type="button" onClick={() => void load(selectedDate)} className={`${systemSecondaryButton} mt-2`}>Thử lại</button></div>
+      : !currentForecast ? <p role="status" className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải dự báo suất ăn…</p> : <>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+          <span>Loại ngày: {currentForecast.day_type_name ?? currentForecast.day_type}</span>
+          <span>Sáng: {currentForecast.suggested_breakfast_price?.toLocaleString("vi-VN") ?? "—"} đ</span>
+          <span>Tối: {currentForecast.suggested_dinner_price?.toLocaleString("vi-VN") ?? "—"} đ</span>
+          <span>Trưa tạp vụ: {currentForecast.suggested_janitor_price?.toLocaleString("vi-VN") ?? "—"} đ</span>
+          {currentForecast.event_notes && <span>{currentForecast.event_notes}</span>}
+        </div>
+        {currentForecast.uses_meal_reports && <MealReportingStatus key={selectedDate} date={selectedDate} employees={currentForecast.employees} />}
+        <MealSessionCards forecast={currentForecast} onLockSession={setLockTarget} foreignLockDisabled={currentForecast.uses_meal_reports && cutoff === null} />
+        <MealEmployeeForecastTable key={selectedDate} filteredEmployees={employees} searchTerm={search} setSearchTerm={setSearch}
+          lodgingFilter={lodging} setLodgingFilter={setLodging} date={selectedDate} usesMealReports={currentForecast.uses_meal_reports} />
+      </>}
+    {lockTarget && currentForecast && <LockMealSessionModal date={selectedDate} sessionSummary={lockTarget} cutoff={cutoff ?? ""}
+      employees={currentForecast.employees} usesMealReports={currentForecast.uses_meal_reports} dayTypeName={currentForecast.day_type_name} suggestedPrice={suggestedPrice}
       onClose={() => setLockTarget(null)} onConfirm={confirmLock} />}
   </div>;
 }

@@ -1,264 +1,97 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect, useCallback, type FormEvent } from "react";
+import { Plus } from "lucide-react";
 import { fetchHotels, createHotel, updateHotel, deleteHotel } from "../api";
 import type { Hotel } from "../types";
+import { SystemDialog } from "../../../shared/components/SystemDialog";
+import { systemField, systemPrimaryButton, systemSecondaryButton, systemTextButton } from "../../../shared/components/systemStyles";
 
-export const HotelList: React.FC = () => {
+export function HotelList() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingHotel, setEditingHotel] = useState<Hotel | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    notes: "",
-  });
+  const [formData, setFormData] = useState({ name: "", address: "", phone: "", notes: "" });
   const [modalError, setModalError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const loadHotels = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await fetchHotels();
-      setHotels(data);
-    } catch (err: any) {
-      setError(err.message || "Không thể tải danh sách khách sạn");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadHotels();
+  const loadHotels = useCallback(async (): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try { setHotels(await fetchHotels()); }
+    catch { setError("Không thể tải danh mục khách sạn. Kiểm tra kết nối rồi thử lại."); }
+    finally { setLoading(false); }
   }, []);
+  useEffect(() => { void loadHotels(); }, [loadHotels]);
 
-  const handleOpenAdd = () => {
-    setEditingHotel(null);
-    setFormData({ name: "", address: "", phone: "", notes: "" });
+  const openModal = (hotel?: Hotel): void => {
+    setEditingHotel(hotel ?? null);
+    setFormData({ name: hotel?.name || "", address: hotel?.address || "", phone: hotel?.phone || "", notes: hotel?.notes || "" });
     setModalError(null);
     setIsModalOpen(true);
   };
-
-  const handleOpenEdit = (hotel: Hotel) => {
-    setEditingHotel(hotel);
-    setFormData({
-      name: hotel.name,
-      address: hotel.address || "",
-      phone: hotel.phone || "",
-      notes: hotel.notes || "",
-    });
+  const handleDelete = async (hotel: Hotel): Promise<void> => {
+    if (!window.confirm(`Bạn có chắc muốn xóa khách sạn "${hotel.name}"?`)) return;
+    try { await deleteHotel(hotel.id); await loadHotels(); }
+    catch (cause: unknown) { setError(cause instanceof Error ? cause.message : "Không thể xóa khách sạn."); }
+  };
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (!formData.name.trim()) { setModalError("Vui lòng nhập tên khách sạn."); return; }
+    setSubmitting(true);
     setModalError(null);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (hotel: Hotel) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa khách sạn "${hotel.name}"?`)) return;
     try {
-      await deleteHotel(hotel.id);
-      await loadHotels();
-    } catch (err: any) {
-      alert(err.message || "Không thể xóa khách sạn");
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      setModalError("Vui lòng nhập tên khách sạn");
-      return;
-    }
-
-    try {
-      setSubmitting(true);
-      setModalError(null);
-      if (editingHotel) {
-        await updateHotel(editingHotel.id, {
-          name: formData.name.trim(),
-          address: formData.address.trim() || undefined,
-          phone: formData.phone.trim() || undefined,
-          notes: formData.notes.trim() || undefined,
-        });
-      } else {
-        await createHotel({
-          name: formData.name.trim(),
-          address: formData.address.trim() || undefined,
-          phone: formData.phone.trim() || undefined,
-          notes: formData.notes.trim() || undefined,
-        });
-      }
+      const payload = { name: formData.name.trim(), address: formData.address.trim() || undefined, phone: formData.phone.trim() || undefined, notes: formData.notes.trim() || undefined };
+      if (editingHotel) await updateHotel(editingHotel.id, payload);
+      else await createHotel(payload);
       setIsModalOpen(false);
       await loadHotels();
-    } catch (err: any) {
-      setModalError(err.message || "Đã xảy ra lỗi khi lưu khách sạn");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (cause: unknown) { setModalError(cause instanceof Error ? cause.message : "Không thể lưu khách sạn."); }
+    finally { setSubmitting(false); }
   };
 
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">Danh mục Khách sạn đối tác</h2>
-          <p className="text-sm text-slate-500 mt-1">
-            Quản lý các cơ sở khách sạn phục vụ nhân viên nước ngoài lưu trú công tác ngắn hạn.
-          </p>
-        </div>
-        <button
-          onClick={handleOpenAdd}
-          className="inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Thêm khách sạn
-        </button>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
-        </div>
-      )}
-
-      {loading ? (
-        <div className="py-12 text-center text-slate-500">Đang tải danh sách khách sạn...</div>
-      ) : hotels.length === 0 ? (
-        <div className="py-12 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-xl">
-          Chưa có khách sạn nào trong danh mục. Nhấn "Thêm khách sạn" để tạo mới.
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-600 font-semibold">
-                <th className="py-3 px-4">Tên khách sạn</th>
-                <th className="py-3 px-4">Địa chỉ</th>
-                <th className="py-3 px-4">Số điện thoại</th>
-                <th className="py-3 px-4">Ghi chú</th>
-                <th className="py-3 px-4 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {hotels.map((h) => (
-                <tr key={h.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3 px-4 font-medium text-slate-900">{h.name}</td>
-                  <td className="py-3 px-4 text-slate-600">{h.address || "—"}</td>
-                  <td className="py-3 px-4 text-slate-600">{h.phone || "—"}</td>
-                  <td className="py-3 px-4 text-slate-500">{h.notes || "—"}</td>
-                  <td className="py-3 px-4 text-right space-x-2">
-                    <button
-                      onClick={() => handleOpenEdit(h)}
-                      className="text-indigo-600 hover:text-indigo-900 font-medium"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => handleDelete(h)}
-                      className="text-rose-600 hover:text-rose-900 font-medium"
-                    >
-                      Xóa
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Modal Add/Edit */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">
-              {editingHotel ? "Chỉnh sửa thông tin Khách sạn" : "Thêm Khách sạn mới"}
-            </h3>
-
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
-                {modalError}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Tên khách sạn <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Vd: Khách sạn Mường Thanh"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Địa chỉ
-                </label>
-                <input
-                  type="text"
-                  placeholder="Địa chỉ khách sạn..."
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Số điện thoại liên hệ
-                </label>
-                <input
-                  type="text"
-                  placeholder="SĐT lễ tân / quản lý..."
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Ghi chú
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Ghi chú thêm..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
-                >
-                  {submitting ? "Đang lưu..." : "Lưu thay đổi"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-base font-semibold text-slate-900">Danh mục khách sạn đối tác <span className="font-normal text-slate-600">({loading || error ? "—" : hotels.length})</span></h2>
+      <button type="button" onClick={() => openModal()} className={systemPrimaryButton}><Plus className="h-4 w-4" aria-hidden="true" /> Thêm khách sạn</button>
     </div>
-  );
-};
+    {error && <div role="alert" className="rounded-sm border border-red-200 bg-white p-4 text-sm text-red-800">{error}<button type="button" onClick={() => void loadHotels()} className={`${systemSecondaryButton} ml-3`}>Thử lại</button></div>}
+    <div className="overflow-x-auto rounded-sm border border-slate-200 bg-white" role="region" aria-label="Danh mục khách sạn" tabIndex={0}>
+      <table className="w-full min-w-[680px] text-left text-sm">
+        <caption className="sr-only">Danh mục khách sạn đối tác</caption>
+        <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>
+          {["Tên khách sạn", "Địa chỉ", "Điện thoại", "Ghi chú", "Thao tác"].map((label) => <th key={label} scope="col" className="px-4 py-3 font-medium">{label}</th>)}
+        </tr></thead>
+        <tbody className="divide-y divide-slate-200">
+          {loading ? <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-600">Đang tải danh sách khách sạn…</td></tr>
+            : !error && hotels.length === 0 ? <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-600">Chưa có khách sạn nào.</td></tr>
+            : !error && hotels.map((hotel) => <tr key={hotel.id} className="hover:bg-slate-50">
+              <th scope="row" className="px-4 py-3 font-medium text-slate-900">{hotel.name}</th>
+              <td className="max-w-sm break-words px-4 py-3 text-slate-600">{hotel.address || "—"}</td>
+              <td className="px-4 py-3 text-slate-600">{hotel.phone || "—"}</td>
+              <td className="max-w-sm break-words px-4 py-3 text-slate-600">{hotel.notes || "—"}</td>
+              <td className="whitespace-nowrap px-4 py-2"><button type="button" onClick={() => openModal(hotel)} aria-label={`Sửa ${hotel.name}`} className={systemTextButton}>Sửa</button>
+                <button type="button" onClick={() => void handleDelete(hotel)} aria-label={`Xóa ${hotel.name}`} className="ml-4 min-h-11 cursor-pointer text-sm text-red-700 hover:underline sm:min-h-9">Xóa</button></td>
+            </tr>)}
+        </tbody>
+      </table>
+    </div>
+    <SystemDialog isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingHotel ? "Sửa khách sạn" : "Thêm khách sạn"}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {modalError && <p role="alert" className="text-sm text-red-800">{modalError}</p>}
+        <div><label htmlFor="hotel-name" className="mb-1.5 block text-sm text-slate-700">Tên khách sạn <span className="text-red-700">*</span></label>
+          <input id="hotel-name" required value={formData.name} onChange={(event) => setFormData({ ...formData, name: event.target.value })} className={systemField} /></div>
+        <div><label htmlFor="hotel-address" className="mb-1.5 block text-sm text-slate-700">Địa chỉ</label>
+          <input id="hotel-address" value={formData.address} onChange={(event) => setFormData({ ...formData, address: event.target.value })} className={systemField} /></div>
+        <div><label htmlFor="hotel-phone" className="mb-1.5 block text-sm text-slate-700">Điện thoại</label>
+          <input id="hotel-phone" type="tel" value={formData.phone} onChange={(event) => setFormData({ ...formData, phone: event.target.value })} className={systemField} /></div>
+        <div><label htmlFor="hotel-notes" className="mb-1.5 block text-sm text-slate-700">Ghi chú</label>
+          <textarea id="hotel-notes" rows={3} value={formData.notes} onChange={(event) => setFormData({ ...formData, notes: event.target.value })} className={systemField} /></div>
+        <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+          <button type="button" onClick={() => setIsModalOpen(false)} className={systemSecondaryButton}>Hủy</button>
+          <button type="submit" disabled={submitting} className={systemPrimaryButton}>{submitting ? "Đang lưu…" : "Lưu khách sạn"}</button>
+        </div>
+      </form>
+    </SystemDialog>
+  </div>;
+}

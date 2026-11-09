@@ -1,179 +1,58 @@
-import React from "react";
+import type { Dispatch, SetStateAction, FormEvent } from "react";
 import type { ForeignEmployee } from "../../types";
-
-interface JanitorFormData {
-  name_latin: string;
-  employee_code: string;
-  workplace_location: string;
-  salary: number;
-  salary_unit: string;
-  role: string;
-  status: string;
-  resignation_date: string;
-  notes: string;
-}
+import { type JanitorFormData, janitorLocations } from "./janitorUtils";
+import { SystemDialog } from "../../../../shared/components/SystemDialog";
+import { systemField, systemPrimaryButton, systemSecondaryButton } from "../../../../shared/components/systemStyles";
 
 interface JanitorModalProps {
   isOpen: boolean;
   editingJanitor: ForeignEmployee | null;
   formData: JanitorFormData;
-  setFormData: React.Dispatch<React.SetStateAction<JanitorFormData>>;
+  setFormData: Dispatch<SetStateAction<JanitorFormData>>;
   submitting: boolean;
-  onSubmit: (e: React.FormEvent) => void;
+  error: string | null;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onClose: () => void;
 }
 
-export const JanitorModal: React.FC<JanitorModalProps> = ({
-  isOpen,
-  editingJanitor,
-  formData,
-  setFormData,
-  submitting,
-  onSubmit,
-  onClose,
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
-        <h3 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4">
-          {editingJanitor ? "Chỉnh sửa Nhân viên Tạp vụ" : "Thêm Nhân viên Tạp vụ Mới"}
-        </h3>
-
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Họ và tên nhân viên <span className="text-rose-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.name_latin}
-              onChange={(e) => setFormData({ ...formData, name_latin: e.target.value })}
-              placeholder="VD: Nguyễn Thị Hoa"
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mã nhân viên (nếu có)</label>
-              <input
-                type="text"
-                value={formData.employee_code}
-                onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
-                placeholder="VD: TV001"
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Nơi làm việc <span className="text-rose-500">*</span>
-              </label>
-              <select
-                value={formData.workplace_location}
-                onChange={(e) => setFormData({ ...formData, workplace_location: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              >
-                <option value="DORMITORY">🏫 KTX (Tính tiền ăn KTX)</option>
-                <option value="CN09">🏭 Nhà máy CN09</option>
-                <option value="CN15">🏭 Nhà máy CN15</option>
-                <option value="COMPANY">🏢 Văn phòng Công ty</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Mức lương</label>
-              <input
-                type="number"
-                min="0"
-                step="50000"
-                value={formData.salary}
-                onChange={(e) => setFormData({ ...formData, salary: Number(e.target.value) })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Đơn vị tính lương</label>
-              <select
-                value={formData.salary_unit}
-                onChange={(e) => setFormData({ ...formData, salary_unit: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              >
-                <option value="MONTH">VNĐ / Tháng</option>
-                <option value="DAY">VNĐ / Ngày công</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Trạng thái làm việc</label>
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none font-bold"
-              >
-                <option value="WORKING">✅ Đang làm việc</option>
-                <option value="RESIGNED">🛑 Đã nghỉ việc</option>
-              </select>
-            </div>
-            {formData.status === "RESIGNED" && (
-              <div>
-                <label className="block text-xs font-bold text-rose-700 mb-1">Ngày nghỉ việc</label>
-                <input
-                  type="date"
-                  value={formData.resignation_date}
-                  onChange={(e) => setFormData({ ...formData, resignation_date: e.target.value })}
-                  className="w-full px-3 py-2 text-xs border border-rose-300 bg-rose-50/50 rounded-lg focus:ring-2 focus:ring-rose-500 focus:outline-none font-bold text-rose-900"
-                />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Chức danh / Mô tả công việc</label>
-            <input
-              type="text"
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              placeholder="VD: Tạp vụ KTX, Vệ sinh xưởng..."
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Ghi chú thêm</label>
-            <textarea
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Ghi chú thêm thông tin..."
-              rows={2}
-              className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-50"
-            >
-              {submitting ? "Đang lưu..." : editingJanitor ? "Cập nhật" : "Lưu Nhân viên"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+export function JanitorModal({ isOpen, editingJanitor, formData, setFormData, submitting, error, onSubmit, onClose }: JanitorModalProps) {
+  return <SystemDialog isOpen={isOpen} onClose={onClose} title={editingJanitor ? "Sửa hồ sơ tạp vụ" : "Thêm nhân sự tạp vụ"} wide>
+    <form onSubmit={onSubmit} className="space-y-4">
+      {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
+      <fieldset disabled={submitting} className="min-w-0 space-y-4 disabled:opacity-60">
+        <div><label htmlFor="janitor-name" className="mb-1.5 block text-sm text-slate-700">Họ và tên <span className="text-red-700">*</span></label>
+          <input id="janitor-name" required value={formData.name_latin} onChange={(event) => setFormData({ ...formData, name_latin: event.target.value })} className={systemField} /></div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><label htmlFor="janitor-code" className="mb-1.5 block text-sm text-slate-700">Mã nhân sự</label>
+            <input id="janitor-code" value={formData.employee_code} onChange={(event) => setFormData({ ...formData, employee_code: event.target.value })} className={systemField} /></div>
+          <div><label htmlFor="janitor-location" className="mb-1.5 block text-sm text-slate-700">Nơi làm việc <span className="text-red-700">*</span></label>
+            <select id="janitor-location" value={formData.workplace_location} onChange={(event) => setFormData({ ...formData, workplace_location: event.target.value })} className={systemField}>
+              {janitorLocations.map((location) => <option key={location.value} value={location.value}>{location.label}</option>)}
+            </select></div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><label htmlFor="janitor-salary" className="mb-1.5 block text-sm text-slate-700">Mức lương (đ)</label>
+            <input id="janitor-salary" type="number" min={0} step={50000} value={formData.salary} onChange={(event) => setFormData({ ...formData, salary: Number(event.target.value) })} className={systemField} /></div>
+          <div><label htmlFor="janitor-salary-unit" className="mb-1.5 block text-sm text-slate-700">Đơn vị tính lương</label>
+            <select id="janitor-salary-unit" value={formData.salary_unit} onChange={(event) => setFormData({ ...formData, salary_unit: event.target.value })} className={systemField}>
+              <option value="MONTH">Theo tháng</option><option value="DAY">Theo ngày công</option>
+            </select></div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><label htmlFor="janitor-status" className="mb-1.5 block text-sm text-slate-700">Trạng thái làm việc</label>
+            <select id="janitor-status" value={formData.status} onChange={(event) => setFormData({ ...formData, status: event.target.value })} className={systemField}>
+              <option value="WORKING">Đang làm việc</option><option value="RESIGNED">Đã nghỉ việc</option>
+            </select></div>
+          {formData.status === "RESIGNED" && <div><label htmlFor="janitor-resigned-date" className="mb-1.5 block text-sm text-slate-700">Ngày nghỉ việc</label>
+            <input id="janitor-resigned-date" type="date" value={formData.resignation_date} onChange={(event) => setFormData({ ...formData, resignation_date: event.target.value })} className={systemField} /></div>}
+        </div>
+        <div><label htmlFor="janitor-role" className="mb-1.5 block text-sm text-slate-700">Chức danh / Công việc</label>
+          <input id="janitor-role" value={formData.role} onChange={(event) => setFormData({ ...formData, role: event.target.value })} className={systemField} /></div>
+        <div><label htmlFor="janitor-notes" className="mb-1.5 block text-sm text-slate-700">Ghi chú</label>
+          <textarea id="janitor-notes" rows={3} value={formData.notes} onChange={(event) => setFormData({ ...formData, notes: event.target.value })} className={systemField} /></div>
+        <div className="flex justify-end gap-2 border-t border-slate-200 pt-4"><button type="button" onClick={onClose} className={systemSecondaryButton}>Hủy</button>
+          <button type="submit" disabled={submitting} className={systemPrimaryButton}>{submitting ? "Đang lưu…" : "Lưu hồ sơ"}</button></div>
+      </fieldset>
+    </form>
+  </SystemDialog>;
+}

@@ -1,0 +1,4 @@
+export const systemField = "min-h-11 w-full rounded-sm border border-slate-300 bg-white px-3 py-2 text-base text-slate-800 sm:min-h-9 sm:text-sm";
+export const systemPrimaryButton = "inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-sm bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-wait disabled:opacity-50 sm:min-h-9";
+export const systemSecondaryButton = "inline-flex min-h-11 cursor-pointer items-center justify-center gap-1.5 rounded-sm border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 sm:min-h-9";
+export const systemTextButton = "inline-flex min-h-11 cursor-pointer items-center text-sm text-slate-700 underline-offset-4 hover:underline sm:min-h-9";

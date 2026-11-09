@@ -1,179 +1,58 @@
-import React from "react";
 import type { DailyPresenceGroup, DailyPresenceItem } from "../../types";
+import type { PresenceAccommodation } from "./PresenceToolbar";
 
 interface Props {
-  activeSubTab: "ALL" | "KTX" | "HOTEL" | "UNASSIGNED";
+  activeSubTab: PresenceAccommodation;
   ktxGroups: DailyPresenceGroup[];
   hotelGroups: DailyPresenceGroup[];
   unassignedItems: DailyPresenceItem[];
-  onOpenProfile: (empId: number) => void;
+  onOpenProfile: (employeeId: number) => void;
 }
 
-export const GroupedPresenceView: React.FC<Props> = ({
-  activeSubTab,
-  ktxGroups,
-  hotelGroups,
-  unassignedItems,
-  onOpenProfile,
-}) => {
-  return (
-    <div className="space-y-8">
-      {/* KTX Groups */}
-      {(activeSubTab === "ALL" || activeSubTab === "KTX") && (
-        <div>
-          <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <span>🏢 Danh sách Theo Phòng KTX</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">
-              {ktxGroups.length} Phòng
-            </span>
-          </h3>
-
-          {ktxGroups.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">Không tìm thấy phòng KTX phù hợp</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ktxGroups.map((g) => (
-                <div
-                  key={`ktx-${g.group_name}`}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all overflow-hidden"
-                >
-                  <div className="bg-gradient-to-r from-sky-700 to-blue-800 text-white px-4 py-2.5 flex items-center justify-between">
-                    <span className="font-bold text-sm">Phòng {g.group_name}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-500/30">
-                      {g.count} người
-                    </span>
-                  </div>
-                  <div className="p-3 divide-y divide-slate-100">
-                    {g.items.map((item) => (
-                      <div key={item.employee_id} className="py-2.5 first:pt-0 last:pb-0">
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => onOpenProfile(item.employee_id)}
-                            className="font-bold text-xs text-slate-900 hover:text-blue-600 transition-colors text-left"
-                          >
-                            {item.name_latin}
-                          </button>
-                          <span className="text-[10px] font-mono font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
-                            {item.employee_code || `#${item.employee_id}`}
-                          </span>
-                        </div>
-                        {item.name_chinese && (
-                          <p className="text-[11px] text-slate-500 mt-0.5">{item.name_chinese}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500">
-                          {item.department && <span>{item.department}</span>}
-                          {item.stay_type && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
-                              {item.stay_type === "CONG_TAC" ? "Công tác" : "Cố định"}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Hotel Groups */}
-      {(activeSubTab === "ALL" || activeSubTab === "HOTEL") && (
-        <div>
-          <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <span>🏨 Danh sách Theo Khách sạn / Cơ sở lưu trú</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">
-              {hotelGroups.length} Cơ sở
-            </span>
-          </h3>
-
-          {hotelGroups.length === 0 ? (
-            <p className="text-xs text-slate-400 italic">Không tìm thấy cơ sở lưu trú phù hợp</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {hotelGroups.map((g) => (
-                <div
-                  key={`hotel-${g.group_name}`}
-                  className="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition-all overflow-hidden"
-                >
-                  <div className="bg-amber-900 text-white px-4 py-2.5 flex items-center justify-between">
-                    <span className="font-bold text-sm truncate">{g.group_name}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
-                      {g.count} người
-                    </span>
-                  </div>
-                  <div className="p-3 divide-y divide-slate-100">
-                    {g.items.map((item) => (
-                      <div key={item.employee_id} className="py-2.5 first:pt-0 last:pb-0">
-                        <div className="flex items-center justify-between">
-                          <button
-                            onClick={() => onOpenProfile(item.employee_id)}
-                            className="font-bold text-xs text-slate-900 hover:text-amber-600 transition-colors text-left"
-                          >
-                            {item.name_latin}
-                          </button>
-                          {item.hotel_room_number && (
-                            <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                              P.{item.hotel_room_number}
-                            </span>
-                          )}
-                        </div>
-                        {item.name_chinese && (
-                          <p className="text-[11px] text-slate-500 mt-0.5">{item.name_chinese}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-1.5 text-[11px] text-slate-500">
-                          {item.department && <span>{item.department}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Unassigned Items */}
-      {(activeSubTab === "ALL" || activeSubTab === "UNASSIGNED") && unassignedItems.length > 0 && (
-        <div>
-          <h3 className="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <span>⚠️ Chưa xếp chỗ ở / Đang cập nhật</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-semibold">
-              {unassignedItems.length} người
-            </span>
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {unassignedItems.map((item) => (
-              <div
-                key={item.employee_id}
-                className="bg-white rounded-2xl border border-rose-200 p-4 shadow-xs hover:shadow-md transition-all"
-              >
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => onOpenProfile(item.employee_id)}
-                    className="font-bold text-sm text-slate-900 hover:text-rose-600 transition-colors"
-                  >
-                    {item.name_latin}
-                  </button>
-                  <span className="text-[10px] font-mono font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                    Chưa xếp phòng
-                  </span>
-                </div>
-                {item.name_chinese && (
-                  <p className="text-xs text-slate-500 mt-1">{item.name_chinese}</p>
-                )}
-                <div className="mt-2 text-xs text-slate-500">
-                  <p>Bộ phận: {item.department || "—"}</p>
-                  <p>SĐT: {item.phone || "—"}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+function PresencePerson({ item, onOpenProfile }: { item: DailyPresenceItem; onOpenProfile: (employeeId: number) => void }) {
+  return <li className="px-4 py-3">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <button type="button" onClick={() => onOpenProfile(item.employee_id)} className="min-w-0 cursor-pointer break-words text-left text-sm font-medium text-slate-900 underline-offset-4 hover:underline">{item.name_latin}{item.name_chinese && <span className="ml-2 font-normal text-slate-600">{item.name_chinese}</span>}</button>
+      <span className="text-xs text-slate-600">{item.employee_code || `#${item.employee_id}`}</span>
     </div>
-  );
-};
+    <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+      <span>{item.department || "Chưa có bộ phận"}</span>
+      {item.hotel_room_number && <span>Phòng {item.hotel_room_number}</span>}
+      {item.bed_location && <span>{item.bed_location}</span>}
+      {item.stay_type && <span>{item.stay_type === "CONG_TAC" ? "Công tác" : "Cố định"}</span>}
+      {!item.room_number && !item.hotel_name && <span>SĐT: {item.phone || "—"}</span>}
+    </p>
+  </li>;
+}
+
+export function GroupedPresenceView({ activeSubTab, ktxGroups, hotelGroups, unassignedItems, onOpenProfile }: Props) {
+  const sections: { key: "KTX" | "HOTEL"; title: string; groups: DailyPresenceGroup[] }[] = [
+    { key: "KTX", title: "Phòng KTX", groups: ktxGroups },
+    { key: "HOTEL", title: "Khách sạn", groups: hotelGroups },
+  ];
+  const visibleSections = sections.filter((section) => activeSubTab === "ALL" || activeSubTab === section.key);
+  const showUnassigned = activeSubTab === "ALL" || activeSubTab === "UNASSIGNED";
+  const count = visibleSections.reduce((sum, section) => sum + section.groups.reduce((total, group) => total + group.items.length, 0), 0) + (showUnassigned ? unassignedItems.length : 0);
+
+  return <div className="min-w-0 space-y-5">
+    {count === 0 ? <p className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Không tìm thấy nhân sự phù hợp với ngày tra cứu và bộ lọc.</p> : <>
+      {visibleSections.filter((section) => section.groups.length > 0).map((section) => <section key={section.key} className="space-y-3" aria-label={section.title}>
+        <h2 className="text-base font-semibold text-slate-900">{section.title} <span className="text-sm font-normal text-slate-600">({section.groups.length} {section.key === "KTX" ? "phòng" : "cơ sở"})</span></h2>
+        <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-2">
+          {section.groups.map((group) => <section key={group.group_name} aria-label={section.key === "KTX" ? `Phòng ${group.group_name}` : group.group_name} className="min-w-0 rounded-sm border border-slate-200 bg-white">
+            <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+              <h3 className="break-words text-sm font-semibold text-slate-900">{section.key === "KTX" ? `Phòng ${group.group_name}` : group.group_name}</h3>
+              <span className="text-xs text-slate-600">{group.items.length} người</span>
+            </div>
+            <ul className="divide-y divide-slate-200">{group.items.map((item) => <PresencePerson key={item.employee_id} item={item} onOpenProfile={onOpenProfile} />)}</ul>
+          </section>)}
+        </div>
+      </section>)}
+      {showUnassigned && unassignedItems.length > 0 && <section className="space-y-3" aria-label="Nhân sự chưa xếp chỗ">
+        <h2 className="text-base font-semibold text-amber-800">Chưa xếp chỗ ở <span className="text-sm font-normal">({unassignedItems.length} người)</span></h2>
+        <ul className="divide-y divide-slate-200 rounded-sm border border-amber-200 bg-white">{unassignedItems.map((item) => <PresencePerson key={item.employee_id} item={item} onOpenProfile={onOpenProfile} />)}</ul>
+      </section>}
+    </>}
+    <p role="status" className="text-sm text-slate-600">Hiển thị {count} nhân sự</p>
+  </div>;
+}

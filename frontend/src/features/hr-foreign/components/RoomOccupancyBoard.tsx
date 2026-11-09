@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, RotateCcw } from "lucide-react";
 import type { RoomOccupancy, ResidentInfo, ForeignEmployee } from "../types";
 import { fetchRoomOccupancy, fetchEmployees } from "../api";
 import { CheckInModal } from "./CheckInModal";
@@ -6,47 +7,44 @@ import { CheckOutModal } from "./CheckOutModal";
 import { UnassignedEmployeesAlert } from "./room-occupancy/UnassignedEmployeesAlert";
 import { GroupedRoomOccupancyView } from "./room-occupancy/GroupedRoomOccupancyView";
 import { FlatResidentTableView } from "./room-occupancy/FlatResidentTableView";
+import { OccupancyToolbar, type AccommodationFilter, type OccupancyView } from "./room-occupancy/OccupancyToolbar";
+import { systemPrimaryButton, systemSecondaryButton } from "../../../shared/components/systemStyles";
 
-export const RoomOccupancyBoard: React.FC = () => {
+export function RoomOccupancyBoard() {
   const [occupancy, setOccupancy] = useState<RoomOccupancy[]>([]);
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<"ALL" | "KTX" | "HOTEL">("ALL");
-  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("GROUPED");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<AccommodationFilter>("ALL");
+  const [viewMode, setViewMode] = useState<OccupancyView>("GROUPED");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isCheckOutOpen, setIsCheckOutOpen] = useState(false);
   const [selectedEmpIdForCheckIn, setSelectedEmpIdForCheckIn] = useState<number | undefined>(undefined);
   const [targetResident, setTargetResident] = useState<ResidentInfo | null>(null);
-  const [targetUnitName, setTargetUnitName] = useState<string>("");
+  const [targetUnitName, setTargetUnitName] = useState("");
 
-  const loadData = async () => {
+  const loadData = useCallback(async (): Promise<void> => {
+    setLoading(true);
+    setLoadError(null);
     try {
-      setLoading(true);
-      const [occData, empData] = await Promise.all([
-        fetchRoomOccupancy(),
-        fetchEmployees(),
-      ]);
+      const [occData, empData] = await Promise.all([fetchRoomOccupancy(), fetchEmployees()]);
       setOccupancy(occData);
       setEmployees(empData);
-    } catch (err) {
-      console.error("Failed to fetch room occupancy:", err);
+    } catch {
+      setLoadError("Không thể tải hiện trạng chỗ ở. Kiểm tra kết nối rồi thử lại.");
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
 
-  const handleOpenCheckInForEmployee = (empId?: number) => {
+  useEffect(() => { void loadData(); }, [loadData]);
+
+  const handleOpenCheckInForEmployee = (empId?: number): void => {
     setSelectedEmpIdForCheckIn(empId);
     setIsCheckInOpen(true);
   };
-
-  const handleOpenCheckOut = (res: ResidentInfo, unitName: string) => {
+  const handleOpenCheckOut = (res: ResidentInfo, unitName: string): void => {
     setTargetResident(res);
     setTargetUnitName(unitName);
     setIsCheckOutOpen(true);
@@ -115,142 +113,37 @@ export const RoomOccupancyBoard: React.FC = () => {
       return unitMatches || item.active_residents.length > 0 || item.scheduled_residents.length > 0;
     });
 
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header & Quick Action Buttons */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">Sơ đồ Hiện trạng Chỗ ở (KTX & Khách sạn)</h2>
-          <p className="text-sm text-slate-500">
-            Xem người đang ở và người đã xếp chỗ sắp đến tại từng phòng KTX và Khách sạn.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => handleOpenCheckInForEmployee(undefined)}
-            className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
-          >
-            + Xếp người vào chỗ ở
-          </button>
-          <button
-            onClick={loadData}
-            className="px-3 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors"
-          >
-            Làm mới
-          </button>
-        </div>
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <p className="text-sm text-slate-600" role="status">
+        {loading ? "Đang tải hiện trạng chỗ ở…" : loadError ? "Chưa tải được hiện trạng" : <>
+          <span className="font-medium tabular-nums text-slate-900">{occupancy.reduce((sum, unit) => sum + unit.active_count, 0)}</span> người đang ở
+          <span className="mx-2 text-slate-400">·</span>{occupancy.reduce((sum, unit) => sum + unit.scheduled_count, 0)} người sắp đến
+        </>}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => void loadData()} disabled={loading} className={systemSecondaryButton}>
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Làm mới
+        </button>
+        <button type="button" onClick={() => handleOpenCheckInForEmployee()} className={systemPrimaryButton}>
+          <Plus className="h-4 w-4" aria-hidden="true" /> Xếp chỗ ở
+        </button>
       </div>
-
-      <UnassignedEmployeesAlert
-        unassignedEmployees={unassignedEmployees}
-        onCheckIn={handleOpenCheckInForEmployee}
-      />
-
-      {/* Filter Tabs & View Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/80 p-3 rounded-xl border border-slate-200">
-        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-          <button
-            onClick={() => setFilterType("ALL")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              filterType === "ALL"
-                ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            Tất cả ({occupancy.length})
-          </button>
-          <button
-            onClick={() => setFilterType("KTX")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              filterType === "KTX"
-                ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            🏫 KTX ({occupancy.filter((o) => o.accommodation_type === "KTX").length})
-          </button>
-          <button
-            onClick={() => setFilterType("HOTEL")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              filterType === "HOTEL"
-                ? "bg-white text-indigo-700 shadow-xs border border-slate-200"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            🏨 Khách sạn ({occupancy.filter((o) => o.accommodation_type === "HOTEL").length})
-          </button>
-        </div>
-
-        <div className="flex items-center gap-3 justify-between md:justify-end flex-wrap">
-          <div className="flex items-center bg-white p-1 rounded-lg border border-slate-200 text-xs font-bold shadow-2xs">
-            <button
-              onClick={() => setViewMode("GROUPED")}
-              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
-                viewMode === "GROUPED"
-                  ? "bg-indigo-600 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              🏢 Theo Phòng
-            </button>
-            <button
-              onClick={() => setViewMode("LIST")}
-              className={`px-3 py-1 rounded-md transition-all flex items-center gap-1 cursor-pointer ${
-                viewMode === "LIST"
-                  ? "bg-indigo-600 text-white shadow-2xs"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              👤 Theo Nhân viên
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Tìm tên, mã, phòng..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-44 sm:w-60 px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="p-12 text-center text-slate-400 font-medium">Đang tải sơ đồ chỗ ở...</div>
-      ) : viewMode === "GROUPED" ? (
-        <GroupedRoomOccupancyView
-          filteredOccupancy={filteredOccupancy}
-          onCheckOut={handleOpenCheckOut}
-        />
-      ) : (
-        <FlatResidentTableView
-          filteredOccupancy={filteredOccupancy}
-          employees={employees}
-          onCheckOut={handleOpenCheckOut}
-        />
-      )}
-
-      {/* Modals */}
-      <CheckInModal
-        isOpen={isCheckInOpen}
-        onClose={() => {
-          setIsCheckInOpen(false);
-          setSelectedEmpIdForCheckIn(undefined);
-        }}
-        onSuccess={loadData}
-        defaultEmployeeId={selectedEmpIdForCheckIn}
-      />
-
-      <CheckOutModal
-        isOpen={isCheckOutOpen}
-        onClose={() => {
-          setIsCheckOutOpen(false);
-          setTargetResident(null);
-        }}
-        onSuccess={loadData}
-        targetResident={targetResident}
-        unitName={targetUnitName}
-      />
     </div>
-  );
-};
+    <OccupancyToolbar occupancy={occupancy} ready={!loading && !loadError} filterType={filterType} onFilter={setFilterType}
+      viewMode={viewMode} onView={setViewMode} searchQuery={searchQuery} onSearch={setSearchQuery} />
+    {loading ? <div className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải danh sách chỗ ở…</div>
+      : loadError ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-5 text-sm">
+        <p className="text-red-800">{loadError}</p>
+        <button type="button" onClick={() => void loadData()} className={`${systemSecondaryButton} mt-3`}>Thử lại</button>
+      </div> : <>
+        <UnassignedEmployeesAlert unassignedEmployees={unassignedEmployees} onCheckIn={handleOpenCheckInForEmployee} />
+        {viewMode === "GROUPED" ? <GroupedRoomOccupancyView filteredOccupancy={filteredOccupancy} onCheckOut={handleOpenCheckOut} />
+          : <FlatResidentTableView filteredOccupancy={filteredOccupancy} employees={employees} onCheckOut={handleOpenCheckOut} />}
+      </>}
+    <CheckInModal isOpen={isCheckInOpen} onClose={() => { setIsCheckInOpen(false); setSelectedEmpIdForCheckIn(undefined); }}
+      onSuccess={loadData} defaultEmployeeId={selectedEmpIdForCheckIn} />
+    <CheckOutModal isOpen={isCheckOutOpen} onClose={() => { setIsCheckOutOpen(false); setTargetResident(null); }}
+      onSuccess={loadData} targetResident={targetResident} unitName={targetUnitName} />
+  </div>;
+}

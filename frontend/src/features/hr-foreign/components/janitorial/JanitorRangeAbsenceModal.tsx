@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { ForeignEmployee } from "../../types";
 import { saveJanitorRangeAbsence } from "../../api/janitorApi";
+import { janitorLocationLabel } from "./janitorUtils";
+import { vietnamDate } from "../meal-forecast/vietnamDate";
+import { SystemDialog } from "../../../../shared/components/SystemDialog";
+import { systemField, systemPrimaryButton, systemSecondaryButton } from "../../../../shared/components/systemStyles";
 
 interface JanitorRangeAbsenceModalProps {
   isOpen: boolean;
@@ -9,194 +13,65 @@ interface JanitorRangeAbsenceModalProps {
   onSuccess: () => void;
 }
 
-export const JanitorRangeAbsenceModal: React.FC<JanitorRangeAbsenceModalProps> = ({
-  isOpen,
-  onClose,
-  employees,
-  onSuccess,
-}) => {
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | "">(
-    employees.length > 0 ? employees[0].id : ""
-  );
-  const [startDate, setStartDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [endDate, setEndDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [absenceType, setAbsenceType] = useState<"FULL_DAY" | "HALF_DAY">(
-    "FULL_DAY"
-  );
+export function JanitorRangeAbsenceModal({ isOpen, onClose, employees, onSuccess }: JanitorRangeAbsenceModalProps) {
+  const [employeeId, setEmployeeId] = useState<number | "">("");
+  const [startDate, setStartDate] = useState(vietnamDate);
+  const [endDate, setEndDate] = useState(vietnamDate);
+  const [absenceType, setAbsenceType] = useState<"FULL_DAY" | "HALF_DAY">("FULL_DAY");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+    setEmployeeId(employees[0]?.id ?? "");
+    setStartDate(vietnamDate());
+    setEndDate(vietnamDate());
+    setAbsenceType("FULL_DAY");
+    setReason("");
+    setError(null);
+  }, [isOpen, employees]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedEmployeeId) {
-      alert("Vui lòng chọn nhân viên tạp vụ.");
-      return;
-    }
-    if (startDate > endDate) {
-      alert("Từ ngày không thể lớn hơn Đến ngày.");
-      return;
-    }
-
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (submitting) return;
+    if (!employeeId) { setError("Vui lòng chọn nhân sự tạp vụ."); return; }
+    if (!startDate || !endDate) { setError("Vui lòng nhập đủ từ ngày và đến ngày."); return; }
+    if (startDate > endDate) { setError("Từ ngày không được sau đến ngày."); return; }
+    setSubmitting(true);
+    setError(null);
     try {
-      setSubmitting(true);
-      await saveJanitorRangeAbsence({
-        employee_id: Number(selectedEmployeeId),
-        start_date: startDate,
-        end_date: endDate,
-        absence_type: absenceType,
-        reason: reason.trim() || undefined,
-      });
+      await saveJanitorRangeAbsence({ employee_id: Number(employeeId), start_date: startDate, end_date: endDate, absence_type: absenceType, reason: reason.trim() || undefined });
       onSuccess();
       onClose();
-    } catch (err: any) {
-      alert(err.message || "Lỗi đăng ký nghỉ theo đợt");
-    } finally {
-      setSubmitting(false);
-    }
+    } catch (cause: unknown) { setError(cause instanceof Error ? cause.message : "Không thể đăng ký nghỉ theo đợt."); }
+    finally { setSubmitting(false); }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📅</span>
-            <h3 className="font-bold text-slate-800 text-sm">
-              Đăng ký Nghỉ theo Đợt (Khoảng ngày)
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 font-bold text-lg leading-none cursor-pointer"
-          >
-            ✕
-          </button>
+  return <SystemDialog isOpen={isOpen} onClose={onClose} title="Đăng ký nghỉ theo đợt">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {error && <p role="alert" className="text-sm text-red-800">{error}</p>}
+      <fieldset disabled={submitting} className="min-w-0 space-y-4 disabled:opacity-60">
+        <div><label htmlFor="janitor-range-employee" className="mb-1.5 block text-sm text-slate-700">Nhân sự tạp vụ <span className="text-red-700">*</span></label>
+          <select id="janitor-range-employee" required value={employeeId} onChange={(event) => setEmployeeId(event.target.value ? Number(event.target.value) : "")} className={systemField}>
+            <option value="">Chọn nhân sự</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name_latin} · {employee.employee_code || "Chưa có mã"} · {janitorLocationLabel(employee.workplace_location)}</option>)}
+          </select></div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div><label htmlFor="janitor-range-start" className="mb-1.5 block text-sm text-slate-700">Từ ngày <span className="text-red-700">*</span></label>
+            <input id="janitor-range-start" type="date" required value={startDate} onChange={(event) => setStartDate(event.target.value)} className={systemField} /></div>
+          <div><label htmlFor="janitor-range-end" className="mb-1.5 block text-sm text-slate-700">Đến ngày <span className="text-red-700">*</span></label>
+            <input id="janitor-range-end" type="date" required value={endDate} onChange={(event) => setEndDate(event.target.value)} className={systemField} /></div>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs">
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Chọn Nhân viên Tạp vụ <span className="text-rose-500">*</span>
-            </label>
-            <select
-              value={selectedEmployeeId}
-              onChange={(e) => setSelectedEmployeeId(Number(e.target.value))}
-              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-              required
-            >
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name_latin} ({emp.employee_code || "Không mã"}) -{" "}
-                  {emp.workplace_location === "DORMITORY"
-                    ? "KTX"
-                    : emp.workplace_location === "CN09"
-                    ? "CN09"
-                    : emp.workplace_location === "CN15"
-                    ? "CN15"
-                    : "Công ty"}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Từ ngày <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                required
-              />
-            </div>
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Đến ngày <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Hình thức nghỉ
-            </label>
-            <div className="flex gap-4 items-center mt-1">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="absenceType"
-                  value="FULL_DAY"
-                  checked={absenceType === "FULL_DAY"}
-                  onChange={() => setAbsenceType("FULL_DAY")}
-                  className="text-amber-600 focus:ring-amber-500"
-                />
-                <span className="font-semibold text-slate-700">
-                  Nghỉ cả ngày (1.0 công)
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="absenceType"
-                  value="HALF_DAY"
-                  checked={absenceType === "HALF_DAY"}
-                  onChange={() => setAbsenceType("HALF_DAY")}
-                  className="text-amber-600 focus:ring-amber-500"
-                />
-                <span className="font-semibold text-slate-700">
-                  Nghỉ nửa ngày (0.5 công)
-                </span>
-              </label>
-            </div>
-          </div>
-
-          <div>
-            <label className="block font-bold text-slate-700 mb-1">
-              Lý do nghỉ (nếu có)
-            </label>
-            <input
-              type="text"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="VD: Nghỉ phép, nghỉ ốm, việc gia đình..."
-              className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl cursor-pointer"
-            >
-              Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
-            >
-              {submitting ? "Đang lưu..." : "Xác nhận Đăng ký"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
+        <fieldset><legend className="mb-1.5 text-sm text-slate-700">Hình thức nghỉ</legend><div className="flex flex-wrap gap-x-4 gap-y-2">
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-slate-700"><input type="radio" name="janitor-range-type" checked={absenceType === "FULL_DAY"} onChange={() => setAbsenceType("FULL_DAY")} className="h-4 w-4 accent-slate-800" /> Nghỉ cả ngày</label>
+          <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-slate-700"><input type="radio" name="janitor-range-type" checked={absenceType === "HALF_DAY"} onChange={() => setAbsenceType("HALF_DAY")} className="h-4 w-4 accent-slate-800" /> Nghỉ nửa ngày</label>
+        </div></fieldset>
+        <div><label htmlFor="janitor-range-reason" className="mb-1.5 block text-sm text-slate-700">Lý do nghỉ</label>
+          <input id="janitor-range-reason" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="Nghỉ phép, nghỉ ốm, việc riêng…" className={systemField} /></div>
+        <p className="text-xs text-slate-600">Chủ nhật được bỏ qua khi đăng ký nghỉ theo khoảng ngày.</p>
+        <div className="flex justify-end gap-2 border-t border-slate-200 pt-4"><button type="button" onClick={onClose} className={systemSecondaryButton}>Hủy</button>
+          <button type="submit" disabled={submitting || employees.length === 0} className={systemPrimaryButton}>{submitting ? "Đang lưu…" : "Đăng ký nghỉ"}</button></div>
+      </fieldset>
+    </form>
+  </SystemDialog>;
+}

@@ -1,100 +1,42 @@
-import React from "react";
 import type { DailyPresenceItem } from "../../types";
+import { systemTextButton } from "../../../../shared/components/systemStyles";
 
 interface Props {
   filteredItems: DailyPresenceItem[];
-  onOpenProfile: (empId: number) => void;
+  onOpenProfile: (employeeId: number) => void;
 }
 
-export const PresenceTableList: React.FC<Props> = ({
-  filteredItems,
-  onOpenProfile,
-}) => {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th className="py-3.5 px-4">STT</th>
-              <th className="py-3.5 px-4">Mã NV</th>
-              <th className="py-3.5 px-4">Họ và tên</th>
-              <th className="py-3.5 px-4">Giới tính</th>
-              <th className="py-3.5 px-4">Bộ phận</th>
-              <th className="py-3.5 px-4">Loại chỗ ở</th>
-              <th className="py-3.5 px-4">Vị trí / Chỗ ở cụ thể</th>
-              <th className="py-3.5 px-4">Vị trí giường</th>
-              <th className="py-3.5 px-4">Loại hình</th>
-              <th className="py-3.5 px-4 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredItems.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="py-8 text-center text-slate-400 italic">
-                  Không tìm thấy nhân sự nào phù hợp với bộ lọc.
-                </td>
-              </tr>
-            ) : (
-              filteredItems.map((item, idx) => (
-                <tr key={item.employee_id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="py-3 px-4 font-mono text-slate-400">{idx + 1}</td>
-                  <td className="py-3 px-4 font-mono font-bold text-slate-700">
-                    {item.employee_code || `#${item.employee_id}`}
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => onOpenProfile(item.employee_id)}
-                      className="font-bold text-slate-900 hover:text-blue-600 transition-colors text-left"
-                    >
-                      {item.name_latin}
-                    </button>
-                    {item.name_chinese && (
-                      <p className="text-[11px] text-slate-400 font-normal">{item.name_chinese}</p>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-slate-600">{item.gender}</td>
-                  <td className="py-3 px-4 font-medium text-slate-700">{item.department || "—"}</td>
-                  <td className="py-3 px-4">
-                    {item.accommodation_type === "KTX" ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        🏢 KTX
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                        🏨 Khách sạn
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 font-semibold text-slate-800">
-                    {item.location_name}
-                  </td>
-                  <td className="py-3 px-4 text-slate-600">{item.bed_location || "—"}</td>
-                  <td className="py-3 px-4">
-                    {item.stay_type === "CONG_TAC" ? (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                        Công tác
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
-                        Cố định
-                      </span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => onOpenProfile(item.employee_id)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      Xem Hồ sơ
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+export function PresenceTableList({ filteredItems, onOpenProfile }: Props) {
+  return <section className="min-w-0 rounded-sm border border-slate-200 bg-white" aria-label="Nhân sự đang ở Việt Nam">
+    <div className="overflow-x-auto" role="region" aria-label="Bảng hiện diện nhân sự" tabIndex={0}>
+      <table className="w-full min-w-[1080px] border-collapse text-left text-sm">
+        <caption className="sr-only">Nhân sự hiện diện tại Việt Nam và chỗ ở theo ngày tra cứu</caption>
+        <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>
+          {["STT", "Mã nhân sự", "Họ và tên", "Giới tính", "Bộ phận", "Loại chỗ ở", "Phòng / Khách sạn", "Vị trí giường", "Loại hình", "Thao tác"].map((label) => <th key={label} scope="col" className="whitespace-nowrap px-3 py-3 font-medium">{label}</th>)}
+        </tr></thead>
+        <tbody className="divide-y divide-slate-200">
+          {filteredItems.length === 0 ? <tr><td colSpan={10} className="px-4 py-8 text-center text-slate-600">Không tìm thấy nhân sự phù hợp với ngày tra cứu và bộ lọc.</td></tr>
+            : filteredItems.map((item, index) => {
+              const unassigned = !item.room_number && !item.hotel_name;
+              return <tr key={item.employee_id} className="hover:bg-slate-50">
+                <td className="px-3 py-3 tabular-nums text-slate-500">{index + 1}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-slate-600">{item.employee_code || `#${item.employee_id}`}</td>
+                <th scope="row" className="min-w-40 px-3 py-3 font-normal">
+                  <button type="button" onClick={() => onOpenProfile(item.employee_id)} className="cursor-pointer text-left font-medium text-slate-900 underline-offset-4 hover:underline">{item.name_latin}</button>
+                  {item.name_chinese && <span className="mt-0.5 block text-xs text-slate-600">{item.name_chinese}</span>}
+                </th>
+                <td className="px-3 py-3 text-slate-600">{item.gender || "—"}</td>
+                <td className="px-3 py-3 text-slate-600">{item.department || "—"}</td>
+                <td className={`px-3 py-3 ${unassigned ? "text-amber-800" : "text-slate-600"}`}>{unassigned ? "Chưa xếp chỗ" : item.accommodation_type === "KTX" ? "KTX" : "Khách sạn"}</td>
+                <td className="px-3 py-3 text-slate-700">{item.location_name || "—"}</td>
+                <td className="px-3 py-3 text-slate-600">{item.bed_location || "—"}</td>
+                <td className="px-3 py-3 text-slate-600">{item.stay_type === "CONG_TAC" ? "Công tác" : item.stay_type === "CO_DINH" ? "Cố định" : "—"}</td>
+                <td className="whitespace-nowrap px-3 py-2"><button type="button" onClick={() => onOpenProfile(item.employee_id)} aria-label={`Xem hồ sơ ${item.name_latin}`} className={systemTextButton}>Hồ sơ</button></td>
+              </tr>;
+            })}
+        </tbody>
+      </table>
     </div>
-  );
-};
+    <p role="status" className="border-t border-slate-200 px-4 py-3 text-sm text-slate-600">Hiển thị {filteredItems.length} nhân sự</p>
+  </section>;
+}

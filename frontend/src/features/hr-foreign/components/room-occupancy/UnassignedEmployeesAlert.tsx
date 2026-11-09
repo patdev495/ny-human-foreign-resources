@@ -1,53 +1,27 @@
-import React from "react";
 import type { ForeignEmployee } from "../../types";
+import { ChevronDown } from "lucide-react";
+import { systemTextButton } from "../../../../shared/components/systemStyles";
 
 interface Props {
   unassignedEmployees: ForeignEmployee[];
   onCheckIn: (empId: number) => void;
 }
 
-export const UnassignedEmployeesAlert: React.FC<Props> = ({
-  unassignedEmployees,
-  onCheckIn,
-}) => {
+export function UnassignedEmployeesAlert({ unassignedEmployees, onCheckIn }: Props) {
   if (unassignedEmployees.length === 0) return null;
-
-  return (
-    <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-4 space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-base">⚠️</span>
-          <h3 className="text-sm font-bold text-amber-900">
-            Có {unassignedEmployees.length} nhân sự đã hoặc sắp đến Việt Nam cần xếp chỗ ở
-          </h3>
+  return <details className="group rounded-sm border border-amber-200 bg-white">
+    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm text-amber-900 [&::-webkit-details-marker]:hidden">
+      <span><strong className="font-semibold">{unassignedEmployees.length} nhân sự chưa xếp chỗ ở</strong><span className="hidden font-normal sm:inline"> · Đã hoặc sắp đến Việt Nam</span></span>
+      <span className="flex shrink-0 items-center gap-2 text-slate-600"><span className="text-xs">Xem danh sách</span><ChevronDown className="h-4 w-4 group-open:rotate-180" aria-hidden="true" /></span>
+    </summary>
+    <ul className="divide-y divide-slate-200 border-t border-amber-200">
+      {unassignedEmployees.map((emp) => <li key={emp.id} className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className="min-w-0 text-sm">
+          <p className="break-words font-medium text-slate-900">{emp.name_latin}</p>
+          <p className="mt-1 break-words text-xs text-slate-600">{emp.employee_code || "Chưa có mã"} · {emp.department || "Chưa có bộ phận"}{emp.entry_date && ` · Ngày đến ${emp.entry_date}`}</p>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-200 text-amber-900">
-          Cần xếp chỗ
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {unassignedEmployees.map((emp) => (
-          <div
-            key={emp.id}
-            className="bg-white p-3 rounded-lg border border-amber-200 shadow-2xs flex items-center justify-between gap-2"
-          >
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">{emp.name_latin}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                {emp.employee_code || "Chưa có mã"} &bull; {emp.department || "N/A"}
-              </p>
-              {emp.entry_date && <p className="text-[11px] text-slate-600">Ngày đến: {emp.entry_date}</p>}
-            </div>
-            <button
-              onClick={() => onCheckIn(emp.id)}
-              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-md shadow-2xs whitespace-nowrap cursor-pointer transition-colors"
-            >
-              + Xếp chỗ ngay
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+        <button type="button" onClick={() => onCheckIn(emp.id)} aria-label={`Xếp chỗ cho ${emp.name_latin}`} className={`${systemTextButton} shrink-0`}>Xếp chỗ</button>
+      </li>)}
+    </ul>
+  </details>;
+}

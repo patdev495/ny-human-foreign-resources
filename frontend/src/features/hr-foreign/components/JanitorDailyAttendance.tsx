@@ -1,367 +1,109 @@
-import React, { useEffect, useState } from "react";
-import {
-  fetchDailyJanitorAttendance,
-  resetJanitorAttendance,
-  saveJanitorAbsence,
-  type JanitorDailyAttendanceSheet,
-} from "../api/janitorApi";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CalendarRange, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { fetchDailyJanitorAttendance, resetJanitorAttendance, saveJanitorAbsence, type JanitorDailyAttendanceSheet } from "../api/janitorApi";
 import { fetchEmployees } from "../api";
 import type { ForeignEmployee } from "../types";
 import { JanitorRangeAbsenceModal } from "./janitorial/JanitorRangeAbsenceModal";
-import { ModuleHeader } from "../../../shared/components/ModuleHeader";
-import { CalendarCheck, CalendarRange, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { JanitorAttendanceTable, type AttendanceChoice, type AttendanceFilter } from "./janitorial/JanitorAttendanceTable";
+import { isJanitor, janitorLocations, type JanitorLocationFilter } from "./janitorial/janitorUtils";
+import { vietnamDate } from "./meal-forecast/vietnamDate";
+import { SystemTabs } from "../../../shared/components/SystemTabs";
+import { systemField, systemPrimaryButton, systemSecondaryButton, systemTextButton } from "../../../shared/components/systemStyles";
 
-export const JanitorDailyAttendance: React.FC = () => {
-  const [targetDate, setTargetDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+export function JanitorDailyAttendance() {
+  const [targetDate, setTargetDate] = useState(vietnamDate);
   const [sheet, setSheet] = useState<JanitorDailyAttendanceSheet | null>(null);
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState<JanitorLocationFilter>("ALL");
+  const [statusFilter, setStatusFilter] = useState<AttendanceFilter>("ALL");
   const [isRangeModalOpen, setIsRangeModalOpen] = useState(false);
+  const [savingId, setSavingId] = useState<number | null>(null);
+  const requestSequence = useRef(0);
 
-  const loadData = async () => {
+  const loadData = useCallback(async (date: string): Promise<void> => {
+    const sequence = ++requestSequence.current;
+    setLoading(true);
+    setLoadError(null);
     try {
-      setLoading(true);
-      setErrorMessage(null);
-      const [sheetData, allEmps] = await Promise.all([
-        fetchDailyJanitorAttendance(targetDate),
-        fetchEmployees(),
-      ]);
-      setSheet(sheetData);
-      setEmployees(
-        allEmps.filter(
-          (e: ForeignEmployee) =>
-            e.employee_type === "JANITORIAL" ||
-            (e.role && e.role.toLowerCase().includes("tạp vụ"))
-        )
-      );
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Lỗi tải dữ liệu điểm danh tạp vụ";
-      setErrorMessage(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+      const [attendance, people] = await Promise.all([fetchDailyJanitorAttendance(date), fetchEmployees()]);
+      if (sequence !== requestSequence.current) return;
+      setSheet(attendance);
+      setEmployees(people.filter(isJanitor));
+    } catch {
+      if (sequence === requestSequence.current) setLoadError("Không thể tải điểm danh tạp vụ. Kiểm tra kết nối rồi thử lại.");
+    } finally { if (sequence === requestSequence.current) setLoading(false); }
+  }, []);
   useEffect(() => {
-    loadData();
-  }, [targetDate]);
+    setSaveError(null);
+    void loadData(targetDate);
+    return () => { requestSequence.current += 1; };
+  }, [targetDate, loadData]);
 
-  const handleStatusChange = async (
-    employeeId: number,
-    newType: "PRESENT" | "FULL_DAY" | "HALF_DAY",
-    reason: string = ""
-  ) => {
+  const handleStatusChange = async (employeeId: number, type: AttendanceChoice, reason: string): Promise<void> => {
+    if (savingId !== null) return;
+    setSavingId(employeeId);
+    setSaveError(null);
     try {
-      if (newType === "PRESENT") {
-        await resetJanitorAttendance(employeeId, targetDate);
-      } else {
-        await saveJanitorAbsence({
-          employee_id: employeeId,
-          attendance_date: targetDate,
-          absence_type: newType,
-          reason: reason.trim() || undefined,
-        });
-      }
-      loadData();
-    } catch (err: any) {
-      alert(err.message || "Lỗi lưu trạng thái điểm danh");
-    }
+      if (type === "PRESENT") await resetJanitorAttendance(employeeId, targetDate);
+      else await saveJanitorAbsence({ employee_id: employeeId, attendance_date: targetDate, absence_type: type, reason: reason.trim() || undefined });
+      await loadData(targetDate);
+    } catch (cause: unknown) { setSaveError(cause instanceof Error ? cause.message : "Không thể lưu điểm danh tạp vụ."); }
+    finally { setSavingId(null); }
   };
-
-  const handleDateShift = (days: number) => {
-    const d = new Date(targetDate);
-    d.setDate(d.getDate() + days);
-    setTargetDate(d.toISOString().split("T")[0]);
+  const shiftDate = (days: number): void => {
+    const date = new Date(`${targetDate}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    setTargetDate(date.toISOString().slice(0, 10));
   };
-
-  const [locationFilter, setLocationFilter] = useState("ALL");
-
-  const filteredItems = (sheet?.items || []).filter((item) => {
-    if (
-      searchQuery &&
-      !item.name_latin.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !(item.employee_code && item.employee_code.toLowerCase().includes(searchQuery.toLowerCase()))
-    ) {
-      return false;
-    }
-    if (locationFilter !== "ALL" && (item.workplace_location || "DORMITORY") !== locationFilter) {
-      return false;
-    }
-    return true;
+  const currentSheet = !loading && !loadError && sheet?.date === targetDate ? sheet : null;
+  const filteredItems = (currentSheet?.items || []).filter((item) => {
+    if (locationFilter !== "ALL" && (item.workplace_location || "DORMITORY") !== locationFilter) return false;
+    if (statusFilter === "PRESENT" && item.status !== "PRESENT") return false;
+    if (statusFilter === "FULL_DAY" && item.absence_type !== "FULL_DAY") return false;
+    if (statusFilter === "HALF_DAY" && item.absence_type !== "HALF_DAY") return false;
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return !query || [item.name_latin, item.name_chinese, item.employee_code].some((value) => value?.toLocaleLowerCase().includes(query));
   });
 
-  return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Top Header Banner */}
-      <ModuleHeader
-        title="Điểm danh Tạp vụ Hàng ngày"
-        subtitle="Mặc định tất cả Tạp vụ đi làm đủ. Tích chọn các trường hợp vắng/nghỉ và nhập lý do."
-        icon={CalendarCheck}
-        theme="purple"
-        badgeText="Hàng ngày"
-        actions={
-          <button
-            type="button"
-            onClick={() => setIsRangeModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-900 shadow-md hover:bg-slate-100 transition-all cursor-pointer"
-          >
-            <CalendarRange className="h-4 w-4 text-purple-600" />
-            <span>Đăng ký nghỉ theo đợt</span>
-          </button>
-        }
-      />
-
-      {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-rose-500" />
-          <span>{errorMessage}</span>
-        </div>
-      )}
-
-      {/* Date selector & Controls */}
-      <div className="modern-card p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <button
-            type="button"
-            onClick={() => handleDateShift(-1)}
-            className="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span>Ngày trước</span>
-          </button>
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none cursor-pointer"
-          />
-          <button
-            type="button"
-            onClick={() => handleDateShift(1)}
-            className="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
-          >
-            <span>Ngày sau</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setTargetDate(new Date().toISOString().split("T")[0])}
-            className="px-3 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold text-xs rounded-xl transition-colors cursor-pointer border border-purple-200"
-          >
-            Hôm nay
-          </button>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600 shrink-0">Lọc nơi làm việc:</span>
-            <select
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              className="px-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none bg-white font-semibold text-slate-700"
-            >
-              <option value="ALL">Tất cả vị trí</option>
-              <option value="DORMITORY">🏫 KTX (Ký túc xá)</option>
-              <option value="CN09">🏭 Nhà máy CN09</option>
-              <option value="CN15">🏭 Nhà máy CN15</option>
-              <option value="COMPANY">🏢 Văn phòng Công ty</option>
-            </select>
-          </div>
-
-          <div className="w-full sm:w-64 relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm tên, mã nhân viên..."
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
-            />
-            <span className="absolute left-3 top-2.5 text-slate-400 text-xs">🔍</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
-          <div className="text-slate-400 text-xs font-bold uppercase">Tổng Tạp vụ</div>
-          <div className="text-2xl font-bold text-slate-800 mt-1">
-            {sheet?.total_count || 0}
-          </div>
-        </div>
-        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-2xs">
-          <div className="text-emerald-600 text-xs font-bold uppercase">Đi làm (1.0 công)</div>
-          <div className="text-2xl font-bold text-emerald-700 mt-1">
-            {sheet?.present_count || 0}
-          </div>
-        </div>
-        <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 shadow-2xs">
-          <div className="text-rose-600 text-xs font-bold uppercase">Nghỉ cả ngày (X)</div>
-          <div className="text-2xl font-bold text-rose-700 mt-1">
-            {sheet?.full_day_absence_count || 0}
-          </div>
-        </div>
-        <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-2xs">
-          <div className="text-amber-600 text-xs font-bold uppercase">Nghỉ nửa ngày (0.5)</div>
-          <div className="text-2xl font-bold text-amber-700 mt-1">
-            {sheet?.half_day_absence_count || 0}
-          </div>
-        </div>
-      </div>
-
-      {/* Attendance Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm font-semibold">
-            Đang tải dữ liệu điểm danh...
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 text-sm font-semibold">
-            Không tìm thấy nhân viên tạp vụ nào.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
-                  <th className="px-4 py-3 w-12 text-center">STT</th>
-                  <th className="px-4 py-3">Mã NV</th>
-                  <th className="px-4 py-3">Họ và Tên</th>
-                  <th className="px-4 py-3">Nơi làm việc</th>
-                  <th className="px-4 py-3">Trạng thái điểm danh</th>
-                  <th className="px-4 py-3">Lý do nghỉ</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredItems.map((item, idx) => {
-                  const isPresent = item.status === "PRESENT";
-                  const isFull = item.absence_type === "FULL_DAY";
-                  const isHalf = item.absence_type === "HALF_DAY";
-
-                  return (
-                    <tr key={item.employee_id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-4 py-3 text-center text-slate-400 font-semibold">
-                        {idx + 1}
-                      </td>
-                      <td className="px-4 py-3 font-mono font-bold text-slate-700">
-                        {item.employee_code || "—"}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-slate-800">
-                        {item.name_latin}
-                        {item.name_chinese && (
-                          <span className="text-slate-400 font-normal ml-1">
-                            ({item.name_chinese})
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
-                        <span
-                          className={`inline-flex px-2.5 py-0.5 rounded-full font-bold text-[11px] ${
-                            item.workplace_location === "DORMITORY"
-                              ? "bg-amber-100 text-amber-900 border border-amber-200"
-                              : item.workplace_location === "CN09"
-                              ? "bg-blue-100 text-blue-900 border border-blue-200"
-                              : item.workplace_location === "CN15"
-                              ? "bg-indigo-100 text-indigo-900 border border-indigo-200"
-                              : "bg-emerald-100 text-emerald-900 border border-emerald-200"
-                          }`}
-                        >
-                          {item.workplace_location === "DORMITORY"
-                            ? "🏫 KTX"
-                            : item.workplace_location === "CN09"
-                            ? "🏭 CN09"
-                            : item.workplace_location === "CN15"
-                            ? "🏭 CN15"
-                            : "🏢 Công ty"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(item.employee_id, "PRESENT")}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              isPresent
-                                ? "bg-emerald-600 text-white shadow-2xs"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                            }`}
-                          >
-                            ✓ Đi làm
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleStatusChange(
-                                item.employee_id,
-                                "FULL_DAY",
-                                item.reason || ""
-                              )
-                            }
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              isFull
-                                ? "bg-rose-600 text-white shadow-2xs"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                            }`}
-                          >
-                            ✕ Nghỉ 1 ngày
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleStatusChange(
-                                item.employee_id,
-                                "HALF_DAY",
-                                item.reason || ""
-                              )
-                            }
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                              isHalf
-                                ? "bg-amber-500 text-white shadow-2xs"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                            }`}
-                          >
-                            ½ Nghỉ 0.5 ngày
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        {!isPresent ? (
-                          <input
-                            type="text"
-                            defaultValue={item.reason || ""}
-                            onBlur={(e) =>
-                              handleStatusChange(
-                                item.employee_id,
-                                (item.absence_type as any) || "FULL_DAY",
-                                e.target.value
-                              )
-                            }
-                            placeholder="Nhập lý do vắng..."
-                            className="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                          />
-                        ) : (
-                          <span className="text-slate-300 text-[11px]">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <JanitorRangeAbsenceModal
-        isOpen={isRangeModalOpen}
-        onClose={() => setIsRangeModalOpen(false)}
-        employees={employees}
-        onSuccess={loadData}
-      />
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">Điểm danh tạp vụ hằng ngày</h1>
+      <button type="button" onClick={() => setIsRangeModalOpen(true)} disabled={loading || savingId !== null || Boolean(loadError)} className={systemPrimaryButton}><CalendarRange className="h-4 w-4" aria-hidden="true" /> Đăng ký nghỉ theo đợt</button>
     </div>
-  );
-};
+    <p className="text-sm text-slate-600">Mặc định đi làm đủ 1 công. Ghi nhận nghỉ cả ngày hoặc nửa ngày; lý do nghỉ được lưu khi rời ô nhập.</p>
+    <section className="rounded-sm border border-slate-200 bg-white" aria-label="Ngày và bộ lọc điểm danh">
+      <div className="flex flex-wrap items-end gap-3 p-4">
+        <div><label htmlFor="attendance-date" className="mb-1.5 block text-sm text-slate-600">Ngày điểm danh</label>
+          <input id="attendance-date" type="date" required value={targetDate} disabled={savingId !== null} onChange={(event) => { if (event.target.value) setTargetDate(event.target.value); }} className={`${systemField} w-auto`} /></div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => shiftDate(-1)} disabled={savingId !== null} aria-label="Ngày trước" className={systemSecondaryButton}><ChevronLeft className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" onClick={() => setTargetDate(vietnamDate())} disabled={savingId !== null} className={systemSecondaryButton}>Hôm nay</button>
+          <button type="button" onClick={() => shiftDate(1)} disabled={savingId !== null} aria-label="Ngày sau" className={systemSecondaryButton}><ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
+          <button type="button" onClick={() => void loadData(targetDate)} disabled={loading || savingId !== null} className={systemSecondaryButton}><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Làm mới</button>
+        </div>
+        <div className="min-w-0 flex-1 basis-52"><label htmlFor="attendance-search" className="mb-1.5 block text-sm text-slate-600">Tìm kiếm</label>
+          <input id="attendance-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Tên, mã nhân sự…" className={systemField} /></div>
+        <div className="w-full sm:w-48"><label htmlFor="attendance-location" className="mb-1.5 block text-sm text-slate-600">Nơi làm việc</label>
+          <select id="attendance-location" value={locationFilter} onChange={(event) => setLocationFilter(event.target.value as JanitorLocationFilter)} className={systemField}>
+            <option value="ALL">Tất cả nơi làm việc</option>{janitorLocations.map((location) => <option key={location.value} value={location.value}>{location.label}</option>)}
+          </select></div>
+        {(searchQuery || locationFilter !== "ALL" || statusFilter !== "ALL") && <button type="button" onClick={() => { setSearchQuery(""); setLocationFilter("ALL"); setStatusFilter("ALL"); }} className={systemTextButton}>Xóa bộ lọc</button>}
+      </div>
+      <div className="border-t border-slate-200 px-4"><SystemTabs label="Lọc trạng thái điểm danh" active={statusFilter} onChange={setStatusFilter} items={[
+        { key: "ALL", label: "Tất cả", count: currentSheet?.total_count },
+        { key: "PRESENT", label: "Đi làm", count: currentSheet?.present_count },
+        { key: "FULL_DAY", label: "Nghỉ cả ngày", count: currentSheet?.full_day_absence_count },
+        { key: "HALF_DAY", label: "Nghỉ nửa ngày", count: currentSheet?.half_day_absence_count },
+      ]} /></div>
+    </section>
+    {saveError && <p role="alert" className="rounded-sm border border-red-200 bg-white p-3 text-sm text-red-800">{saveError}</p>}
+    {loadError ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-4 text-sm"><p className="text-red-800">{loadError}</p><button type="button" onClick={() => void loadData(targetDate)} className={`${systemSecondaryButton} mt-2`}>Thử lại</button></div>
+      : !currentSheet ? <p role="status" className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải điểm danh tạp vụ…</p>
+        : <JanitorAttendanceTable key={targetDate} items={filteredItems} savingId={savingId} onChange={handleStatusChange} />}
+    <JanitorRangeAbsenceModal isOpen={isRangeModalOpen} onClose={() => setIsRangeModalOpen(false)} employees={employees} onSuccess={() => void loadData(targetDate)} />
+  </div>;
+}

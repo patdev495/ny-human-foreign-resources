@@ -1,179 +1,94 @@
-import React, { useEffect, useState } from "react";
-import {
-  fetchMonthlyContracts,
-  updateMonthlyContract,
-  fetchVehicles,
-  updateVehicle,
-} from "../api";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { fetchMonthlyContracts, updateMonthlyContract, fetchVehicles, updateVehicle } from "../api";
 import type { MonthlyVehicleContract, Vehicle } from "../types";
 import { PdfViewerModal } from "./PdfViewerModal";
 import { MonthlyContractEditModal } from "./contracts/MonthlyContractEditModal";
 import { MonthlyVehicleEditModal } from "./contracts/MonthlyVehicleEditModal";
-import { MonthlyInnovaContractCard } from "./contracts/MonthlyInnovaContractCard";
-import { MonthlyTruckContractCard } from "./contracts/MonthlyTruckContractCard";
+import { MonthlyContractTable, MonthlyVehicleTable } from "./contracts/MonthlyContractTable";
+import { applyContractEdits, type ContractEditPackage } from "./contracts/contractDetails";
+import { systemSecondaryButton } from "../../../shared/components/systemStyles";
 
-export const MonthlyContractList: React.FC = () => {
+export function MonthlyContractList() {
   const [contracts, setContracts] = useState<MonthlyVehicleContract[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Contract Edit Modal State
-  const [editingContractPackage, setEditingContractPackage] = useState<{
-    contract: MonthlyVehicleContract;
-    linkedContractIds: number[];
-  } | null>(null);
-  const [submittingContract, setSubmittingContract] = useState<boolean>(false);
-
-  // Vehicle Edit Modal State
+  const [editingPackage, setEditingPackage] = useState<ContractEditPackage | null>(null);
+  const [submittingContract, setSubmittingContract] = useState(false);
+  const [contractError, setContractError] = useState<string | null>(null);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [submittingVehicle, setSubmittingVehicle] = useState<boolean>(false);
+  const [submittingVehicle, setSubmittingVehicle] = useState(false);
+  const [vehicleError, setVehicleError] = useState<string | null>(null);
+  const [pdf, setPdf] = useState<{ title: string; key: string } | null>(null);
+  const request = useRef(0);
 
-  // PDF Viewer Modal State
-  const [pdfModalOpen, setPdfModalOpen] = useState<boolean>(false);
-  const [pdfTitle, setPdfTitle] = useState<string>("");
-  const [pdfDocKey, setPdfDocKey] = useState<string | null>(null);
-
-  const handleOpenPdf = (title: string, docKey: string | null) => {
-    setPdfTitle(title);
-    setPdfDocKey(docKey);
-    setPdfModalOpen(true);
-  };
-
-  const loadData = async () => {
+  const load = useCallback(async () => {
+    const current = ++request.current;
     setLoading(true);
     setError(null);
     try {
-      const [contractsData, vehiclesData] = await Promise.all([
-        fetchMonthlyContracts(),
-        fetchVehicles("COMPANY_OWNED"),
-      ]);
-      setContracts(contractsData);
-      setVehicles(vehiclesData);
-    } catch (err: any) {
-      setError(err.message || "Lỗi khi tải dữ liệu hợp đồng và danh sách xe");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
+      const [contractData, vehicleData] = await Promise.all([fetchMonthlyContracts(), fetchVehicles("COMPANY_OWNED")]);
+      if (current === request.current) { setContracts(contractData); setVehicles(vehicleData); }
+    } catch (failure: unknown) {
+      if (current === request.current) setError(failure instanceof Error ? failure.message : "Không tải được hợp đồng và phương tiện.");
+    } finally { if (current === request.current) setLoading(false); }
   }, []);
+  useEffect(() => { void load(); return () => { request.current += 1; }; }, [load]);
 
-  const handleSaveContract = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingContractPackage) return;
+  function editContract(contract: MonthlyVehicleContract, ids: number[]) {
+    setContractError(null);
+    setEditingPackage({ contract: { ...contract }, linkedContractIds: ids });
+  }
+
+  async function saveContract(event: FormEvent) {
+    event.preventDefault();
+    if (!editingPackage || submittingContract) return;
     setSubmittingContract(true);
+    setContractError(null);
     try {
-      const { contract, linkedContractIds } = editingContractPackage;
-      await Promise.all(
-        linkedContractIds.map((id) => updateMonthlyContract(id, contract))
-      );
-      setEditingContractPackage(null);
-      await loadData();
-    } catch (err: any) {
-      alert("Lỗi khi cập nhật bảng giá hợp đồng: " + err.message);
-    } finally {
-      setSubmittingContract(false);
-    }
-  };
+      const { contract, linkedContractIds } = editingPackage;
+      const result = await Promise.allSettled(linkedContractIds.map(id => {
+        const target = contracts.find(item => item.id === id);
+        return updateMonthlyContract(id, applyContractEdits(target || contract, contract));
+      }));
+      const failed = result.filter(item => item.status === "rejected");
+      if (failed.length > 0) {
+        const failure: unknown = failed[0].reason;
+        const succeeded = result.length - failed.length;
+        setContractError(`${succeeded > 0 ? `Đã lưu ${succeeded}/${result.length} hợp đồng. ` : ""}${failure instanceof Error ? failure.message : "Không lưu được bảng giá."} Có thể thử lưu lại.`);
+        if (succeeded > 0) void load();
+      } else { setEditingPackage(null); void load(); }
+    } finally { setSubmittingContract(false); }
+  }
 
-  const handleSaveVehicle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingVehicle) return;
+  async function saveVehicle(event: FormEvent) {
+    event.preventDefault();
+    if (!editingVehicle || submittingVehicle) return;
     setSubmittingVehicle(true);
+    setVehicleError(null);
     try {
-      await updateVehicle(editingVehicle.id, {
-        ownership_group: editingVehicle.ownership_group,
-        name: editingVehicle.name,
-        driver_name: editingVehicle.driver_name,
-        license_plate: editingVehicle.license_plate,
-        driver_phone: editingVehicle.driver_phone,
-        default_cost: editingVehicle.default_cost,
-        is_active: editingVehicle.is_active,
-      });
+      await updateVehicle(editingVehicle.id, { provider_id: editingVehicle.provider_id, ownership_group: editingVehicle.ownership_group,
+        name: editingVehicle.name, driver_name: editingVehicle.driver_name, license_plate: editingVehicle.license_plate,
+        driver_phone: editingVehicle.driver_phone, default_cost: editingVehicle.default_cost, is_active: editingVehicle.is_active });
       setEditingVehicle(null);
-      await loadData();
-    } catch (err: any) {
-      alert("Lỗi khi cập nhật thông tin xe / lái xe: " + err.message);
-    } finally {
-      setSubmittingVehicle(false);
-    }
-  };
+      void load();
+    } catch (failure: unknown) { setVehicleError(failure instanceof Error ? failure.message : "Không lưu được thông tin xe."); }
+    finally { setSubmittingVehicle(false); }
+  }
 
-  // Group contracts and vehicles
-  const sevenSeaterContracts = contracts.filter(
-    (c) => c.contract_name.includes("7 chỗ") || (c.vehicle_name && c.vehicle_name.includes("7 chỗ"))
-  );
-  const sevenSeaterVehicles = vehicles.filter(
-    (v) => (v.name && v.name.includes("7 chỗ")) || (v.name && v.name.includes("Innova"))
-  );
-
-  const truckContracts = contracts.filter(
-    (c) => c.contract_name.includes("tải") || (c.vehicle_name && c.vehicle_name.includes("tải"))
-  );
-  const truckVehicles = vehicles.filter(
-    (v) => (v.name && v.name.includes("tải")) || (v.name && v.name.includes("CNHTC"))
-  );
-
-  const main7SeaterContract = sevenSeaterContracts[0] || contracts[0];
-  const mainTruckContract = truckContracts[0] || contracts.find((c) => c.id !== main7SeaterContract?.id);
-
-  return (
-    <div className="space-y-6">
-      {loading ? (
-        <div className="p-8 text-center text-slate-500 font-medium">Đang tải cấu hình hợp đồng xe công ty...</div>
-      ) : error ? (
-        <div className="p-8 text-center text-red-500 font-medium">{error}</div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {main7SeaterContract && (
-            <MonthlyInnovaContractCard
-              mainInnovaContract={main7SeaterContract}
-              innovaContracts={sevenSeaterContracts}
-              innovaVehicles={sevenSeaterVehicles}
-              onEditContract={(contract, linkedIds) => setEditingContractPackage({ contract, linkedContractIds: linkedIds })}
-              onEditVehicle={(vehicle) => setEditingVehicle(vehicle)}
-              onViewPdf={handleOpenPdf}
-            />
-          )}
-
-          {mainTruckContract && (
-            <MonthlyTruckContractCard
-              mainTruckContract={mainTruckContract}
-              truckVehicles={truckVehicles}
-              onEditContract={(contract, linkedIds) => setEditingContractPackage({ contract, linkedContractIds: linkedIds })}
-              onEditVehicle={(vehicle) => setEditingVehicle(vehicle)}
-              onViewPdf={handleOpenPdf}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Modal 1: Sửa Bảng Giá Hợp Đồng */}
-      <MonthlyContractEditModal
-        editingContractPackage={editingContractPackage}
-        setEditingContractPackage={setEditingContractPackage}
-        onSave={handleSaveContract}
-        submitting={submittingContract}
-      />
-
-      {/* Modal 2: Sửa Thông Tin Xe & Lái Xe */}
-      <MonthlyVehicleEditModal
-        editingVehicle={editingVehicle}
-        setEditingVehicle={setEditingVehicle}
-        onSave={handleSaveVehicle}
-        submitting={submittingVehicle}
-      />
-
-      {/* PDF Viewer Modal */}
-      <PdfViewerModal
-        isOpen={pdfModalOpen}
-        title={pdfTitle}
-        docKey={pdfDocKey}
-        onClose={() => setPdfModalOpen(false)}
-      />
-    </div>
-  );
-};
+  const sevenSeat = contracts.filter(contract => contract.contract_name.includes("7 chỗ") || contract.vehicle_name?.includes("7 chỗ"));
+  return <div className="space-y-4">
+    {loading && <p role="status" className="py-6 text-sm text-slate-500">Đang tải hợp đồng khoán tháng…</p>}
+    {!loading && error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-sm border border-red-200 bg-white p-4 text-sm text-red-700"><span>{error}</span><button type="button" onClick={() => void load()} className={systemSecondaryButton}>Thử lại</button></div>}
+    {!loading && !error && <>
+      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">{contracts.length} hợp đồng · {vehicles.length} phương tiện. Đơn giá hiển thị theo từng hợp đồng.</p>
+        {sevenSeat.length > 1 && <button type="button" onClick={() => editContract(sevenSeat[0], sevenSeat.map(contract => contract.id))} className={systemSecondaryButton}>Sửa chung xe 7 chỗ ({sevenSeat.length} hợp đồng)</button>}
+      </div>
+      <MonthlyContractTable contracts={contracts} onEdit={editContract} onPdf={(title, key) => setPdf({ title, key })} />
+      <MonthlyVehicleTable vehicles={vehicles} onEdit={vehicle => { setVehicleError(null); setEditingVehicle({ ...vehicle }); }} />
+    </>}
+    <MonthlyContractEditModal editingContractPackage={editingPackage} setEditingContractPackage={setEditingPackage} onSave={saveContract} submitting={submittingContract} error={contractError} />
+    <MonthlyVehicleEditModal editingVehicle={editingVehicle} setEditingVehicle={setEditingVehicle} onSave={saveVehicle} submitting={submittingVehicle} error={vehicleError} />
+    <PdfViewerModal isOpen={pdf !== null} title={pdf?.title || "Hợp đồng"} docKey={pdf?.key || null} onClose={() => setPdf(null)} />
+  </div>;
+}

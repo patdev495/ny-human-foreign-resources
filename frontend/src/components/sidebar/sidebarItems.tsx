@@ -12,6 +12,7 @@ import {
   UtensilsCrossed,
   FileSpreadsheet,
   PlaneTakeoff,
+  type LucideIcon,
 } from "lucide-react";
 
 export type NavTab =
@@ -143,3 +144,17 @@ export const exportItem: NavItem = {
   label: "Xuất Báo Cáo Excel",
   icon: <FileSpreadsheet className="h-4 w-4 shrink-0" />,
 };
+
+export interface NavigationGroup {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  items: NavItem[];
+}
+
+export const navigationGroups: NavigationGroup[] = [
+  { id: "foreign", label: "Nhân sự nước ngoài", icon: Users, items: hrForeignItems },
+  { id: "janitor", label: "Nhân sự tạp vụ", icon: Sparkles, items: janitorItems },
+  { id: "vehicle", label: "Quản lý xe & điều xe", icon: Car, items: vehicleItems },
+  { id: "export", label: exportItem.label, icon: FileSpreadsheet, items: exportSubItems },
+];

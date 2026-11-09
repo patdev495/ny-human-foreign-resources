@@ -1,3 +1,4 @@
+import { systemField, systemPrimaryButton, systemSecondaryButton, systemTextButton } from "../../../../shared/components/systemStyles";
 import React, { useState } from "react";
 import type { MealPriceConfig } from "../../types";
 import {
@@ -64,7 +65,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
           fruit_allowance_price: Number(fruitPrice),
           notes: dtNotes.trim() || undefined,
         });
-        setSuccessMsg(`✓ Đã cập nhật loại ngày '${dtName || dtCode}' thành công!`);
+        setSuccessMsg(` Đã cập nhật loại ngày '${dtName || dtCode}' thành công!`);
         setEditingPriceConfigId(null);
       } else {
         await createMealPriceConfig({
@@ -77,7 +78,7 @@ export const MealPriceConfigTab: React.FC<Props> = ({
           effective_from: new Date().toISOString().split("T")[0],
           notes: dtNotes.trim() || undefined,
         });
-        setSuccessMsg(`✓ Đã thêm loại ngày mới '${dtName || dtCode}' với đầy đủ 4 mức giá!`);
+        setSuccessMsg(` Đã thêm loại ngày mới '${dtName || dtCode}' với đầy đủ 4 mức giá!`);
       }
 
       setDtCode("");
@@ -88,8 +89,8 @@ export const MealPriceConfigTab: React.FC<Props> = ({
       setFruitPrice(normalConfig ? normalConfig.fruit_allowance_price : 60000);
       setDtNotes("");
       onDataChange();
-    } catch (err: any) {
-      setError(err.message || "Không thể lưu cấu hình đơn giá");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Không thể lưu cấu hình đơn giá");
     }
   };
 
@@ -124,120 +125,120 @@ export const MealPriceConfigTab: React.FC<Props> = ({
 
     try {
       await deleteMealPriceConfig(cfg.id);
-      setSuccessMsg("✓ Đã xóa cấu hình đơn giá!");
+      setSuccessMsg(" Đã xóa cấu hình đơn giá!");
       onDataChange();
-    } catch (err: any) {
-      alert(`Lỗi khi xóa: ${err.message}`);
+    } catch (err: unknown) {
+      alert(`Lỗi khi xóa: ${err instanceof Error ? err.message : "Không thể thực hiện thao tác."}`);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-lg p-5">
-        <h3 className="text-lg font-semibold text-emerald-900 mb-2">
-          💰 {editingPriceConfigId !== null ? "Sửa Cấu hình Đơn giá" : "Thêm Loại ngày & Đơn giá Mới"}
+      <div className="bg-white border border-slate-200 rounded-sm p-5">
+        <h3 className="text-base font-semibold text-slate-900 mb-2">
+           {editingPriceConfigId !== null ? "Sửa Cấu hình Đơn giá" : "Thêm Loại ngày & Đơn giá Mới"}
         </h3>
         <form onSubmit={handleSavePriceConfig} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="meal-day-code" className="block text-sm font-medium text-slate-700 mb-1">
                 Mã Loại ngày (Viết hoa, không dấu)
               </label>
-              <input
+              <input id="meal-day-code"
                 type="text"
                 placeholder="VD: TET, LE_304, CONG_TY_KY_NIEM"
                 value={dtCode}
                 onChange={(e) => setDtCode(e.target.value)}
                 disabled={editingPriceConfigId !== null}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-mono text-sm uppercase"
+                className={systemField}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="meal-day-name" className="block text-sm font-medium text-slate-700 mb-1">
                 Tên hiển thị Loại ngày
               </label>
-              <input
+              <input id="meal-day-name"
                 type="text"
                 placeholder="VD: Tết Nguyên Đán, Lễ Quốc Khánh..."
                 value={dtName}
                 onChange={(e) => setDtName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500"
+                className={systemField}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 bg-white/70 p-3 rounded-lg border border-emerald-100">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2 bg-white p-3 rounded-sm border border-slate-200">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                🍳 Bữa Sáng (Nước ngoài) <span className="text-rose-500">*</span>
+              <label htmlFor="meal-breakfast-price" className="block text-xs font-semibold text-slate-700 mb-1">
+                 Bữa Sáng (Nước ngoài) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <input id="meal-breakfast-price"
                 type="number"
                 step={1}
                 min={1000}
                 value={bfPrice}
                 onChange={(e) => setBfPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
+                className={systemField}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                🌙 Bữa Tối (Nước ngoài) <span className="text-rose-500">*</span>
+              <label htmlFor="meal-dinner-price" className="block text-xs font-semibold text-slate-700 mb-1">
+                 Bữa Tối (Nước ngoài) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <input id="meal-dinner-price"
                 type="number"
                 step={1}
                 min={1000}
                 value={dnPrice}
                 onChange={(e) => setDnPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
+                className={systemField}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                ☀️ 1 Bữa Trưa (Lao công) <span className="text-rose-500">*</span>
+              <label htmlFor="meal-janitor-price" className="block text-xs font-semibold text-slate-700 mb-1">
+                 1 Bữa Trưa (Tạp vụ) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <input id="meal-janitor-price"
                 type="number"
                 step={1}
                 min={1000}
                 value={lcPrice}
                 onChange={(e) => setLcPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
+                className={systemField}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                🍇 Tiền Hoa quả (1 ngày) <span className="text-rose-500">*</span>
+              <label htmlFor="meal-fruit-price" className="block text-xs font-semibold text-slate-700 mb-1">
+                 Tiền Hoa quả (1 ngày) <span className="text-rose-500">*</span>
               </label>
-              <input
+              <input id="meal-fruit-price"
                 type="number"
                 step={1}
                 min={1000}
                 value={fruitPrice}
                 onChange={(e) => setFruitPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 font-semibold text-sm"
+                className={systemField}
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="meal-price-notes" className="block text-sm font-medium text-slate-700 mb-1">
               Ghi chú
             </label>
-            <input
+            <input id="meal-price-notes"
               type="text"
               placeholder="Ghi chú thêm về quy định đơn giá này..."
               value={dtNotes}
               onChange={(e) => setDtNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+              className={systemField}
             />
           </div>
 
@@ -246,79 +247,79 @@ export const MealPriceConfigTab: React.FC<Props> = ({
               <button
                 type="button"
                 onClick={handleCancelEditPriceConfig}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-md text-sm"
+                className={systemSecondaryButton}
               >
                 Hủy chỉnh sửa
               </button>
             )}
             <button
               type="submit"
-              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md shadow transition duration-150 text-sm"
+              className={systemPrimaryButton}
             >
-              {editingPriceConfigId !== null ? "💾 Cập nhật Đơn giá" : "➕ Thêm Cấu hình"}
+              {editingPriceConfigId !== null ? " Cập nhật Đơn giá" : " Thêm Cấu hình"}
             </button>
           </div>
         </form>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-          <h4 className="font-semibold text-gray-800">
+      <div className="bg-white border border-slate-200 rounded-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+          <h4 className="font-semibold text-slate-800">
             📊 Danh mục Loại ngày & Đơn giá ({priceConfigs.length})
           </h4>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-100">
+        <div className="overflow-x-auto" role="region" aria-label="Bảng đơn giá bữa ăn" tabIndex={0}>
+          <table className="w-full min-w-[1050px] divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">STT</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Mã Loại ngày</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Tên Hiển thị</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Sáng NNN</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Tối NNN</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Trưa Lao công</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Hoa quả</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-600">Ghi chú</th>
-                <th className="px-4 py-3 text-right font-semibold text-gray-600">Thao tác</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">STT</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Mã Loại ngày</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Tên Hiển thị</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Sáng NNN</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Tối NNN</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Trưa Tạp vụ</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Hoa quả</th>
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-slate-600">Ghi chú</th>
+                <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-600">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-slate-200 bg-white">
               {priceConfigs.map((cfg, idx) => {
                 const bf = cfg.foreign_breakfast_price ?? 30000;
                 const dn = cfg.foreign_dinner_price ?? 40000;
                 const lc = cfg.janitor_meal_price ?? 25000;
                 const fr = cfg.fruit_allowance_price ?? 60000;
                 return (
-                  <tr key={cfg.id} className="hover:bg-emerald-50/50 transition">
-                    <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                    <td className="px-4 py-3 font-mono font-medium text-gray-900">{cfg.day_type}</td>
-                    <td className="px-4 py-3 font-semibold text-emerald-800">
+                  <tr key={cfg.id} className="hover:bg-slate-50 transition">
+                    <td className="px-4 py-3 text-slate-500">{idx + 1}</td>
+                    <td className="px-4 py-3 font-mono font-medium text-slate-900">{cfg.day_type}</td>
+                    <td className="px-4 py-3 font-semibold text-slate-700">
                       {cfg.day_type_name || cfg.day_type}
                     </td>
-                    <td className="px-4 py-3 font-bold text-amber-800">
+                    <td className="px-4 py-3 font-semibold text-slate-700">
                       {bf.toLocaleString()} VNĐ
                     </td>
-                    <td className="px-4 py-3 font-bold text-indigo-800">
+                    <td className="px-4 py-3 font-semibold text-slate-700">
                       {dn.toLocaleString()} VNĐ
                     </td>
-                    <td className="px-4 py-3 font-bold text-emerald-800">
+                    <td className="px-4 py-3 font-semibold text-slate-700">
                       {lc.toLocaleString()} VNĐ
                     </td>
-                    <td className="px-4 py-3 font-bold text-purple-800">
+                    <td className="px-4 py-3 font-semibold text-slate-700">
                       {fr.toLocaleString()} VNĐ
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{cfg.notes || "—"}</td>
+                    <td className="px-4 py-3 text-slate-600">{cfg.notes || "—"}</td>
                     <td className="px-4 py-3 text-right space-x-2">
                       <button
                         onClick={() => handleStartEditPriceConfig(cfg)}
-                        className="text-blue-600 hover:text-blue-800 font-medium"
+                        className={systemTextButton}
                       >
                         Sửa
                       </button>
                       {cfg.day_type !== "NORMAL" && (
                         <button
                           onClick={() => handleDeletePriceConfig(cfg)}
-                          className="text-red-600 hover:text-red-800 font-medium"
+                          className="min-h-11 cursor-pointer text-sm text-red-700 hover:underline sm:min-h-9"
                         >
                           Xóa
                         </button>

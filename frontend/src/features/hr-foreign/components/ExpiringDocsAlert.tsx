@@ -1,368 +1,108 @@
-import React, { useState, useEffect } from "react";
-import type { ExpiringDocumentsResponse, ExpiringDocumentItem, ProfileTab } from "../types";
-
+import { useState, useEffect, useCallback, useRef } from "react";
+import { RotateCcw, Settings } from "lucide-react";
+import type { ExpiringDocumentItem, ProfileTab } from "../types";
 import { getVisaLabel } from "../types";
 import { fetchExpiringDocuments, fetchDocWarningConfigs } from "../api";
 import { DocWarningConfigModal } from "./DocWarningConfigModal";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
-import { ModuleHeader } from "../../../shared/components/ModuleHeader";
-import { AlertTriangle, Settings } from "lucide-react";
+import { DocumentWarningsTable } from "./document-warnings/DocumentWarningsTable";
+import { defaultWarningConfigs, documentWarningStatus, warningDocuments, warningThreshold, type DocumentType, type WarningConfigValues, type WarningFilter, type WarningStatus } from "./document-warnings/warningUtils";
+import { SystemTabs } from "../../../shared/components/SystemTabs";
+import { systemField, systemSecondaryButton, systemTextButton } from "../../../shared/components/systemStyles";
 
-
-interface DocWarningSectionCardProps {
-  icon: string;
-  title: string;
-  docType: string;
-  items: ExpiringDocumentItem[];
-  thresholdText: string;
-  badgeBg: string;
-  badgeText: string;
-  itemBorder: string;
-  itemBg: string;
-  itemText: string;
-  onItemClick: (employeeId: number, tab: ProfileTab) => void;
-}
-
-const docTypeToTab = (docType: string): ProfileTab => {
-  switch (docType) {
-    case "VISA":
-    case "TAM_TRU":
-      return "VISA_TAM_TRU";
-    case "GPLD":
-      return "GPLD";
-    case "CONTRACT":
-      return "HOP_DONG";
-    case "PASSPORT":
-      return "PASSPORT";
-    default:
-      return "VISA_TAM_TRU";
-  }
-};
-
-const DocWarningSectionCard: React.FC<DocWarningSectionCardProps> = ({
-  icon,
-  title,
-  docType,
-  items,
-  thresholdText,
-  badgeBg,
-  badgeText,
-  itemBorder,
-  itemBg,
-  itemText,
-  onItemClick,
-}) => {
-  // Default expanded if count <= 3, otherwise collapsed for clean overview
-  const [expanded, setExpanded] = useState(items.length > 0 && items.length <= 3);
-
-  const count = items.length;
-
-  return (
-    <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 pb-2.5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-base">{icon}</span>
-          <h3 className="font-bold text-slate-800 text-sm">{title}</h3>
-          {count > 0 ? (
-            <span className={`px-2.5 py-0.5 font-bold text-xs rounded-full ${badgeBg} ${badgeText}`}>
-              {count} cảnh báo
-            </span>
-          ) : (
-            <span className="px-2.5 py-0.5 font-semibold text-xs rounded-full bg-slate-100 text-slate-500">
-              0 cảnh báo
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] font-semibold text-slate-500 bg-white border border-slate-200 px-2 py-0.5 rounded-full">
-            Mốc: Trong {thresholdText}
-          </span>
-          {count > 0 && (
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="px-2.5 py-1 text-xs font-bold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg cursor-pointer transition-colors flex items-center gap-1 shadow-2xs"
-            >
-              <span>{expanded ? "Thu gọn 🔼" : "Xem chi tiết 👁️"}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {count === 0 ? (
-        <p className="text-xs text-slate-400 italic py-2">Không có cảnh báo nào cần lưu ý.</p>
-      ) : !expanded ? (
-        <div className="py-2 flex items-center justify-between text-xs text-slate-500">
-          <span className="italic">
-            Đang ẩn {count} danh sách cảnh báo. Nhấn nút <strong>"Xem chi tiết"</strong> để xem.
-          </span>
-          <button
-            onClick={() => setExpanded(true)}
-            className="text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
-          >
-            Xem chi tiết
-          </button>
-        </div>
-      ) : (
-        <div className="max-h-72 overflow-y-auto pr-1 space-y-2">
-          {items.map((item, idx) => (
-            <div
-              key={`${docType}-${item.id || idx}`}
-              onClick={() => onItemClick(item.employee_id, docTypeToTab(docType))}
-              title="Bấm vào để mở hồ sơ nhân sự và chỉnh sửa"
-              className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer hover:border-blue-400 hover:shadow-xs transition-all group ${
-                item.is_missing_info ? "border-red-300 bg-red-50/60 hover:bg-red-50" : `${itemBorder} ${itemBg}`
-              }`}
-            >
-              <div>
-                <div className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition-colors flex items-center gap-1.5">
-                  <span>{item.employee_name}</span>
-                  {item.passport_number && (
-                    <span className="text-xs text-slate-500 font-mono">({item.passport_number})</span>
-                  )}
-                  <span className="text-[10px] text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity font-normal">
-                    (Mở hồ sơ ↗)
-                  </span>
-                </div>
-                <div className="text-xs text-slate-600 mt-0.5">
-                  {item.is_missing_info ? (
-                    <span className="text-red-700 font-medium">{item.missing_reason}</span>
-                  ) : (
-                    <>
-                      {docType === "VISA" && (
-                        <>
-                          Visa loại: <span className="font-semibold">{getVisaLabel(item.type_name)}</span> &bull; Hết hạn:{" "}
-                          <span className={`font-mono font-semibold ${itemText}`}>{item.expiry_date}</span>
-                        </>
-                      )}
-                      {docType === "TAM_TRU" && (
-                        <>
-                          Giấy tờ: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
-                          <span className={`font-mono font-semibold ${itemText}`}>{item.expiry_date}</span>
-                        </>
-                      )}
-                      {docType === "GPLD" && (
-                        <>
-                          Số GPLĐ: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
-                          <span className={`font-mono font-semibold ${itemText}`}>{item.expiry_date}</span>
-                        </>
-                      )}
-                      {docType === "CONTRACT" && (
-                        <>
-                          Hợp đồng: <span className="font-semibold">{item.type_name}</span> &bull; Hết hạn:{" "}
-                          <span className={`font-mono font-semibold ${itemText}`}>{item.expiry_date}</span>
-                        </>
-                      )}
-                      {docType === "PASSPORT" && (
-                        <>
-                          Số HC: <span className="font-mono font-bold text-slate-900">{item.passport_number || "Chưa có"}</span> &bull; Hết hạn:{" "}
-                          <span className={`font-mono font-semibold ${itemText}`}>{item.expiry_date}</span>
-                        </>
-                      )}
-                    </>
-                  )}
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                {item.is_missing_info ? (
-                  <span className="px-2 py-1 bg-red-100 text-red-800 font-bold text-xs rounded-lg whitespace-nowrap">
-                    ⚠️ Thiếu thông tin
-                  </span>
-                ) : (
-                  <span className={`px-2 py-1 ${badgeBg} ${badgeText} font-bold text-xs rounded-lg whitespace-nowrap`}>
-                    Còn {item.days_remaining} ngày
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const ExpiringDocsAlert: React.FC = () => {
-  const [data, setData] = useState<ExpiringDocumentsResponse | null>(null);
-  const [configs, setConfigs] = useState<Record<string, { value: number; unit: string }>>({});
+export function ExpiringDocsAlert() {
+  const [items, setItems] = useState<ExpiringDocumentItem[]>([]);
+  const [configs, setConfigs] = useState<WarningConfigValues>(defaultWarningConfigs);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [documentType, setDocumentType] = useState<"ALL" | DocumentType>("ALL");
+  const [statusFilter, setStatusFilter] = useState<WarningFilter>("ALL");
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-
-  // Profile modal state
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [selectedTab, setSelectedTab] = useState<ProfileTab | undefined>(undefined);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const requestSequence = useRef(0);
 
-  const loadData = async () => {
+  const loadData = useCallback(async (): Promise<void> => {
+    const sequence = ++requestSequence.current;
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const [docsRes, cfgRes] = await Promise.all([
-        fetchExpiringDocuments(),
-        fetchDocWarningConfigs(),
-      ]);
-      setData(docsRes);
-
-      const cfgMap: Record<string, { value: number; unit: string }> = {};
-      cfgRes.configs.forEach((item) => {
-        cfgMap[item.doc_type] = {
-          value: item.warning_value,
-          unit: item.warning_unit === "MONTH" ? "tháng" : "ngày",
-        };
-      });
-      setConfigs(cfgMap);
-    } catch (err) {
-      console.error("Failed to fetch expiring docs:", err);
+      const [documents, thresholds] = await Promise.all([fetchExpiringDocuments(), fetchDocWarningConfigs()]);
+      if (sequence !== requestSequence.current) return;
+      setItems(warningDocuments.flatMap((document) => (documents[document.responseKey] || []).map((item) => ({ ...item, doc_type: document.type }))));
+      const values = defaultWarningConfigs();
+      thresholds.configs.forEach((config) => { values[config.doc_type] = { warning_value: config.warning_value, warning_unit: config.warning_unit }; });
+      setConfigs(values);
+    } catch (cause: unknown) {
+      if (sequence === requestSequence.current) {
+        console.error("Failed to load document warnings:", cause);
+        setError("Không thể tải cảnh báo giấy tờ. Kiểm tra kết nối rồi thử lại.");
+      }
     } finally {
-      setLoading(false);
+      if (sequence === requestSequence.current) setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
+  useEffect(() => {
+    void loadData();
+    return () => { requestSequence.current += 1; };
+  }, [loadData]);
 
-  const totalExpiring =
-    (data?.expiring_visas.length || 0) +
-    (data?.expiring_tam_trus.length || 0) +
-    (data?.expiring_gpl_ds?.length || 0) +
-    (data?.expiring_contracts?.length || 0) +
-    (data?.expiring_passports?.length || 0);
-
-  const formatThreshold = (docType: string) => {
-    const cfg = configs[docType];
-    if (!cfg) return "30 ngày";
-    return `${cfg.value} ${cfg.unit}`;
-  };
-
-  const handleOpenProfile = (employeeId: number, tab: ProfileTab) => {
+  const ready = !loading && !error;
+  const typeItems = documentType === "ALL" ? items : items.filter((item) => item.doc_type === documentType);
+  const counts: Record<WarningFilter, number> = { ALL: typeItems.length, EXPIRED: 0, EXPIRING: 0, MISSING: 0 };
+  typeItems.forEach((item) => { counts[documentWarningStatus(item)] += 1; });
+  const severity: Record<WarningStatus, number> = { EXPIRED: 0, MISSING: 1, EXPIRING: 2 };
+  const filteredItems = typeItems.filter((item) => {
+    if (statusFilter !== "ALL" && documentWarningStatus(item) !== statusFilter) return false;
+    const keyword = query.trim().toLocaleLowerCase();
+    const document = warningDocuments.find((entry) => entry.type === item.doc_type);
+    return !keyword || [item.employee_name, item.passport_number, item.type_name, item.missing_reason, document?.label, item.doc_type === "VISA" ? getVisaLabel(item.type_name) : undefined]
+      .some((value) => value?.toLocaleLowerCase().includes(keyword));
+  }).sort((first, second) => severity[documentWarningStatus(first)] - severity[documentWarningStatus(second)]
+    || (first.days_remaining ?? Number.MAX_SAFE_INTEGER) - (second.days_remaining ?? Number.MAX_SAFE_INTEGER)
+    || first.employee_name.localeCompare(second.employee_name, "vi"));
+  const handleOpenProfile = (employeeId: number, tab: ProfileTab): void => {
     setSelectedEmployeeId(employeeId);
     setSelectedTab(tab);
     setIsProfileModalOpen(true);
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Top Header Banner */}
-      <ModuleHeader
-        title="Cảnh báo Giấy tờ sắp Hết hạn & Thiếu thông tin"
-        subtitle="Cảnh báo các giấy tờ sắp hết hạn theo mốc đã cấu hình & thiếu thông tin. Bấm vào nhân sự để mở hồ sơ chỉnh sửa ngay."
-        icon={AlertTriangle}
-        theme="amber"
-        badgeText={totalExpiring > 0 ? `${totalExpiring} cần lưu ý` : undefined}
-        actions={
-          <button
-            type="button"
-            onClick={() => setIsConfigModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 text-xs shadow-md transition-all cursor-pointer border border-amber-300/40"
-          >
-            <Settings className="h-4 w-4 text-slate-950" />
-            <span>Cấu hình mốc cảnh báo</span>
-          </button>
-        }
-      />
-
-      {loading ? (
-        <div className="py-12 text-center text-slate-400">Đang kiểm tra danh sách hết hạn...</div>
-      ) : totalExpiring === 0 ? (
-        <div className="py-10 text-center bg-emerald-50/50 rounded-xl border border-emerald-100 text-emerald-700 text-sm font-medium">
-          Tất cả 5 loại giấy tờ pháp lý của nhân sự đều đầy đủ thông tin và còn hạn dài vượt mốc đã cấu hình.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* 1. VISAS */}
-          <DocWarningSectionCard
-            icon="🛂"
-            title="Visa / Thị thực"
-            docType="VISA"
-            items={data?.expiring_visas || []}
-            thresholdText={formatThreshold("VISA")}
-            badgeBg="bg-amber-100"
-            badgeText="text-amber-800"
-            itemBorder="border-amber-200"
-            itemBg="bg-amber-50/40"
-            itemText="text-amber-900"
-            onItemClick={handleOpenProfile}
-          />
-
-          {/* 2. TAM TRUS */}
-          <DocWarningSectionCard
-            icon="🏠"
-            title="Đăng ký Tạm trú"
-            docType="TAM_TRU"
-            items={data?.expiring_tam_trus || []}
-            thresholdText={formatThreshold("TAM_TRU")}
-            badgeBg="bg-rose-100"
-            badgeText="text-rose-800"
-            itemBorder="border-rose-200"
-            itemBg="bg-rose-50/40"
-            itemText="text-rose-900"
-            onItemClick={handleOpenProfile}
-          />
-
-          {/* 3. GPLD */}
-          <DocWarningSectionCard
-            icon="💼"
-            title="Giấy phép lao động (GPLĐ)"
-            docType="GPLD"
-            items={data?.expiring_gpl_ds || []}
-            thresholdText={formatThreshold("GPLD")}
-            badgeBg="bg-blue-100"
-            badgeText="text-blue-800"
-            itemBorder="border-blue-200"
-            itemBg="bg-blue-50/40"
-            itemText="text-blue-900"
-            onItemClick={handleOpenProfile}
-          />
-
-          {/* 4. CONTRACTS */}
-          <DocWarningSectionCard
-            icon="📜"
-            title="Hợp đồng lao động"
-            docType="CONTRACT"
-            items={data?.expiring_contracts || []}
-            thresholdText={formatThreshold("CONTRACT")}
-            badgeBg="bg-purple-100"
-            badgeText="text-purple-800"
-            itemBorder="border-purple-200"
-            itemBg="bg-purple-50/40"
-            itemText="text-purple-900"
-            onItemClick={handleOpenProfile}
-          />
-
-          {/* 5. PASSPORTS */}
-          <DocWarningSectionCard
-            icon="📘"
-            title="Hộ chiếu (Passport)"
-            docType="PASSPORT"
-            items={data?.expiring_passports || []}
-            thresholdText={formatThreshold("PASSPORT")}
-            badgeBg="bg-teal-100"
-            badgeText="text-teal-800"
-            itemBorder="border-teal-200"
-            itemBg="bg-teal-50/40"
-            itemText="text-teal-900"
-            onItemClick={handleOpenProfile}
-          />
-        </div>
-      )}
-
-      <DocWarningConfigModal
-        isOpen={isConfigModalOpen}
-        onClose={() => setIsConfigModalOpen(false)}
-        onSaved={loadData}
-      />
-
-      {/* Employee 360 History & Edit Modal */}
-      <EmployeeProfileModal
-        employeeId={selectedEmployeeId}
-        isOpen={isProfileModalOpen}
-        initialTab={selectedTab}
-        onClose={() => {
-          setIsProfileModalOpen(false);
-          loadData();
-        }}
-        onUpdate={loadData}
-      />
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 pb-1">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">Cảnh báo giấy tờ</h1>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => void loadData()} disabled={loading} className={systemSecondaryButton}><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Làm mới</button>
+        <button type="button" onClick={() => setIsConfigModalOpen(true)} className={systemSecondaryButton}><Settings className="h-4 w-4" aria-hidden="true" /> Cấu hình cảnh báo</button>
+      </div>
     </div>
-  );
-};
+    <section className="rounded-sm border border-slate-200 bg-white" aria-label="Tìm kiếm và lọc cảnh báo giấy tờ">
+      <div className="flex flex-wrap items-end gap-3 p-4">
+        <div className="min-w-0 flex-1 basis-64"><label htmlFor="warning-search" className="mb-1.5 block text-sm text-slate-600">Tìm kiếm</label>
+          <input id="warning-search" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Tên nhân sự, hộ chiếu, số giấy tờ…" className={systemField} /></div>
+        <div className="w-full sm:w-60"><label htmlFor="warning-document-type" className="mb-1.5 block text-sm text-slate-600">Loại giấy tờ</label>
+          <select id="warning-document-type" value={documentType} onChange={(event) => setDocumentType(event.target.value as "ALL" | DocumentType)} className={systemField}>
+            <option value="ALL">Tất cả loại giấy tờ ({ready ? items.length : "—"})</option>
+            {warningDocuments.map((document) => <option key={document.type} value={document.type}>{document.label} ({ready ? items.filter((item) => item.doc_type === document.type).length : "—"})</option>)}
+          </select></div>
+        {(query || documentType !== "ALL" || statusFilter !== "ALL") && <button type="button" onClick={() => { setQuery(""); setDocumentType("ALL"); setStatusFilter("ALL"); }} className={systemTextButton}>Xóa bộ lọc</button>}
+      </div>
+      <div className="border-t border-slate-200 px-4"><SystemTabs label="Lọc trạng thái giấy tờ" active={statusFilter} onChange={setStatusFilter} items={[
+        { key: "ALL", label: "Tất cả", count: ready ? counts.ALL : undefined },
+        { key: "EXPIRED", label: "Đã hết hạn", count: ready ? counts.EXPIRED : undefined },
+        { key: "EXPIRING", label: "Sắp hết hạn", count: ready ? counts.EXPIRING : undefined },
+        { key: "MISSING", label: "Thiếu thông tin", count: ready ? counts.MISSING : undefined },
+      ]} /></div>
+    </section>
+    {ready && <p className="text-xs text-slate-600">Mốc cảnh báo: {warningDocuments.filter((document) => documentType === "ALL" || document.type === documentType).map((document) => `${document.label} ${warningThreshold(configs[document.type])}`).join(" · ")}</p>}
+    <div aria-busy={loading}>
+      {loading ? <div role="status" className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải cảnh báo giấy tờ…</div>
+        : error ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-5 text-sm"><p className="text-red-800">{error}</p><button type="button" onClick={() => void loadData()} className={`${systemSecondaryButton} mt-3`}>Thử lại</button></div>
+          : <DocumentWarningsTable items={filteredItems} onOpenProfile={handleOpenProfile} />}
+    </div>
+    <DocWarningConfigModal isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)} onSaved={() => void loadData()} />
+    <EmployeeProfileModal employeeId={selectedEmployeeId} isOpen={isProfileModalOpen} initialTab={selectedTab}
+      onClose={() => { setIsProfileModalOpen(false); void loadData(); }} onUpdate={() => void loadData()} />
+  </div>;
+}

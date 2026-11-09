@@ -1,331 +1,102 @@
-import React, { useEffect, useState } from "react";
-import {
-  UserCheck,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Building2,
-  Hotel,
-  AlertTriangle,
-  PlaneTakeoff,
-  List,
-  LayoutGrid,
-} from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { fetchDailyPresenceReport } from "../api";
-import type { DailyPresenceReportResponse } from "../types";
+import type { DailyPresenceItem, DailyPresenceReportResponse } from "../types";
 import { EmployeeProfileModal } from "./EmployeeProfileModal";
-import { PresenceKpiHeader } from "./daily-presence/PresenceKpiHeader";
 import { GroupedPresenceView } from "./daily-presence/GroupedPresenceView";
 import { PresenceTableList } from "./daily-presence/PresenceTableList";
 import { ExitedPresenceTable } from "./daily-presence/ExitedPresenceTable";
-import { ModuleHeader } from "../../../shared/components/ModuleHeader";
+import { PresenceToolbar, type PresenceScope, type PresenceAccommodation, type PresenceView } from "./daily-presence/PresenceToolbar";
+import { vietnamDate } from "./meal-forecast/vietnamDate";
+import { systemField, systemSecondaryButton } from "../../../shared/components/systemStyles";
 
-export const DailyPresenceReport: React.FC = () => {
-  const getTodayStr = () => new Date().toISOString().split("T")[0];
-
-  const [targetDate, setTargetDate] = useState<string>(getTodayStr());
+export function DailyPresenceReport() {
+  const [targetDate, setTargetDate] = useState(vietnamDate);
   const [data, setData] = useState<DailyPresenceReportResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [mainTab, setMainTab] = useState<"IN_VN" | "EXITED">("IN_VN");
-  const [activeSubTab, setActiveSubTab] = useState<"ALL" | "KTX" | "HOTEL" | "UNASSIGNED">("ALL");
-  const [viewMode, setViewMode] = useState<"GROUPED" | "LIST">("LIST");
-
+  const [searchQuery, setSearchQuery] = useState("");
+  const [mainTab, setMainTab] = useState<PresenceScope>("IN_VN");
+  const [activeSubTab, setActiveSubTab] = useState<PresenceAccommodation>("ALL");
+  const [viewMode, setViewMode] = useState<PresenceView>("LIST");
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const requestSequence = useRef(0);
 
-  const handleOpenProfile = (empId: number) => {
-    setSelectedEmpId(empId);
+  const handleOpenProfile = (employeeId: number): void => {
+    setSelectedEmpId(employeeId);
     setIsProfileOpen(true);
   };
-
-  const loadReport = async (date: string) => {
+  const loadReport = useCallback(async (date: string): Promise<void> => {
+    const sequence = ++requestSequence.current;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetchDailyPresenceReport(date);
-      setData(res);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Không thể tải báo cáo thống kê hiện diện";
-      setError(message);
+      const report = await fetchDailyPresenceReport(date);
+      if (sequence === requestSequence.current) setData(report);
+    } catch (cause: unknown) {
+      if (sequence === requestSequence.current) {
+        console.error("Failed to load daily presence report:", cause);
+        setError("Không thể tải thống kê hiện diện. Kiểm tra kết nối rồi thử lại.");
+      }
     } finally {
-      setLoading(false);
+      if (sequence === requestSequence.current) setLoading(false);
     }
-  };
-
+  }, []);
   useEffect(() => {
-    loadReport(targetDate);
-  }, [targetDate]);
+    void loadReport(targetDate);
+    return () => { requestSequence.current += 1; };
+  }, [targetDate, loadReport]);
 
-  const setOffsetDate = (offsetDays: number) => {
-    const d = new Date(targetDate);
-    d.setDate(d.getDate() + offsetDays);
-    setTargetDate(d.toISOString().split("T")[0]);
+  const setOffsetDate = (offsetDays: number): void => {
+    const date = new Date(`${targetDate}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + offsetDays);
+    setTargetDate(date.toISOString().slice(0, 10));
   };
-
-  const matchesSearch = (item: {
-    employee_code?: string | null;
-    name_latin: string;
-    room_number?: string | null;
-    hotel_name?: string | null;
-    department?: string | null;
-  }) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      item.name_latin.toLowerCase().includes(q) ||
-      (item.employee_code && item.employee_code.toLowerCase().includes(q)) ||
-      (item.room_number && item.room_number.toLowerCase().includes(q)) ||
-      (item.hotel_name && item.hotel_name.toLowerCase().includes(q)) ||
-      (item.department && item.department.toLowerCase().includes(q))
-    );
+  const currentData = !loading && !error && data?.target_date === targetDate ? data : null;
+  const matchesSearch = (item: DailyPresenceItem): boolean => {
+    const query = searchQuery.trim().toLocaleLowerCase();
+    return !query || [item.name_latin, item.name_chinese, item.employee_code, item.room_number, item.hotel_name, item.department]
+      .some((value) => value?.toLocaleLowerCase().includes(query));
   };
+  const filteredItems = (currentData?.items || []).filter((item) => {
+    if (activeSubTab === "KTX") return Boolean(item.room_number);
+    if (activeSubTab === "HOTEL") return Boolean(item.hotel_name);
+    if (activeSubTab === "UNASSIGNED") return !item.room_number && !item.hotel_name;
+    return true;
+  }).filter(matchesSearch);
+  const filteredKtxGroups = (currentData?.ktx_groups || []).map((group) => ({ ...group, items: group.items.filter(matchesSearch) })).filter((group) => group.items.length > 0);
+  const filteredHotelGroups = (currentData?.hotel_groups || []).map((group) => ({ ...group, items: group.items.filter(matchesSearch) })).filter((group) => group.items.length > 0);
+  const filteredUnassignedItems = (currentData?.unassigned_items || []).filter(matchesSearch);
+  const filteredExitedItems = (currentData?.exited_items || []).filter(matchesSearch).sort((first, second) => {
+    const firstUnassigned = !first.room_number && !first.hotel_name ? 0 : 1;
+    const secondUnassigned = !second.room_number && !second.hotel_name ? 0 : 1;
+    return firstUnassigned - secondUnassigned;
+  });
 
-  const filteredItems = (data?.items || [])
-    .filter((it) => {
-      if (activeSubTab === "KTX") return Boolean(it.room_number);
-      if (activeSubTab === "HOTEL") return Boolean(it.hotel_name);
-      if (activeSubTab === "UNASSIGNED") return !it.room_number && !it.hotel_name;
-      return true;
-    })
-    .filter(matchesSearch);
-
-  const filteredKtxGroups = (data?.ktx_groups || [])
-    .map((g) => ({
-      ...g,
-      items: g.items.filter(matchesSearch),
-    }))
-    .filter((g) => g.items.length > 0);
-
-  const filteredHotelGroups = (data?.hotel_groups || [])
-    .map((g) => ({
-      ...g,
-      items: g.items.filter(matchesSearch),
-    }))
-    .filter((g) => g.items.length > 0);
-
-  const filteredUnassignedItems = (data?.unassigned_items || []).filter(matchesSearch);
-
-  const filteredExitedItems = (data?.exited_items || [])
-    .filter(matchesSearch)
-    .sort((a, b) => {
-      const aUnassigned = !a.room_number && !a.hotel_name ? 0 : 1;
-      const bUnassigned = !b.room_number && !b.hotel_name ? 0 : 1;
-      return aUnassigned - bUnassigned;
-    });
-
-  return (
-    <div className="space-y-6">
-      {/* Top Header Banner */}
-      <ModuleHeader
-        title="Thống kê Hiện diện & Chỗ ở"
-        subtitle="Tra cứu số lượng & vị trí lưu trú của nhân sự nước ngoài đang có mặt tại Việt Nam."
-        icon={UserCheck}
-        theme="indigo"
-        badgeText="Theo ngày"
-      >
-        {/* Date Selector Controls */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center rounded-xl bg-slate-950/40 p-1 border border-white/10 backdrop-blur-md">
-            <button
-              type="button"
-              onClick={() => setOffsetDate(-1)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Hôm qua"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setTargetDate(getTodayStr())}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                targetDate === getTodayStr()
-                  ? "bg-indigo-600 text-white shadow-xs font-extrabold"
-                  : "text-slate-300 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              Hôm nay
-            </button>
-            <button
-              type="button"
-              onClick={() => setOffsetDate(1)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-              title="Ngày mai"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <input
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-            className="h-9 px-3 text-xs font-mono font-bold bg-white text-slate-900 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 shadow-sm cursor-pointer"
-          />
-        </div>
-      </ModuleHeader>
-
-      {data && (
-        <PresenceKpiHeader
-          data={data}
-          mainTab={mainTab}
-          setMainTab={setMainTab}
-          activeSubTab={activeSubTab}
-          setActiveSubTab={setActiveSubTab}
-        />
-      )}
-
-      {/* Modern Filter Toolbar */}
-      <div className="modern-card p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-          {mainTab === "IN_VN" ? (
-            <>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("ALL")}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  activeSubTab === "ALL"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                Tất cả ({data?.summary.total_in_vn || 0})
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("KTX")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  activeSubTab === "KTX"
-                    ? "bg-emerald-600 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <Building2 className="h-3.5 w-3.5" />
-                <span>Ký túc xá ({data?.summary.ktx_count || 0})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("HOTEL")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  activeSubTab === "HOTEL"
-                    ? "bg-amber-600 text-white shadow-xs"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                <Hotel className="h-3.5 w-3.5" />
-                <span>Khách sạn ({data?.summary.hotel_count || 0})</span>
-              </button>
-              {(data?.summary.unassigned_count || 0) > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setActiveSubTab("UNASSIGNED")}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                    activeSubTab === "UNASSIGNED"
-                      ? "bg-rose-600 text-white shadow-xs"
-                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                  }`}
-                >
-                  <AlertTriangle className="h-3.5 w-3.5" />
-                  <span>Chưa xếp phòng ({data?.summary.unassigned_count})</span>
-                </button>
-              )}
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200">
-              <PlaneTakeoff className="h-4 w-4" />
-              <span>Danh sách Đã về nước ({data?.summary.exited_count || 0})</span>
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          {mainTab === "IN_VN" && (
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setViewMode("LIST")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  viewMode === "LIST"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <List className="h-3.5 w-3.5" />
-                <span>Bảng</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("GROUPED")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  viewMode === "GROUPED"
-                    ? "bg-white text-slate-900 shadow-2xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
-              >
-                <LayoutGrid className="h-3.5 w-3.5" />
-                <span>Nhóm</span>
-              </button>
-            </div>
-          )}
-
-          <div className="relative w-full md:w-64">
-            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-              <Search className="h-3.5 w-3.5" />
-            </div>
-            <input
-              type="text"
-              placeholder="Tìm tên, mã, phòng..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-8 pr-3 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </div>
-        </div>
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3 pb-1">
+      <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">Thống kê hiện diện</h1>
+      <div className="flex flex-wrap items-end gap-2">
+        <div><label htmlFor="presence-date" className="mb-1.5 block text-sm text-slate-600">Ngày tra cứu</label>
+          <input id="presence-date" type="date" required value={targetDate} onChange={(event) => { if (event.target.value) setTargetDate(event.target.value); }} className={`${systemField} w-auto`} /></div>
+        <button type="button" onClick={() => setOffsetDate(-1)} aria-label="Ngày trước" className={systemSecondaryButton}><ChevronLeft className="h-4 w-4" aria-hidden="true" /></button>
+        <button type="button" onClick={() => setTargetDate(vietnamDate())} className={systemSecondaryButton}>Hôm nay</button>
+        <button type="button" onClick={() => setOffsetDate(1)} aria-label="Ngày sau" className={systemSecondaryButton}><ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
+        <button type="button" onClick={() => void loadReport(targetDate)} disabled={loading} className={systemSecondaryButton}><RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Làm mới</button>
       </div>
-
-      {loading ? (
-        <div className="modern-card p-12 text-center text-slate-400">
-          <div className="workspace-skeleton h-12 w-full mb-3" />
-          <div className="workspace-skeleton h-12 w-full" />
-        </div>
-      ) : error ? (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-medium">
-          {error}
-        </div>
-      ) : mainTab === "IN_VN" ? (
-        viewMode === "GROUPED" ? (
-          <GroupedPresenceView
-            activeSubTab={activeSubTab}
-            ktxGroups={filteredKtxGroups}
-            hotelGroups={filteredHotelGroups}
-            unassignedItems={filteredUnassignedItems}
-            onOpenProfile={handleOpenProfile}
-          />
-        ) : (
-          <PresenceTableList
-            filteredItems={filteredItems}
-            onOpenProfile={handleOpenProfile}
-          />
-        )
-      ) : (
-        <ExitedPresenceTable
-          filteredExitedItems={filteredExitedItems}
-          onOpenProfile={handleOpenProfile}
-        />
-      )}
-
-      {selectedEmpId && (
-        <EmployeeProfileModal
-          isOpen={isProfileOpen}
-          onClose={() => {
-            setIsProfileOpen(false);
-            loadReport(targetDate);
-          }}
-          onUpdate={() => loadReport(targetDate)}
-          employeeId={selectedEmpId}
-        />
-      )}
     </div>
-  );
-};
+    <PresenceToolbar summary={currentData?.summary ?? null} scope={mainTab} onScope={setMainTab}
+      accommodation={activeSubTab} onAccommodation={setActiveSubTab} view={viewMode} onView={setViewMode} query={searchQuery} onQuery={setSearchQuery} />
+    <div aria-busy={loading}>
+      {error ? <div role="alert" className="rounded-sm border border-red-200 bg-white p-5 text-sm">
+        <p className="text-red-800">{error}</p><button type="button" onClick={() => void loadReport(targetDate)} className={`${systemSecondaryButton} mt-3`}>Thử lại</button>
+      </div> : !currentData ? <div role="status" className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Đang tải thống kê hiện diện…</div>
+        : mainTab === "EXITED" ? <ExitedPresenceTable filteredExitedItems={filteredExitedItems} onOpenProfile={handleOpenProfile} />
+          : viewMode === "LIST" ? <PresenceTableList filteredItems={filteredItems} onOpenProfile={handleOpenProfile} />
+            : <GroupedPresenceView activeSubTab={activeSubTab} ktxGroups={filteredKtxGroups} hotelGroups={filteredHotelGroups} unassignedItems={filteredUnassignedItems} onOpenProfile={handleOpenProfile} />}
+    </div>
+    {selectedEmpId !== null && <EmployeeProfileModal isOpen={isProfileOpen} employeeId={selectedEmpId}
+      onClose={() => { setIsProfileOpen(false); void loadReport(targetDate); }} onUpdate={() => void loadReport(targetDate)} />}
+  </div>;
+}

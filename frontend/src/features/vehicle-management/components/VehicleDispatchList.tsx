@@ -1,273 +1,153 @@
-import React, { useEffect, useState } from "react";
-import {
-  createDispatch,
-  deleteDispatch,
-  fetchDispatches,
-  fetchProviders,
-  fetchVehicles,
-  updateDispatch,
-} from "../api";
-import type {
-  OwnershipGroup,
-  Vehicle,
-  VehicleDispatch,
-  VehicleDispatchCreatePayload,
-  VehicleProvider,
-} from "../types";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { createDispatch, deleteDispatch, fetchDispatches, fetchProviders, fetchVehicles, updateDispatch } from "../api";
+import type { OwnershipGroup, Vehicle, VehicleDispatch, VehicleDispatchCreatePayload, VehicleProvider } from "../types";
 import { DispatchFilterBar } from "./dispatch/DispatchFilterBar";
-import { DispatchKpiBanner } from "./dispatch/DispatchKpiBanner";
 import { DispatchModal } from "./dispatch/DispatchModal";
 import { DispatchTable } from "./dispatch/DispatchTable";
 import { QuickOdometerModal } from "./dispatch/QuickOdometerModal";
+import { dispatchPayload, emptyDispatch } from "./dispatch/dispatchForm";
+import { SystemDialog } from "../../../shared/components/SystemDialog";
+import { systemPrimaryButton, systemSecondaryButton } from "../../../shared/components/systemStyles";
 
-export const VehicleDispatchList: React.FC = () => {
+export function VehicleDispatchList() {
   const [dispatches, setDispatches] = useState<VehicleDispatch[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [providers, setProviders] = useState<VehicleProvider[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Filters
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
-  const [selectedProviderFilter, setSelectedProviderFilter] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState<string>("");
-
-  // Quick Odometer Modal State
-  const [quickOdoDispatch, setQuickOdoDispatch] = useState<VehicleDispatch | null>(null);
-  const [isQuickOdoOpen, setIsQuickOdoOpen] = useState<boolean>(false);
-
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [providerFilter, setProviderFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const request = useRef(0);
+  const [quickDispatch, setQuickDispatch] = useState<VehicleDispatch | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingDispatch, setEditingDispatch] = useState<VehicleDispatch | null>(null);
-  const [formData, setFormData] = useState<VehicleDispatchCreatePayload>({
-    dispatch_date: new Date().toISOString().split("T")[0],
-    provider_id: undefined,
-    provider_name: "",
-    vehicle_id: undefined,
-    vehicle_name: "",
-    ownership_group: "COMPANY_OWNED",
-    driver_name: "",
-    license_plate: "",
-    driver_phone: "",
-    pickup_location: "",
-    dropoff_location: "",
-    pickup_time: "08:00",
-    passenger_name: "",
-    passenger_count: 1,
-    route_type: "FIXED_ROUTE",
-    distance_km: 0,
-    waiting_hours: 0,
-    calculated_cost: 0,
-    cost: 0,
-    notes: "",
-  });
+  const [formData, setFormData] = useState<VehicleDispatchCreatePayload>(emptyDispatch);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<VehicleDispatch | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
+    const current = ++request.current;
     setLoading(true);
     setError(null);
+    if (fromDate && toDate && fromDate > toDate) {
+      setError("Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.");
+      setLoading(false);
+      return;
+    }
     try {
-      let ownershipGroupFilter: OwnershipGroup | undefined = undefined;
-      let providerIdFilter: number | undefined = undefined;
-
-      if (selectedProviderFilter === "COMPANY_OWNED") {
-        ownershipGroupFilter = "COMPANY_OWNED";
-      } else if (selectedProviderFilter === "OUTSOURCED") {
-        ownershipGroupFilter = "OUTSOURCED";
-      } else if (selectedProviderFilter.startsWith("PROVIDER_")) {
-        providerIdFilter = parseInt(selectedProviderFilter.replace("PROVIDER_", ""), 10);
-      }
-
+      const ownershipGroup: OwnershipGroup | undefined = providerFilter === "COMPANY_OWNED" || providerFilter === "OUTSOURCED" ? providerFilter : undefined;
       const [dispatchData, vehicleData, providerData] = await Promise.all([
-        fetchDispatches({
-          fromDate: fromDate || undefined,
-          toDate: toDate || undefined,
-          ownershipGroup: ownershipGroupFilter,
-          providerId: providerIdFilter,
-          search: searchQuery || undefined,
-        }),
-        fetchVehicles(),
-        fetchProviders(),
+        fetchDispatches({ fromDate: fromDate || undefined, toDate: toDate || undefined, ownershipGroup,
+          providerId: providerFilter.startsWith("PROVIDER_") ? Number(providerFilter.slice(9)) : undefined,
+          search: appliedSearch || undefined }),
+        fetchVehicles(), fetchProviders(),
       ]);
+      if (current !== request.current) return;
       setDispatches(dispatchData);
       setVehicles(vehicleData);
       setProviders(providerData);
-    } catch (err: any) {
-      setError(err.message || "Lỗi khi tải nhật ký điều xe");
+    } catch (failure: unknown) {
+      if (current === request.current) setError(failure instanceof Error ? failure.message : "Không tải được nhật ký điều xe.");
     } finally {
-      setLoading(false);
+      if (current === request.current) setLoading(false);
     }
-  };
+  }, [fromDate, toDate, providerFilter, appliedSearch]);
 
   useEffect(() => {
-    loadData();
-  }, [fromDate, toDate, selectedProviderFilter]);
+    void loadData();
+    return () => { request.current += 1; };
+  }, [loadData]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadData();
-  };
-
-  const handleVehicleSelect = (vehicleIdStr: string) => {
-    if (!vehicleIdStr) return;
-    const vId = parseInt(vehicleIdStr, 10);
-    const selected = vehicles.find((v) => v.id === vId);
-    if (selected) {
-      setFormData((prev) => ({
-        ...prev,
-        vehicle_id: selected.id,
-        vehicle_name: selected.name,
-        ownership_group: selected.ownership_group,
-        provider_id: selected.provider_id || prev.provider_id,
-        driver_name: selected.driver_name || prev.driver_name,
-        license_plate: selected.license_plate || prev.license_plate,
-        driver_phone: selected.driver_phone || prev.driver_phone,
-        cost: selected.default_cost || prev.cost,
-      }));
+  function openModal(dispatch?: VehicleDispatch) {
+    setSaveError(null);
+    setEditingDispatch(dispatch || null);
+    if (dispatch) setFormData(dispatchPayload(dispatch));
+    else {
+      const provider = providers.find(item => item.name === "Bình An") || providers[0];
+      const vehicle = provider?.provider_type === "COMPANY_OWNED"
+        ? vehicles.find(item => item.provider_id === provider.id || item.ownership_group === "COMPANY_OWNED") : undefined;
+      setFormData({ ...emptyDispatch(), provider_id: provider?.id, provider_name: provider?.name,
+        ownership_group: provider?.provider_type || "OUTSOURCED", vehicle_id: vehicle?.id,
+        vehicle_name: vehicle?.name || "", driver_name: vehicle?.driver_name || "",
+        license_plate: vehicle?.license_plate || "", driver_phone: vehicle?.driver_phone || "" });
     }
-  };
+    setModalOpen(true);
+  }
 
-  const handleOpenModal = (dispatch?: VehicleDispatch) => {
-    if (dispatch) {
-      setEditingDispatch(dispatch);
-      setFormData({
-        dispatch_date: dispatch.dispatch_date,
-        provider_id: dispatch.provider_id || undefined,
-        provider_name: dispatch.provider_name || "",
-        vehicle_id: dispatch.vehicle_id || undefined,
-        vehicle_name: dispatch.vehicle_name,
-        ownership_group: dispatch.ownership_group,
-        driver_name: dispatch.driver_name || "",
-        license_plate: dispatch.license_plate || "",
-        driver_phone: dispatch.driver_phone || "",
-        pickup_location: dispatch.pickup_location || "",
-        dropoff_location: dispatch.dropoff_location || "",
-        pickup_time: dispatch.pickup_time || "",
-        passenger_name: dispatch.passenger_name || "",
-        passenger_count: dispatch.passenger_count || 1,
-        start_km: dispatch.start_km ?? undefined,
-        end_km: dispatch.end_km ?? undefined,
-        vendor_route_id: dispatch.vendor_route_id || undefined,
-        route_type: dispatch.route_type || "FIXED_ROUTE",
-        distance_km: dispatch.distance_km || 0,
-        waiting_hours: dispatch.waiting_hours || 0,
-        calculated_cost: dispatch.calculated_cost || 0,
-        cost: dispatch.cost || 0,
-        notes: dispatch.notes || "",
-      });
-    } else {
-      setEditingDispatch(null);
-      const defaultProvider = providers.find((p) => p.name === "Bình An") || providers[0];
-      const isCompany = defaultProvider?.provider_type === "COMPANY_OWNED";
-      const defaultVehicle = isCompany
-        ? vehicles.find((v) => (defaultProvider ? v.provider_id === defaultProvider.id : true) || v.ownership_group === "COMPANY_OWNED")
-        : undefined;
+  function selectVehicle(id: string) {
+    const vehicle = vehicles.find(item => item.id === Number(id));
+    if (!vehicle) return;
+    setFormData(previous => ({ ...previous, vehicle_id: vehicle.id, vehicle_name: vehicle.name,
+      ownership_group: vehicle.ownership_group, provider_id: vehicle.provider_id || previous.provider_id,
+      driver_name: vehicle.driver_name || previous.driver_name, license_plate: vehicle.license_plate || previous.license_plate,
+      driver_phone: vehicle.driver_phone || previous.driver_phone, cost: vehicle.default_cost || previous.cost }));
+  }
 
-      setFormData({
-        dispatch_date: new Date().toISOString().split("T")[0],
-        provider_id: defaultProvider ? defaultProvider.id : undefined,
-        provider_name: defaultProvider ? defaultProvider.name : "",
-        vehicle_id: defaultVehicle ? defaultVehicle.id : undefined,
-        vehicle_name: defaultVehicle ? defaultVehicle.name : "",
-        ownership_group: defaultProvider ? defaultProvider.provider_type : "OUTSOURCED",
-        driver_name: defaultVehicle ? defaultVehicle.driver_name || "" : "",
-        license_plate: defaultVehicle ? defaultVehicle.license_plate || "" : "",
-        driver_phone: defaultVehicle ? defaultVehicle.driver_phone || "" : "",
-        pickup_location: "",
-        dropoff_location: "",
-        pickup_time: "08:00",
-        passenger_name: "",
-        passenger_count: 1,
-        start_km: undefined,
-        end_km: undefined,
-        route_type: "FIXED_ROUTE",
-        distance_km: 0,
-        waiting_hours: 0,
-        calculated_cost: 0,
-        cost: 0,
-        notes: "",
-      });
-    }
-    setIsModalOpen(true);
-  };
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setSaveError(null);
     try {
-      if (editingDispatch) {
-        await updateDispatch(editingDispatch.id, formData);
-      } else {
-        await createDispatch(formData);
-      }
-      setIsModalOpen(false);
-      loadData();
-    } catch (err: any) {
-      alert("Lỗi khi lưu thông tin điều xe: " + err.message);
-    }
-  };
+      if (editingDispatch) await updateDispatch(editingDispatch.id, formData);
+      else await createDispatch(formData);
+      setModalOpen(false);
+      void loadData();
+    } catch (failure: unknown) {
+      setSaveError(failure instanceof Error ? failure.message : "Không lưu được chuyến điều xe.");
+    } finally { setSaving(false); }
+  }
 
-  const handleDelete = async (id: number, dispatchDate: string, vehicleName: string) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa bản ghi điều xe "${vehicleName}" ngày ${dispatchDate}?`))
-      return;
+  async function remove() {
+    if (!deleting || deleteBusy) return;
+    setDeleteBusy(true);
+    setDeleteError(null);
     try {
-      await deleteDispatch(id);
-      loadData();
-    } catch (err: any) {
-      alert("Lỗi khi xóa bản ghi điều xe: " + err.message);
-    }
-  };
+      await deleteDispatch(deleting.id);
+      setDeleting(null);
+      void loadData();
+    } catch (failure: unknown) {
+      setDeleteError(failure instanceof Error ? failure.message : "Không xóa được chuyến điều xe.");
+    } finally { setDeleteBusy(false); }
+  }
 
-  return (
-    <div className="space-y-6">
-      <DispatchFilterBar
-        fromDate={fromDate}
-        setFromDate={setFromDate}
-        toDate={toDate}
-        setToDate={setToDate}
-        providers={providers}
-        selectedProviderFilter={selectedProviderFilter}
-        setSelectedProviderFilter={setSelectedProviderFilter}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearchSubmit={handleSearchSubmit}
-        onOpenModal={() => handleOpenModal()}
-      />
-
-      <DispatchKpiBanner dispatches={dispatches} />
-
-      {loading && <div className="text-center py-8 text-xs text-slate-500">Đang tải nhật ký điều xe...</div>}
-      {error && <div className="text-center py-8 text-xs text-red-500 font-medium">{error}</div>}
-
-      {!loading && !error && (
-        <DispatchTable
-          dispatches={dispatches}
-          onEdit={(d) => handleOpenModal(d)}
-          onDelete={handleDelete}
-          onQuickOdo={(d) => {
-            setQuickOdoDispatch(d);
-            setIsQuickOdoOpen(true);
-          }}
-        />
-      )}
-
-      <DispatchModal
-        isOpen={isModalOpen}
-        editingDispatch={editingDispatch}
-        formData={formData}
-        setFormData={setFormData}
-        vehicles={vehicles}
-        providers={providers}
-        onVehicleSelect={handleVehicleSelect}
-        onSave={handleSave}
-        onClose={() => setIsModalOpen(false)}
-      />
-
-      <QuickOdometerModal
-        isOpen={isQuickOdoOpen}
-        dispatch={quickOdoDispatch}
-        onClose={() => setIsQuickOdoOpen(false)}
-        onSuccess={loadData}
-      />
-    </div>
-  );
-};
+  const outsourced = dispatches.filter(item => item.ownership_group === "OUTSOURCED").length;
+  const total = dispatches.reduce((sum, item) => sum + (item.cost || 0), 0);
+  return <div className="space-y-4">
+    <DispatchFilterBar fromDate={fromDate} setFromDate={setFromDate} toDate={toDate} setToDate={setToDate}
+      providers={providers} selectedProviderFilter={providerFilter} setSelectedProviderFilter={setProviderFilter}
+      searchQuery={searchQuery} setSearchQuery={setSearchQuery} disabled={loading || !!error}
+      onSearchSubmit={event => { event.preventDefault(); if (appliedSearch === searchQuery.trim()) void loadData(); else setAppliedSearch(searchQuery.trim()); }}
+      onOpenModal={() => openModal()} />
+    {loading && <p role="status" className="py-6 text-sm text-slate-500">Đang tải nhật ký điều xe…</p>}
+    {!loading && error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-sm border border-red-200 bg-white p-4 text-sm text-red-700">
+      <span>{error}</span><button type="button" onClick={() => void loadData()} className={systemSecondaryButton}>Thử lại</button>
+    </div>}
+    {!loading && !error && <>
+      <p className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
+        <span>Tổng: <strong className="font-semibold text-slate-900">{dispatches.length} chuyến</strong></span>
+        <span>Xe công ty: {dispatches.length - outsourced}</span><span>Xe thuê ngoài: {outsourced}</span>
+        <span>Cước theo bộ lọc: <strong className="font-semibold text-slate-900">{total.toLocaleString("vi-VN")} đ</strong></span>
+      </p>
+      <DispatchTable dispatches={dispatches} onEdit={openModal} onDelete={dispatch => { setDeleteError(null); setDeleting(dispatch); }} onQuickOdo={setQuickDispatch} />
+    </>}
+    <DispatchModal isOpen={modalOpen} editingDispatch={editingDispatch} formData={formData} setFormData={setFormData}
+      vehicles={vehicles} providers={providers} onVehicleSelect={selectVehicle} onSave={save}
+      onClose={() => { if (!saving) setModalOpen(false); }} saving={saving} error={saveError} />
+    <QuickOdometerModal isOpen={quickDispatch !== null} dispatch={quickDispatch} onClose={() => setQuickDispatch(null)} onSuccess={() => void loadData()} />
+    <SystemDialog isOpen={deleting !== null} onClose={() => { if (!deleteBusy) setDeleting(null); }} title="Xóa chuyến điều xe">
+      <p className="text-sm text-slate-700">Xóa chuyến {deleting?.vehicle_name} ngày {deleting?.dispatch_date.split("-").reverse().join("/")}?</p>
+      {deleteError && <p role="alert" className="mt-3 text-sm text-red-700">{deleteError}</p>}
+      <div className="mt-5 flex justify-end gap-2">
+        <button type="button" disabled={deleteBusy} onClick={() => setDeleting(null)} className={systemSecondaryButton}>Hủy</button>
+        <button type="button" disabled={deleteBusy} onClick={() => void remove()} className={`${systemPrimaryButton} bg-red-700 hover:bg-red-800`}>{deleteBusy ? "Đang xóa…" : "Xóa chuyến"}</button>
+      </div>
+    </SystemDialog>
+  </div>;
+}

@@ -1,5 +1,5 @@
-import React from "react";
 import type { ResidentInfo, RoomOccupancy } from "../../types";
+import { systemTextButton } from "../../../../shared/components/systemStyles";
 
 interface Props {
   filteredOccupancy: RoomOccupancy[];
@@ -8,143 +8,49 @@ interface Props {
 
 const roomNumberCollator = new Intl.Collator("vi", { numeric: true, sensitivity: "base" });
 
-export const GroupedRoomOccupancyView: React.FC<Props> = ({
-  filteredOccupancy,
-  onCheckOut,
-}) => {
-  if (filteredOccupancy.length === 0) {
-    return (
-      <div className="p-12 text-center text-slate-400 italic bg-slate-50 rounded-xl border border-dashed border-slate-200">
-        Không có dữ liệu phòng/khách sạn phù hợp.
-      </div>
-    );
-  }
-
+export function GroupedRoomOccupancyView({ filteredOccupancy, onCheckOut }: Props) {
+  if (filteredOccupancy.length === 0) return <div className="rounded-sm border border-slate-200 bg-white p-8 text-center text-sm text-slate-600">Không có phòng hoặc khách sạn phù hợp.</div>;
   const orderedOccupancy = [...filteredOccupancy].sort((first, second) => {
-    if (first.accommodation_type !== second.accommodation_type) {
-      return first.accommodation_type === "KTX" ? -1 : 1;
-    }
-    return roomNumberCollator.compare(
-      first.room_number || first.unit_name,
-      second.room_number || second.unit_name,
-    );
+    if (first.accommodation_type !== second.accommodation_type) return first.accommodation_type === "KTX" ? -1 : 1;
+    return roomNumberCollator.compare(first.room_number || first.unit_name, second.room_number || second.unit_name);
   });
 
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {orderedOccupancy.map((room) => {
-        const isHotel = room.accommodation_type === "HOTEL";
-        const unitTitle = isHotel ? room.unit_name : `Phòng ${room.unit_name}`;
-        const hasResidents = room.active_count + room.scheduled_count > 0;
-        const remaining = room.capacity == null
-          ? null
-          : room.capacity - room.active_count - room.scheduled_count;
-        const visibleResidents = [
-          ...room.active_residents.map((resident) => ({ resident, scheduled: false })),
-          ...room.scheduled_residents.map((resident) => ({ resident, scheduled: true })),
-        ];
-
-        return (
-          <div
-            key={`${room.accommodation_type}-${room.unit_id}`}
-            className={`rounded-2xl border transition-all overflow-hidden flex flex-col ${
-              hasResidents
-                ? "bg-white border-slate-200 shadow-xs hover:shadow-md"
-                : "bg-slate-50/70 border-slate-200/80 opacity-75"
-            }`}
-          >
-            <div
-              className={`p-4 border-b flex items-center justify-between ${
-                isHotel
-                  ? "bg-amber-500/10 border-amber-200 text-amber-900"
-                  : "bg-indigo-500/10 border-indigo-200 text-indigo-900"
-              }`}
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{isHotel ? "🏨" : "🏢"}</span>
-                  <h3 className="font-bold text-base tracking-tight">{unitTitle}</h3>
-                </div>
-                {isHotel && room.address && (
-                  <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[200px]">
-                    📍 {room.address}
-                  </p>
-                )}
-              </div>
-              <span
-                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                  hasResidents
-                    ? isHotel
-                      ? "bg-amber-100 text-amber-800"
-                      : "bg-indigo-100 text-indigo-800"
-                    : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {room.active_count} đang ở · {room.scheduled_count} sắp đến
-              </span>
-            </div>
-
-            {!isHotel && (
-              <div className="px-4 py-2 text-xs font-semibold text-slate-700 border-b border-slate-100 bg-white">
-                {remaining === null
-                  ? `${room.active_count + room.scheduled_count} đã xếp · Chưa khai báo sức chứa`
-                  : remaining < 0
-                    ? `${room.active_count + room.scheduled_count}/${room.capacity} đã xếp · Vượt sức chứa ${-remaining}`
-                    : `${room.active_count + room.scheduled_count}/${room.capacity} đã xếp · ${remaining} chỗ chưa xếp`}
-              </div>
-            )}
-
-            <div className="p-4 flex-1 divide-y divide-slate-100 space-y-3">
-              {visibleResidents.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-400 italic">Chưa có người phù hợp</div>
-              ) : (
-                visibleResidents.map(({ resident: res, scheduled }) => (
-                  <div key={res.stay_id} className="pt-3 first:pt-0 flex items-start justify-between gap-2">
-                    <div className="space-y-0.5 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-xs text-slate-900 truncate">
-                          {res.name_latin}
-                        </span>
-                        {res.stay_type === "CONG_TAC" && (
-                          <span className="px-1.5 py-0.2 bg-purple-100 text-purple-700 text-[10px] font-bold rounded">
-                            Công tác
-                          </span>
-                        )}
-                        {scheduled && (
-                          <span className="px-1.5 py-0.5 bg-sky-100 text-sky-800 text-[10px] font-bold rounded">
-                            Sắp đến
-                          </span>
-                        )}
-                      </div>
-                      {res.name_chinese && (
-                        <p className="text-[11px] text-slate-500 truncate">{res.name_chinese}</p>
-                      )}
-                      <div className="text-[11px] text-slate-400 flex items-center gap-2 flex-wrap pt-0.5">
-                        {res.bed_location && (
-                          <span className="font-medium text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
-                            🛏️ {res.bed_location}
-                          </span>
-                        )}
-                        <span>{scheduled ? "Dự kiến vào" : "Vào"}: {res.start_date || "N/A"}</span>
-                      </div>
-                    </div>
-
-                    {!scheduled && <button
-                      onClick={() => onCheckOut(res, unitTitle)}
-                      title="Trả phòng / Chuyển đi"
-                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer transition-colors shrink-0"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                    </button>}
-                  </div>
-                ))
-              )}
-            </div>
+  return <div className="grid min-w-0 grid-cols-1 items-start gap-4 xl:grid-cols-2">
+    {orderedOccupancy.map((room) => {
+      const isHotel = room.accommodation_type === "HOTEL";
+      const title = isHotel ? room.unit_name : `Phòng ${room.unit_name}`;
+      const remaining = room.capacity == null ? null : room.capacity - room.active_count - room.scheduled_count;
+      const residents = [
+        ...room.active_residents.map((resident) => ({ resident, scheduled: false })),
+        ...room.scheduled_residents.map((resident) => ({ resident, scheduled: true })),
+      ];
+      return <section key={`${room.accommodation_type}-${room.unit_id}`} aria-label={title} className="min-w-0 rounded-sm border border-slate-200 bg-white">
+        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="min-w-0">
+            <h2 className="break-words text-sm font-semibold text-slate-900">{title}</h2>
+            {isHotel && room.address && <p className="mt-1 break-words text-xs text-slate-600">{room.address}</p>}
           </div>
-        );
-      })}
-    </div>
-  );
-};
+          <span className="text-xs text-slate-600">{room.active_count} đang ở · {room.scheduled_count} sắp đến</span>
+        </div>
+        {!isHotel && <p className={`border-b border-slate-200 px-4 py-2 text-xs ${remaining !== null && remaining < 0 ? "text-red-700" : "text-slate-600"}`}>
+          {remaining === null ? "Chưa khai báo sức chứa" : remaining < 0 ? `${room.active_count + room.scheduled_count}/${room.capacity} đã xếp · Vượt sức chứa ${-remaining}` : `Sức chứa ${room.capacity} người · Còn ${remaining} chỗ chưa xếp`}
+        </p>}
+        {residents.length === 0 ? <p className="px-4 py-6 text-sm text-slate-600">Chưa có người phù hợp.</p>
+          : <ul className="divide-y divide-slate-200">
+            {residents.map(({ resident, scheduled }) => <li key={resident.stay_id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <p className="break-words text-sm font-medium text-slate-900">{resident.name_latin}{resident.name_chinese && <span className="ml-2 font-normal text-slate-600">{resident.name_chinese}</span>}</p>
+                <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                  <span>{resident.bed_location || "Chưa ghi vị trí giường"}</span>
+                  <span>{scheduled ? "Dự kiến vào" : "Ngày vào"}: {resident.start_date || "—"}</span>
+                  <span>{resident.stay_type === "CONG_TAC" ? "Công tác" : "Cố định"}</span>
+                </p>
+              </div>
+              {scheduled ? <span className="shrink-0 text-sm text-slate-600">Sắp đến</span>
+                : <button type="button" onClick={() => onCheckOut(resident, title)} aria-label={`Trả phòng cho ${resident.name_latin}`} className={`${systemTextButton} shrink-0`}>Trả phòng</button>}
+            </li>)}
+          </ul>}
+      </section>;
+    })}
+  </div>;
+}

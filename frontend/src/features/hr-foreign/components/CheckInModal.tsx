@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchEmployees, fetchRooms, fetchHotels, fetchRoomOccupancy, createStay } from "../api";
 import type { ForeignEmployee, Room, Hotel, RoomOccupancy } from "../types";
+import { SystemDialog } from "../../../shared/components/SystemDialog";
+import { systemPrimaryButton, systemSecondaryButton } from "../../../shared/components/systemStyles";
 import { CheckInFormFields } from "./check-in/CheckInFormFields";
 
 interface CheckInModalProps {
@@ -55,7 +57,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
   useEffect(() => {
     if (!isOpen) return;
-    const loadOptions = async () => {
+    const loadOptions = async (): Promise<void> => {
       try {
         setLoading(true);
         setError(null);
@@ -79,8 +81,8 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         } else if (defaultAccommodationType === "HOTEL" && defaultUnitId) {
           setHotelId(defaultUnitId);
         }
-      } catch (err: any) {
-        setError(err.message || "Không thể tải danh sách chọn");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Không thể tải danh sách chọn");
       } finally {
         setLoading(false);
       }
@@ -88,7 +90,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     loadOptions();
   }, [isOpen, defaultAccommodationType, defaultUnitId, defaultEmployeeId]);
 
-  const handleTypeChange = (type: "KTX" | "HOTEL") => {
+  const handleTypeChange = (type: "KTX" | "HOTEL"): void => {
     setAccommodationType(type);
     if (type === "KTX") {
       setStayType("CO_DINH");
@@ -111,15 +113,18 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   );
 
   useEffect(() => {
-    if (selectedEmployee && selectedEmployee.work_type) {
+    if (selectedEmployee?.work_type) {
       setStayType(selectedEmployee.work_type as "CO_DINH" | "CONG_TAC");
     }
+  }, [selectedEmployee?.id, selectedEmployee?.work_type]);
+
+  useEffect(() => {
     if (selectedEmployee?.entry_date && startDate < selectedEmployee.entry_date) {
       setStartDate(selectedEmployee.entry_date);
     }
-  }, [selectedEmployeeId, employees]);
+  }, [selectedEmployee?.entry_date, startDate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!selectedEmployeeId) {
       setError("Vui lòng chọn Nhân viên nước ngoài");
@@ -172,8 +177,8 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Không thể xếp người vào chỗ ở");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Không thể xếp người vào chỗ ở");
     } finally {
       setSubmitting(false);
     }
@@ -182,22 +187,9 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]">
-        <div className="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
-          <h3 className="text-lg font-bold text-slate-900 flex items-center">
-            🏢 Xếp người vào chỗ ở mới
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 rounded-lg p-1 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
+    <SystemDialog isOpen={isOpen} onClose={onClose} title="Xếp chỗ ở" wide>
         {error && (
-          <div className="mb-4 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+          <div role="alert" className="mb-4 rounded-sm border border-red-200 p-3 text-sm text-red-800">
             {error}
           </div>
         )}
@@ -241,21 +233,20 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm font-medium text-slate-600 border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer"
+                className={systemSecondaryButton}
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm cursor-pointer disabled:opacity-60"
+                className={systemPrimaryButton}
               >
                 {submitting ? "Đang xử lý..." : "Xác nhận xếp chỗ"}
               </button>
             </div>
           </form>
         )}
-      </div>
-    </div>
+    </SystemDialog>
   );
 };

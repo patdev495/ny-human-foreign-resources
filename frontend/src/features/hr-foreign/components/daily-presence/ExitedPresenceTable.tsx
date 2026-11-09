@@ -1,93 +1,38 @@
-import React from "react";
 import type { DailyPresenceItem } from "../../types";
+import { systemTextButton } from "../../../../shared/components/systemStyles";
 
 interface Props {
   filteredExitedItems: DailyPresenceItem[];
-  onOpenProfile: (empId: number) => void;
+  onOpenProfile: (employeeId: number) => void;
 }
 
-export const ExitedPresenceTable: React.FC<Props> = ({
-  filteredExitedItems,
-  onOpenProfile,
-}) => {
-  return (
-    <div className="bg-white rounded-2xl border border-rose-200 overflow-hidden shadow-xs">
-      <div className="p-4 bg-rose-50/50 border-b border-rose-200 flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-sm text-rose-900 flex items-center gap-2">
-            <span>✈️ Danh sách Nhân sự Vắng mặt tại Việt Nam (Đã về nước / Chưa sang)</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-rose-200 text-rose-800 font-bold">
-              {filteredExitedItems.length} người
-            </span>
-          </h3>
-          <p className="text-xs text-rose-600 mt-0.5">
-            Nhân sự hiện không ở Việt Nam (đã làm thủ tục về nước hoặc đang ở nước ngoài chờ đợt sang).
-          </p>
-        </div>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th className="py-3.5 px-4">STT</th>
-              <th className="py-3.5 px-4">Mã NV</th>
-              <th className="py-3.5 px-4">Họ và tên</th>
-              <th className="py-3.5 px-4">Giới tính</th>
-              <th className="py-3.5 px-4">Bộ phận</th>
-              <th className="py-3.5 px-4">Ngày đã về nước</th>
-              <th className="py-3.5 px-4">Dự kiến sang lại</th>
-              <th className="py-3.5 px-4">Ghi chú</th>
-              <th className="py-3.5 px-4 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredExitedItems.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400 italic">
-                  Không có nhân sự nào đã về nước.
-                </td>
-              </tr>
-            ) : (
-              filteredExitedItems.map((item, idx) => (
-                <tr key={item.employee_id} className="hover:bg-rose-50/30 transition-colors">
-                  <td className="py-3 px-4 font-mono text-slate-400">{idx + 1}</td>
-                  <td className="py-3 px-4 font-mono font-bold text-slate-700">
-                    {item.employee_code || `#${item.employee_id}`}
-                  </td>
-                  <td className="py-3 px-4">
-                    <button
-                      onClick={() => onOpenProfile(item.employee_id)}
-                      className="font-bold text-slate-900 hover:text-rose-600 transition-colors text-left"
-                    >
-                      {item.name_latin}
-                    </button>
-                    {item.name_chinese && (
-                      <p className="text-[11px] text-slate-400 font-normal">{item.name_chinese}</p>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-slate-600">{item.gender}</td>
-                  <td className="py-3 px-4 font-medium text-slate-700">{item.department || "—"}</td>
-                  <td className="py-3 px-4 font-semibold text-rose-700">
-                    {item.actual_exit_date || "—"}
-                  </td>
-                  <td className="py-3 px-4 font-semibold text-emerald-700">
-                    {item.expected_entry_date || "—"}
-                  </td>
-                  <td className="py-3 px-4 text-slate-500">{item.notes || "—"}</td>
-                  <td className="py-3 px-4 text-right">
-                    <button
-                      onClick={() => onOpenProfile(item.employee_id)}
-                      className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                    >
-                      Xem Hồ sơ
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+export function ExitedPresenceTable({ filteredExitedItems, onOpenProfile }: Props) {
+  return <section className="min-w-0 rounded-sm border border-slate-200 bg-white" aria-label="Nhân sự đang ở nước ngoài">
+    <div className="overflow-x-auto" role="region" aria-label="Bảng nhân sự ở nước ngoài" tabIndex={0}>
+      <table className="w-full min-w-[1000px] border-collapse text-left text-sm">
+        <caption className="sr-only">Nhân sự đã về nước hoặc chưa sang Việt Nam theo ngày tra cứu</caption>
+        <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>
+          {["STT", "Mã nhân sự", "Họ và tên", "Giới tính", "Bộ phận", "Ngày đã về nước", "Dự kiến sang lại", "Ghi chú", "Thao tác"].map((label) => <th key={label} scope="col" className="whitespace-nowrap px-3 py-3 font-medium">{label}</th>)}
+        </tr></thead>
+        <tbody className="divide-y divide-slate-200">
+          {filteredExitedItems.length === 0 ? <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-600">Không tìm thấy nhân sự ở nước ngoài phù hợp với ngày tra cứu và bộ lọc.</td></tr>
+            : filteredExitedItems.map((item, index) => <tr key={item.employee_id} className="hover:bg-slate-50">
+              <td className="px-3 py-3 tabular-nums text-slate-500">{index + 1}</td>
+              <td className="whitespace-nowrap px-3 py-3 text-slate-600">{item.employee_code || `#${item.employee_id}`}</td>
+              <th scope="row" className="min-w-40 px-3 py-3 font-normal">
+                <button type="button" onClick={() => onOpenProfile(item.employee_id)} className="cursor-pointer text-left font-medium text-slate-900 underline-offset-4 hover:underline">{item.name_latin}</button>
+                {item.name_chinese && <span className="mt-0.5 block text-xs text-slate-600">{item.name_chinese}</span>}
+              </th>
+              <td className="px-3 py-3 text-slate-600">{item.gender || "—"}</td>
+              <td className="px-3 py-3 text-slate-600">{item.department || "—"}</td>
+              <td className="whitespace-nowrap px-3 py-3 text-slate-600">{item.actual_exit_date || "—"}</td>
+              <td className="whitespace-nowrap px-3 py-3 text-slate-600">{item.expected_entry_date || "—"}</td>
+              <td className="max-w-sm break-words px-3 py-3 text-slate-600">{item.notes || "—"}</td>
+              <td className="whitespace-nowrap px-3 py-2"><button type="button" onClick={() => onOpenProfile(item.employee_id)} aria-label={`Xem hồ sơ ${item.name_latin}`} className={systemTextButton}>Hồ sơ</button></td>
+            </tr>)}
+        </tbody>
+      </table>
     </div>
-  );
-};
+    <p role="status" className="border-t border-slate-200 px-4 py-3 text-sm text-slate-600">Hiển thị {filteredExitedItems.length} nhân sự</p>
+  </section>;
+}

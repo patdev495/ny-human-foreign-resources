@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { SystemDialog } from "../../../shared/components/SystemDialog";
+import { systemSecondaryButton } from "../../../shared/components/systemStyles";
 
 interface PdfViewerModalProps {
   isOpen: boolean;
@@ -7,136 +9,38 @@ interface PdfViewerModalProps {
   onClose: () => void;
 }
 
-export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({
-  isOpen,
-  title,
-  docKey,
-  onClose,
-}) => {
+export function PdfViewerModal({ isOpen, title, docKey, onClose }: PdfViewerModalProps) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [retry, setRetry] = useState(0);
+  const pdfUrl = docKey ? `/api/vehicle-management/contracts/pdf/${encodeURIComponent(docKey)}` : "";
   useEffect(() => {
-    if (!isOpen || !docKey) {
-      setBlobUrl(null);
-      setError(null);
-      return;
-    }
-
+    setBlobUrl(null);
+    setError(null);
+    if (!isOpen || !pdfUrl) return;
     let active = true;
     let createdUrl: string | null = null;
-
     setLoading(true);
-    setError(null);
-    setBlobUrl(null);
-
-    const pdfApiUrl = `/api/vehicle-management/contracts/pdf/${docKey}`;
-
-    fetch(pdfApiUrl)
-      .then(async (res) => {
-        if (!res.ok) {
-          const json = await res.json().catch(() => ({}));
-          throw new Error(json.detail || `Không thể tải file PDF (${res.status})`);
-        }
-        return res.blob();
-      })
-      .then((blob) => {
-        if (!active) return;
-        createdUrl = URL.createObjectURL(blob);
-        setBlobUrl(createdUrl);
-      })
-      .catch((err: Error) => {
-        if (!active) return;
-        setError(err.message || "Lỗi tải file hợp đồng");
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    return () => {
-      active = false;
-      if (createdUrl) {
-        URL.revokeObjectURL(createdUrl);
+    fetch(pdfUrl).then(async response => {
+      if (!response.ok) {
+        const detail: unknown = await response.json().catch(() => null);
+        const message = typeof detail === "object" && detail !== null && "detail" in detail && typeof detail.detail === "string" ? detail.detail : `Không tải được file PDF (${response.status}).`;
+        throw new Error(message);
       }
-    };
-  }, [isOpen, docKey]);
+      return response.blob();
+    }).then(blob => { if (active) { createdUrl = URL.createObjectURL(blob); setBlobUrl(createdUrl); } })
+      .catch((failure: unknown) => { if (active) setError(failure instanceof Error ? failure.message : "Không tải được file hợp đồng."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; if (createdUrl) URL.revokeObjectURL(createdUrl); };
+  }, [isOpen, pdfUrl, retry]);
 
-  if (!isOpen || !docKey) return null;
-
-  const pdfUrl = `/api/vehicle-management/contracts/pdf/${docKey}`;
-
-  return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-6">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden border border-slate-200">
-        {/* Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-sky-700 to-blue-800 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="p-2 bg-white/15 text-white rounded-lg text-lg">📄</span>
-            <div>
-              <h3 className="font-bold text-base text-slate-100">{title}</h3>
-              <p className="text-xs text-slate-400">File Hợp Đồng Gốc (Định dạng PDF)</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition-colors flex items-center gap-1.5"
-            >
-              ↗ Mở Trong Tab Mới
-            </a>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 text-lg font-bold transition-colors cursor-pointer"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        {/* PDF Content Area */}
-        <div className="flex-1 bg-slate-100 relative flex items-center justify-center">
-          {loading && (
-            <div className="flex flex-col items-center gap-3 text-slate-600">
-              <div className="w-9 h-9 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm font-medium">Đang tải file PDF hợp đồng...</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="p-6 bg-red-50 text-red-700 rounded-2xl border border-red-200 max-w-md text-center shadow-sm">
-              <div className="text-3xl mb-2">⚠️</div>
-              <h4 className="font-bold text-base mb-1 text-slate-800">Không thể xem file hợp đồng</h4>
-              <p className="text-xs text-red-600 mb-4">{error}</p>
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-lg transition-colors inline-block"
-              >
-                Mở link trực tiếp
-              </a>
-            </div>
-          )}
-
-          {!loading && !error && blobUrl && (
-            <object
-              data={blobUrl}
-              type="application/pdf"
-              className="w-full h-full border-none"
-            >
-              <iframe
-                src={blobUrl}
-                title={title}
-                className="w-full h-full border-none"
-              />
-            </object>
-          )}
-        </div>
-      </div>
+  return <SystemDialog isOpen={isOpen && docKey !== null} title={title} onClose={onClose} wide>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-sm text-slate-500">Bản hợp đồng gốc · PDF</span><a href={pdfUrl} target="_blank" rel="noopener noreferrer" className={systemSecondaryButton}>Mở trong tab mới</a></div>
+      {loading && <p role="status" className="py-6 text-sm text-slate-500">Đang tải file hợp đồng…</p>}
+      {!loading && error && <div role="alert" className="space-y-3 rounded-sm border border-red-200 p-4 text-sm text-red-700"><p>{error}</p><button type="button" onClick={() => setRetry(value => value + 1)} className={systemSecondaryButton}>Thử lại</button></div>}
+      {!loading && !error && blobUrl && <object data={blobUrl} type="application/pdf" aria-label={title} className="h-[65dvh] min-h-64 w-full border border-slate-200"><p className="p-4 text-sm text-slate-600">Trình duyệt chưa hỗ trợ xem PDF tại đây. <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="underline">Mở hợp đồng trong tab mới</a>.</p></object>}
     </div>
-  );
-};
-
+  </SystemDialog>;
+}

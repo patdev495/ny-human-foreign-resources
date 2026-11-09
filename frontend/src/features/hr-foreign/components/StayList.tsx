@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { ForeignEmployee, Room, Stay, StayCreate } from "../types";
 import { fetchStays, createStay, updateStay, fetchEmployees, fetchRooms } from "../api";
+import { systemPrimaryButton, systemSecondaryButton, systemTextButton } from "../../../shared/components/systemStyles";
 import { StayFormModal } from "./stay-list/StayFormModal";
 
 interface StayListProps {
@@ -12,7 +13,9 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
   const [employees, setEmployees] = useState<ForeignEmployee[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [editingStay, setEditingStay] = useState<Stay | null>(null);
 
   const [employeeId, setEmployeeId] = useState<number | "">("");
@@ -25,9 +28,10 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
+      setLoadError(null);
       const [stayData, empData, roomData] = await Promise.all([
         fetchStays(),
         fetchEmployees(),
@@ -38,12 +42,13 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
       setRooms(roomData);
     } catch (err) {
       console.error("Failed to load stay data:", err);
+      setLoadError("Không thể tải lịch sử lưu trú. Kiểm tra kết nối rồi thử lại.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { void loadData(); }, [loadData]);
 
   const openCreateModal = () => {
     setEditingStay(null);
@@ -88,6 +93,8 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
     if (!startDate) { setError("Vui lòng chọn ngày bắt đầu."); return; }
     if (accommodationType === "KTX" && !roomId) { setError("Vui lòng chọn số phòng KTX."); return; }
 
+    setSubmitting(true);
+    setError(null);
     try {
       const payload: StayCreate = {
         employee_id: Number(employeeId),
@@ -108,136 +115,56 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
       loadData();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Đã xảy ra lỗi.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const getEmpName = (id: number) => {
-    const emp = employees.find((e) => e.id === id);
-    return emp ? `${emp.name_latin} (${emp.passport_number})` : `#${id}`;
-  };
-
-  const getRoomNumber = (rId?: number | null) => {
-    if (!rId) return "-";
-    const room = rooms.find((r) => r.id === rId);
-    return room ? room.room_number : `#${rId}`;
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
-        <div>
-          <h2 className="text-xl font-bold text-slate-800">Quản lý Đợt Lưu Trú (Stays)</h2>
-          <p className="text-sm text-slate-500">Ghi nhận thông tin công tác & nơi lưu trú tại Việt Nam</p>
-        </div>
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg shadow-xs cursor-pointer transition-colors"
-        >
-          + Đăng ký Đợt Lưu Trú
-        </button>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <table className="w-full text-left text-sm text-slate-700">
-          <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-            <tr>
-              <th className="px-4 py-3">Mã Stay</th>
-              <th className="px-4 py-3">Nhân Sự</th>
-              <th className="px-4 py-3">Loại Lưu Trú</th>
-              <th className="px-4 py-3">Số Phòng</th>
-              <th className="px-4 py-3">Hình Thức</th>
-              <th className="px-4 py-3">Cờ Ăn KTX</th>
-              <th className="px-4 py-3">Thời Gian</th>
-              <th className="px-4 py-3">Trạng Thái</th>
-              <th className="px-4 py-3 text-right">Thao tác</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                  Đang tải danh sách lưu trú...
-                </td>
-              </tr>
-            ) : stays.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                  Chưa có đợt lưu trú nào.
-                </td>
-              </tr>
-            ) : (
-              stays.map((stay) => {
-                const isActive = !stay.end_date || stay.end_date > new Date().toISOString().split("T")[0];
-                return (
-                  <tr key={stay.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-slate-500">#{stay.id}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900">
-                      <button
-                        onClick={() => onSelectStay?.(stay)}
-                        className="hover:underline text-blue-600 text-left cursor-pointer"
-                      >
-                        {getEmpName(stay.employee_id)}
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                          stay.accommodation_type === "KTX"
-                            ? "bg-purple-50 text-purple-700"
-                            : "bg-amber-50 text-amber-700"
-                        }`}
-                      >
-                        {stay.accommodation_type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono font-medium">{getRoomNumber(stay.room_id)}</td>
-                    <td className="px-4 py-3">
-                      {stay.stay_type === "CO_DINH" ? "Cố định" : "Công tác"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {stay.accommodation_type === "KTX" ? (
-                        stay.has_meals ? (
-                          <span className="text-emerald-600 font-semibold"> Có ăn</span>
-                        ) : (
-                          <span className="text-slate-400">Không ăn</span>
-                        )
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {stay.start_date} &rarr; {stay.end_date || "Hiện tại"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {isActive ? "Đang lưu trú" : "Đã kết thúc"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => openEditModal(stay)}
-                        className="px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded cursor-pointer"
-                      >
-                        {isActive ? "Cập nhật / Kết thúc" : "Chỉnh sửa"}
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
+  return <div className="min-w-0 space-y-4">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-base font-semibold text-slate-900">Các đợt lưu trú <span className="font-normal text-slate-600">({loading || loadError ? "—" : stays.length})</span></h2>
+      <button type="button" onClick={openCreateModal} className={systemPrimaryButton}>+ Đăng ký đợt lưu trú</button>
+    </div>
+    {loadError && <div role="alert" className="rounded-sm border border-red-200 bg-white p-4 text-sm text-red-800">{loadError}<button type="button" onClick={() => void loadData()} className={`${systemSecondaryButton} ml-3`}>Thử lại</button></div>}
+    <div className="overflow-x-auto rounded-sm border border-slate-200 bg-white" role="region" aria-label="Bảng lịch sử lưu trú" tabIndex={0}>
+      <table className="w-full min-w-[1050px] text-left text-sm">
+        <caption className="sr-only">Lịch sử các đợt lưu trú KTX và khách sạn</caption>
+        <thead className="border-b border-slate-200 bg-slate-50 text-slate-600"><tr>
+          {["Mã đợt", "Nhân sự", "Loại chỗ ở", "Phòng / Khách sạn", "Loại hình", "Ăn KTX", "Thời gian", "Trạng thái", "Thao tác"].map((label) => <th key={label} scope="col" className="whitespace-nowrap px-3 py-3 font-medium">{label}</th>)}
+        </tr></thead>
+        <tbody className="divide-y divide-slate-200">
+          {loading ? <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-600">Đang tải lịch sử lưu trú…</td></tr>
+            : !loadError && stays.length === 0 ? <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-600">Chưa có đợt lưu trú nào.</td></tr>
+            : !loadError && stays.map((stay) => {
+              const isActive = !stay.end_date || stay.end_date > new Date().toISOString().split("T")[0];
+              const isScheduled = Boolean(stay.start_date && stay.start_date > new Date().toISOString().split("T")[0]);
+              const employee = employees.find((emp) => emp.id === stay.employee_id);
+              const roomNumber = stay.room_number || rooms.find((room) => room.id === stay.room_id)?.room_number;
+              const location = stay.accommodation_type === "HOTEL" ? `${stay.hotel_name || "Khách sạn"}${stay.hotel_room_number ? ` · Phòng ${stay.hotel_room_number}` : ""}` : roomNumber ? `Phòng ${roomNumber}` : "—";
+              return <tr key={stay.id} className="hover:bg-slate-50">
+                <td className="px-3 py-3 text-slate-600">#{stay.id}</td>
+                <th scope="row" className="min-w-40 px-3 py-3 font-medium text-slate-900">
+                  {onSelectStay ? <button type="button" onClick={() => onSelectStay(stay)} className="cursor-pointer text-left hover:underline">{employee?.name_latin || `#${stay.employee_id}`}</button> : employee?.name_latin || `#${stay.employee_id}`}
+                  <span className="mt-0.5 block text-xs font-normal text-slate-600">{employee?.passport_number || "Chưa có hộ chiếu"}</span>
+                </th>
+                <td className="px-3 py-3 text-slate-600">{stay.accommodation_type === "KTX" ? "KTX" : "Khách sạn"}</td>
+                <td className="px-3 py-3 text-slate-700">{location}</td>
+                <td className="px-3 py-3 text-slate-600">{stay.stay_type === "CO_DINH" ? "Cố định" : "Công tác"}</td>
+                <td className="px-3 py-3 text-slate-600">{stay.accommodation_type !== "KTX" ? "—" : stay.has_meals ? "Có ăn" : "Không ăn"}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-slate-600">{stay.start_date || "—"}<span className="block">đến {stay.end_date || (isScheduled ? "chưa xác định" : "hiện tại")}</span></td>
+                <td className="px-3 py-3 text-slate-600">{isScheduled ? "Sắp đến" : isActive ? "Đang lưu trú" : "Đã kết thúc"}</td>
+                <td className="whitespace-nowrap px-3 py-2"><button type="button" onClick={() => openEditModal(stay)} aria-label={`Cập nhật đợt lưu trú ${stay.id}`} className={systemTextButton}>{isScheduled ? "Cập nhật" : isActive ? "Cập nhật / Kết thúc" : "Chỉnh sửa"}</button></td>
+              </tr>;
+            })}
+        </tbody>
+      </table>
+    </div>
       <StayFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleSubmit}
         editingStay={editingStay}
+        submitting={submitting}
         error={error}
         employees={employees}
         rooms={rooms}
@@ -258,6 +185,5 @@ export const StayList: React.FC<StayListProps> = ({ onSelectStay }) => {
         notes={notes}
         setNotes={setNotes}
       />
-    </div>
-  );
+  </div>;
 };

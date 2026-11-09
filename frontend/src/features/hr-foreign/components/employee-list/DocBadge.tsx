@@ -40,10 +40,16 @@ export const DocBadge: React.FC<{
   dateStr?: string | null;
   label?: string;
   threshold: number;
-}> = ({ dateStr, label, threshold }) => {
+  plain?: boolean;
+}> = ({ dateStr, label, threshold, plain = false }) => {
   const days = getDays(dateStr);
   const status = classifyDays(days, threshold);
   const config = badgeConfig[status];
+  if (plain) {
+    const color = status === "expired" ? "text-red-700" : status === "warning" ? "text-amber-800" : "text-slate-600";
+    const description = status === "missing" ? "Thiếu thông tin" : status === "expired" ? "Đã hết hạn" : status === "warning" ? `Còn ${days} ngày · sắp hết hạn` : `Còn ${days} ngày`;
+    return <span className={`text-sm ${color}`} title={dateStr ? `Hết hạn: ${dateStr}` : undefined}>{description}</span>;
+  }
   const text = label
     ? `${label}: ${
         status === "missing" ? "Thiếu TT" : status === "expired" ? "Hết hạn" : `${days} ngày`
@@ -60,10 +66,16 @@ export const DocBadge: React.FC<{
   );
 };
 
-export const PassportBadge: React.FC<{ emp: ForeignEmployee; threshold: number }> = ({
+export const PassportBadge: React.FC<{ emp: ForeignEmployee; threshold: number; plain?: boolean }> = ({
   emp,
   threshold,
+  plain = false,
 }) => {
+  if (plain) {
+    if (!emp.passport_number) return <span className="text-sm text-slate-600">Thiếu hộ chiếu</span>;
+    if (!emp.passport_expiry) return <span className="text-sm text-amber-800">Chưa có hạn</span>;
+    return <DocBadge dateStr={emp.passport_expiry} threshold={threshold} plain />;
+  }
   if (!emp.passport_number) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] font-medium bg-slate-100 text-slate-500 border-slate-200/80">
