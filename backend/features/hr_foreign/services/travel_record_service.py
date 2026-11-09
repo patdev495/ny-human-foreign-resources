@@ -161,15 +161,10 @@ def update_travel_record(
     
     emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == record.employee_id).first()
     if emp:
-        latest = (
-            db.query(TravelRecord)
-            .filter(TravelRecord.employee_id == emp.id)
-            .order_by(
-                case((TravelRecord.entry_date.is_(None), 1), else_=0),
-                TravelRecord.entry_date.desc(),
-                TravelRecord.id.desc(),
-            )
-            .first()
+        records = list_travel_records(db, emp.id)
+        latest = next(
+            (trip for trip in records if trip.actual_exit_date is None),
+            records[0] if records else None,
         )
         if latest and latest.id == record.id:
             emp.entry_date = record.entry_date
