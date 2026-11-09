@@ -4,7 +4,7 @@ import type { MonthlyVehicleContract, Vehicle } from "../types";
 import { PdfViewerModal } from "./PdfViewerModal";
 import { MonthlyContractEditModal } from "./contracts/MonthlyContractEditModal";
 import { MonthlyVehicleEditModal } from "./contracts/MonthlyVehicleEditModal";
-import { MonthlyContractTable, MonthlyVehicleTable } from "./contracts/MonthlyContractTable";
+import { MonthlyContractCards } from "./contracts/MonthlyContractCards";
 import { applyContractEdits, type ContractEditPackage } from "./contracts/contractDetails";
 import { systemSecondaryButton } from "../../../shared/components/systemStyles";
 
@@ -76,16 +76,14 @@ export function MonthlyContractList() {
     finally { setSubmittingVehicle(false); }
   }
 
-  const sevenSeat = contracts.filter(contract => contract.contract_name.includes("7 chỗ") || contract.vehicle_name?.includes("7 chỗ"));
   return <div className="space-y-4">
     {loading && <p role="status" className="py-6 text-sm text-slate-500">Đang tải hợp đồng khoán tháng…</p>}
     {!loading && error && <div role="alert" className="flex flex-wrap items-center gap-3 rounded-sm border border-red-200 bg-white p-4 text-sm text-red-700"><span>{error}</span><button type="button" onClick={() => void load()} className={systemSecondaryButton}>Thử lại</button></div>}
     {!loading && !error && <>
-      <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-slate-600">{contracts.length} hợp đồng · {vehicles.length} phương tiện. Đơn giá hiển thị theo từng hợp đồng.</p>
-        {sevenSeat.length > 1 && <button type="button" onClick={() => editContract(sevenSeat[0], sevenSeat.map(contract => contract.id))} className={systemSecondaryButton}>Sửa chung xe 7 chỗ ({sevenSeat.length} hợp đồng)</button>}
-      </div>
-      <MonthlyContractTable contracts={contracts} onEdit={editContract} onPdf={(title, key) => setPdf({ title, key })} />
-      <MonthlyVehicleTable vehicles={vehicles} onEdit={vehicle => { setVehicleError(null); setEditingVehicle({ ...vehicle }); }} />
+      <p className="text-sm text-slate-600">{contracts.length} hợp đồng · {vehicles.length} phương tiện. Đơn giá và phụ phí theo hợp đồng đang áp dụng.</p>
+      <MonthlyContractCards contracts={contracts} vehicles={vehicles} onEdit={editContract}
+        onPdf={(title, key) => setPdf({ title, key })}
+        onEditVehicle={vehicle => { setVehicleError(null); setEditingVehicle({ ...vehicle }); }} />
     </>}
     <MonthlyContractEditModal editingContractPackage={editingPackage} setEditingContractPackage={setEditingPackage} onSave={saveContract} submitting={submittingContract} error={contractError} />
     <MonthlyVehicleEditModal editingVehicle={editingVehicle} setEditingVehicle={setEditingVehicle} onSave={saveVehicle} submitting={submittingVehicle} error={vehicleError} />
