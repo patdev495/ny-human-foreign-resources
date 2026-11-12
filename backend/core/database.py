@@ -46,6 +46,7 @@ def init_db() -> None:
     Base.metadata.tables["bot_reminder_channel_days"].create(bind=engine, checkfirst=True)
     Base.metadata.tables["bot_reminder_channel_changes"].create(bind=engine, checkfirst=True)
     Base.metadata.tables["bot_pre_reminder_deliveries"].create(bind=engine, checkfirst=True)
+    Base.metadata.tables["bot_travel_reminder_deliveries"].create(bind=engine, checkfirst=True)
     for table_name in ("telegram_reminder_bot", "telegram_reminder_recipients",
                        "telegram_reminder_delivery_logs", "telegram_reminder_daily_deliveries"):
         Base.metadata.tables[table_name].create(bind=engine, checkfirst=True)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class CutoffTime(BaseModel):
@@ -21,6 +21,12 @@ class TestMessageResult(BaseModel):
     message_type: Literal["PRE", "CUTOFF"]
     status: Literal["SENT", "FAILED"]
     error: str = ""
+
+
+class TravelReminderConfig(CutoffTime):
+    enabled: bool = True
+    days_before: int = Field(default=3, ge=0, le=365, strict=True)
+    time: str = "08:00"
 
 
 class TestSendResponse(BaseModel):

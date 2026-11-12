@@ -26,6 +26,20 @@ from features.hr_foreign.services.scheduler import run_email_scheduler_loop
 from features.zalo_reminder.scheduler import run_scheduler_loop
 from features.telegram_reminder.scheduler import tick as telegram_tick
 from features.bot_reminder.pre_reminder import tick as pre_reminder_tick
+from features.bot_reminder.travel import run_due as run_travel_reminder
+from features.bot_reminder.config import VIETNAM_TZ
+from features.hr_foreign.services.travel_reminder import reminder_message
+from features.zalo_reminder.notifications import notification_targets as zalo_targets
+from features.telegram_reminder.notifications import notification_targets as telegram_targets
+from core.database import SessionLocal
+
+
+def travel_reminder_tick() -> None:
+    import datetime as dt
+
+    with SessionLocal() as db:
+        run_travel_reminder(db, dt.datetime.now(VIETNAM_TZ), reminder_message,
+                            {"zalo": zalo_targets, "telegram": telegram_targets})
 
 
 @asynccontextmanager
@@ -35,6 +49,7 @@ async def lifespan(app: FastAPI):
     zalo_task = None
     telegram_task = None
     pre_reminder_task = None
+    travel_reminder_task = None
     if os.getenv("TESTING") != "1":
         scheduler_task = asyncio.create_task(run_email_scheduler_loop())
         zalo_task = asyncio.create_task(run_scheduler_loop())
@@ -56,10 +71,19 @@ async def lifespan(app: FastAPI):
                     logging.getLogger(__name__).exception("HR pre-reminder scheduler failed")
                 await asyncio.sleep(15)
         pre_reminder_task = asyncio.create_task(pre_reminder_loop())
+        async def travel_reminder_loop() -> None:
+            while True:
+                try:
+                    await asyncio.to_thread(travel_reminder_tick)
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception("Travel reminder scheduler failed")
+                await asyncio.sleep(30)
+        travel_reminder_task = asyncio.create_task(travel_reminder_loop())
     try:
         yield
     finally:
-        for task in (scheduler_task, zalo_task, telegram_task, pre_reminder_task):
+        for task in (scheduler_task, zalo_task, telegram_task, pre_reminder_task, travel_reminder_task):
             if task:
                 task.cancel()
                 try:

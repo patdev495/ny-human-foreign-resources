@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
-import type { TravelRecord } from "../../types";
+import type { Stay, TravelRecord } from "../../types";
 import { updateTravelRecord } from "../../api";
+import { TravelExitRoomAction, type TravelExitAction } from "../TravelExitRoomAction";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   employeeId: number;
   travelRecord: TravelRecord | null;
+  activeStay?: Stay | null;
   onSuccess: () => void;
 }
 
@@ -15,6 +17,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
   onClose,
   employeeId,
   travelRecord,
+  activeStay,
   onSuccess,
 }) => {
   const [entryDate, setEntryDate] = useState("");
@@ -22,6 +25,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
   const [expectedExitDate, setExpectedExitDate] = useState("");
   const [actualExitDate, setActualExitDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [actionType, setActionType] = useState<TravelExitAction>("CHECK_OUT");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +38,9 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
       setExpectedExitDate(travelRecord.expected_exit_date || "");
       setActualExitDate(travelRecord.actual_exit_date || "");
       setNotes(travelRecord.notes || "");
+      setActionType(travelRecord.actual_exit_date && activeStay ? "KEEP_ROOM_ABSENCE" : "CHECK_OUT");
     }
-  }, [isOpen, travelRecord]);
+  }, [isOpen, travelRecord, activeStay]);
 
   if (!isOpen || !travelRecord) return null;
 
@@ -58,6 +63,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
         expected_entry_date: expectedEntryDate || null,
         expected_exit_date: expectedExitDate || undefined,
         actual_exit_date: actualExitDate || undefined,
+        action_type: activeStay && actualExitDate ? actionType : undefined,
         notes: notes.trim() || undefined,
       });
 
@@ -72,7 +78,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-slate-200">
         {/* Header */}
         <div className="px-5 py-4 border-b border-sky-600/30 bg-gradient-to-r from-sky-700 to-blue-800 text-white flex justify-between items-center">
           <div>
@@ -154,6 +160,9 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
               />
             </div>
           </div>
+
+          {activeStay && <TravelExitRoomAction stay={activeStay} value={actionType}
+            disabled={!actualExitDate || saving} onChange={setActionType} />}
 
           <div>
             <label className="block text-slate-600 font-medium mb-1">Ghi chú đợt di chuyển</label>

@@ -172,8 +172,9 @@ def test_assign_stay_success_and_binds_travel_record_id(client: TestClient) -> N
     assert stay_data["travel_record_id"] == tr_id
 
 
-def test_update_travel_record_actual_exit_closes_active_stay(client: TestClient) -> None:
-    """Cycle 3: Khi chốt Ngày thực tế đã về nước trên TravelRecord -> Tự động đóng đợt Stay active (end_date = actual_exit_date)."""
+@pytest.mark.parametrize("action_type", [None, "CHECK_OUT", "KEEP_ROOM_ABSENCE"])
+def test_update_travel_record_actual_exit_room_action(client: TestClient, action_type: str | None) -> None:
+    """Sửa đợt hỗ trợ trả/giữ phòng; client cũ vẫn mặc định trả phòng."""
     emp_res = client.post(
         "/api/hr-foreign/employees",
         json={
@@ -218,6 +219,7 @@ def test_update_travel_record_actual_exit_closes_active_stay(client: TestClient)
             "entry_date": "2026-08-01",
             "expected_exit_date": "2026-08-30",
             "actual_exit_date": "2026-08-10",
+            "action_type": action_type,
         },
     )
     assert update_tr_res.status_code == 200
@@ -227,6 +229,28 @@ def test_update_travel_record_actual_exit_closes_active_stay(client: TestClient)
     assert get_stays_res.status_code == 200
     stays = get_stays_res.json()
     assert len(stays) == 1
-    assert stays[0]["end_date"] == "2026-08-10"
+    expected_end = None if action_type == "KEEP_ROOM_ABSENCE" else "2026-08-10"
+    assert stays[0]["end_date"] == expected_end
+    employee = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
+    assert employee["actual_exit_date"] == "2026-08-10"
+    assert employee["is_in_vietnam"] is False
+
+    # Resaving dates/notes must preserve the room decision, including kept rooms.
+    saved_again = client.put(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records/{tr_id}",
+        json={"actual_exit_date": "2026-08-10", "notes": "Bổ sung ghi chú"},
+    )
+    assert saved_again.status_code == 200
+    stays = client.get(f"/api/hr-foreign/stays?employee_id={emp_id}").json()
+    assert stays[0]["end_date"] == expected_end
+
+    if action_type == "KEEP_ROOM_ABSENCE":
+        checked_out = client.put(
+            f"/api/hr-foreign/employees/{emp_id}/travel-records/{tr_id}",
+            json={"actual_exit_date": "2026-08-10", "action_type": "CHECK_OUT"},
+        )
+        assert checked_out.status_code == 200
+        stays = client.get(f"/api/hr-foreign/stays?employee_id={emp_id}").json()
+        assert stays[0]["end_date"] == "2026-08-10"
 
 

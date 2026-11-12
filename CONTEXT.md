@@ -94,6 +94,9 @@ Lời nhắc gửi riêng cho từng HR trước hạn báo cơm và báo giờ 
 **Gửi thử thông báo cho HR**:
 Thao tác của admin gửi cả Thông báo nhắc HR trước giờ chốt và Thông báo chốt Báo cơm cho một HR đã chọn trên một kênh, bất kể thời điểm gửi và trạng thái gửi tự động của kênh.
 
+**Thông báo nhắc lịch xuất nhập cảnh dự kiến**:
+Tin nhắn tổng hợp lịch đến/rời Việt Nam dự kiến từ từng đợt Nhập xuất cảnh (`TravelRecord`), gửi cho danh sách HR đã chọn trên các kênh Zalo/Telegram đang bật. Admin cấu hình chung số ngày báo trước (mặc định 3 ngày), giờ gửi (mặc định 08:00 giờ Việt Nam) và bật/tắt lời nhắc này. Mỗi HR nhận một lượt tổng hợp mỗi ngày trên mỗi kênh, từ mốc báo trước đến hết ngày dự kiến, kể cả Chủ nhật và ngày lễ. Dừng nhắc từng mốc khi đã có ngày thực tế tương ứng; đợt đã xuất cảnh không được nhắc lại. Không gửi nếu không có lịch phù hợp.
+
 **Danh sách HR nhận thông báo**:
 Những người HR được chọn riêng theo từng kênh để nhận Thông báo chốt Báo cơm qua tin nhắn cá nhân. Danh sách này không mặc nhiên bao gồm mọi Tài khoản người dùng của hệ thống.
 

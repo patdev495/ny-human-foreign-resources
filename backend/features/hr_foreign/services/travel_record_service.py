@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+from typing import cast
 from fastapi import HTTPException
 from sqlalchemy import case, or_
 from sqlalchemy.orm import Session
@@ -144,9 +145,11 @@ def update_travel_record(
     payload: TravelRecordUpdate,
 ) -> TravelRecord:
     _validate_travel_record_dates(
-        entry=payload.entry_date,
-        expected_exit=payload.expected_exit_date,
-        actual_exit=payload.actual_exit_date,
+        entry=payload.entry_date if "entry_date" in payload.model_fields_set else cast(datetime.date | None, record.entry_date),
+        expected_exit=(payload.expected_exit_date if "expected_exit_date" in payload.model_fields_set
+                       else cast(datetime.date | None, record.expected_exit_date)),
+        actual_exit=(payload.actual_exit_date if "actual_exit_date" in payload.model_fields_set
+                     else cast(datetime.date | None, record.actual_exit_date)),
     )
     if payload.entry_date:
         earliest_stay = (
@@ -156,7 +159,8 @@ def update_travel_record(
         )
         if earliest_stay:
             raise HTTPException(status_code=400, detail="Ngày đến không thể sau ngày bắt đầu ở đã xếp.")
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    exit_changed = "actual_exit_date" in payload.model_fields_set and payload.actual_exit_date != record.actual_exit_date
+    for key, value in payload.model_dump(exclude_unset=True, exclude={"action_type"}).items():
         setattr(record, key, value)
     
     emp = db.query(ForeignEmployee).filter(ForeignEmployee.id == record.employee_id).first()
@@ -172,7 +176,8 @@ def update_travel_record(
             emp.expected_exit_date = record.expected_exit_date
             emp.actual_exit_date = record.actual_exit_date
 
-    _sync_travel_record_exit_with_stays(db, record)
+    if payload.action_type != "KEEP_ROOM_ABSENCE" and (exit_changed or payload.action_type == "CHECK_OUT"):
+        _sync_travel_record_exit_with_stays(db, record)
 
     db.commit()
     db.refresh(record)

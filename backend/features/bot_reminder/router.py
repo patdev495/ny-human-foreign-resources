@@ -10,8 +10,21 @@ from core.system_settings import get_time_setting, set_time_setting
 from features.auth.models import User
 from features.auth.security import require_admin
 from features.bot_reminder.schemas import CutoffTime
+from features.bot_reminder.schemas import TravelReminderConfig
+from features.bot_reminder.travel import get_config, save_config
 
 router = APIRouter(prefix="/api/bot-reminder", tags=["Bot reminder"])
+
+
+@router.get("/travel", response_model=TravelReminderConfig)
+def get_travel(_admin: User = Depends(require_admin), db: Session = Depends(get_db)) -> TravelReminderConfig:
+    return get_config(db)
+
+
+@router.put("/travel", response_model=TravelReminderConfig)
+def put_travel(payload: TravelReminderConfig, _admin: User = Depends(require_admin),
+               db: Session = Depends(get_db)) -> TravelReminderConfig:
+    return save_config(db, payload)
 
 
 @router.get("/cutoff", response_model=CutoffTime)

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import type { ForeignEmployee, Stay } from "../types";
 import { recordEmployeeExit, createTravelRecord } from "../api";
+import { TravelExitRoomAction, type TravelExitAction } from "./TravelExitRoomAction";
 
 interface TravelRecordModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
   const [entryDate, setEntryDate] = useState<string>("");
   const [expectedEntryDate, setExpectedEntryDate] = useState<string>("");
   const [expectedExitDate, setExpectedExitDate] = useState<string>("");
-  const [actionType, setActionType] = useState<"CHECK_OUT" | "KEEP_ROOM_ABSENCE">(
+  const [actionType, setActionType] = useState<TravelExitAction>(
     "CHECK_OUT"
   );
   const [notes, setNotes] = useState<string>("");
@@ -177,70 +178,8 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
                 />
               </div>
 
-              {activeStay && (
-                <div className={`space-y-2.5 pt-3 border-t border-slate-100 transition-opacity ${actualExitDate ? "opacity-100" : "opacity-60"}`}>
-                  <label className="block text-slate-800 font-bold">
-                    Xử lý Chỗ ở hiện tại ({activeStay.accommodation_type === "KTX" ? `KTX Phòng ${activeStay.room_number || ""}` : "Khách sạn"}):
-                    {!actualExitDate && <span className="text-amber-700 text-[11px] font-normal ml-2">(Chỉ áp dụng khi chọn Ngày thực tế đã về nước)</span>}
-                  </label>
-                  
-                  <div
-                    onClick={() => actualExitDate && setActionType("CHECK_OUT")}
-                    className={`p-3.5 rounded-xl border transition-all ${
-                      actionType === "CHECK_OUT" && actualExitDate
-                        ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20"
-                        : "border-slate-200 bg-slate-50/50"
-                    } ${actualExitDate ? "cursor-pointer" : "cursor-not-allowed"}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="action_type"
-                        disabled={!actualExitDate}
-                        checked={actionType === "CHECK_OUT"}
-                        onChange={() => setActionType("CHECK_OUT")}
-                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="font-bold text-slate-900 block text-xs">
-                          🏠 Trả phòng & Trạng thái Đã về nước
-                        </span>
-                        <span className="text-slate-500 block text-[11px] mt-0.5">
-                          Chấm dứt lượt ở KTX hiện tại, giải phóng vị trí giường và ngừng tính cơm hoàn toàn.
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    onClick={() => actualExitDate && setActionType("KEEP_ROOM_ABSENCE")}
-                    className={`p-3.5 rounded-xl border transition-all ${
-                      actionType === "KEEP_ROOM_ABSENCE" && actualExitDate
-                        ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-500/20"
-                        : "border-slate-200 bg-slate-50/50"
-                    } ${actualExitDate ? "cursor-pointer" : "cursor-not-allowed"}`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <input
-                        type="radio"
-                        name="action_type"
-                        disabled={!actualExitDate}
-                        checked={actionType === "KEEP_ROOM_ABSENCE"}
-                        onChange={() => setActionType("KEEP_ROOM_ABSENCE")}
-                        className="mt-0.5 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div>
-                        <span className="font-bold text-slate-900 block text-xs">
-                          🛏️ Giữ phòng, chỉ báo vắng mặt (Không tính tiền cơm)
-                        </span>
-                        <span className="text-slate-500 block text-[11px] mt-0.5">
-                          Duy trì chỗ ở KTX để sẵn sàng cho lượt sang tới. Đánh dấu vắng mặt để không tính chi phí ăn.
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {activeStay && <TravelExitRoomAction stay={activeStay} value={actionType}
+                disabled={!actualExitDate || saving} onChange={setActionType} />}
             </div>
           ) : (
             /* CASE 2: Employee is ABROAD / NEW TRIP */

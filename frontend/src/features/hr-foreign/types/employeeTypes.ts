@@ -78,7 +78,9 @@ export interface TravelRecordCreate {
   notes?: string | null;
 }
 
-export interface TravelRecordUpdate extends TravelRecordCreate { }
+export interface TravelRecordUpdate extends TravelRecordCreate {
+  action_type?: "CHECK_OUT" | "KEEP_ROOM_ABSENCE";
+}
 
 export interface ExitDateActionPayload {
   actual_exit_date?: string | null;

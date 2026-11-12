@@ -9,7 +9,13 @@ async function json<T>(path: string, options?: RequestInit): Promise<T> {
   return await response.json() as T;
 }
 
+export interface TravelReminderConfig { enabled: boolean; days_before: number; time: string }
+
 export const botReminderApi = {
+  travel: (): Promise<TravelReminderConfig> => json("/travel"),
+  saveTravel: (config: TravelReminderConfig): Promise<TravelReminderConfig> => json("/travel", {
+    method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(config),
+  }),
   cutoff: (): Promise<{ time: string }> => json("/cutoff"),
   saveCutoff: (time: string): Promise<{ time: string }> => json("/cutoff", {
     method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ time }),

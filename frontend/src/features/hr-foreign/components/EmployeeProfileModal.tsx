@@ -360,6 +360,10 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               }}
               employeeId={data.employee.id}
               travelRecord={selectedTravelRecord}
+              activeStay={data.stays.find((stay) => !stay.end_date && (
+                stay.travel_record_id === selectedTravelRecord?.id ||
+                (stay.travel_record_id == null && data.travel_records[0]?.id === selectedTravelRecord?.id)
+              ))}
               onSuccess={handleRefresh}
             />
           </>

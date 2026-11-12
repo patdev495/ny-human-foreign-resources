@@ -38,6 +38,7 @@ Chọn **Option 2**.
    - Khi tạo `Stay` mới cho nhân viên đang ở Việt Nam, hệ thống tự động gán `stay.travel_record_id = active_travel_record.id`.
 3. **Chốt đợt ở khi xuất cảnh**:
    - Khi cập nhật `actual_exit_date` cho `TravelRecord`, hệ thống tự động chốt `end_date = actual_exit_date` cho đợt `Stay` đang active của `TravelRecord` đó (nếu `end_date` chưa có).
+   - Bổ sung ngày 2026-11-12: luồng Sửa đợt hỗ trợ lựa chọn `CHECK_OUT` (trả phòng, mặc định khi nhập ngày về mới) hoặc `KEEP_ROOM_ABSENCE` (giữ chỗ ở khi đã về nước), thống nhất với luồng Thêm / Cập nhật. Sửa lại ghi chú hoặc lưu lại cùng ngày về không tự thay đổi lựa chọn chỗ ở trước đó. HR có thể chọn trả phòng sau khi đã giữ phòng.
 4. **Làm sạch dữ liệu**:
    - Xóa dữ liệu các bảng: `meal_absences`, `tam_trus`, `visas`, `stays`, `travel_records`.
    - Reset mốc ngày `entry_date`, `expected_entry_date`, `expected_exit_date`, `actual_exit_date` trên `foreign_employees` về NULL.

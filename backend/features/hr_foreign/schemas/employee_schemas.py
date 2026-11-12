@@ -70,7 +70,7 @@ class TravelRecordCreate(TravelRecordBase):
 
 
 class TravelRecordUpdate(TravelRecordBase):
-    pass
+    action_type: Literal["CHECK_OUT", "KEEP_ROOM_ABSENCE"] | None = None
 
 
 class TravelRecordRead(TravelRecordBase):
