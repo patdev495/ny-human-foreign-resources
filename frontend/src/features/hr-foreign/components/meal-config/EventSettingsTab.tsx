@@ -24,13 +24,19 @@ export const EventSettingsTab: React.FC<Props> = ({
 }) => {
   const [evStartDate, setEvStartDate] = useState<string>("");
   const [evEndDate, setEvEndDate] = useState<string>("");
-  const [evSelectedDayType, setEvSelectedDayType] = useState<string>("PRESIDENT_VISIT");
+  const [evSelectedDayType, setEvSelectedDayType] = useState("");
   const [evNotes, setEvNotes] = useState<string>("");
 
   const [editingEvId, setEditingEvId] = useState<number | null>(null);
   const [editingEvDate, setEditingEvDate] = useState<string>("");
-  const [editingEvType, setEditingEvType] = useState<string>("PRESIDENT_VISIT");
+  const [editingEvType, setEditingEvType] = useState("");
   const [editingEvNotes, setEditingEvNotes] = useState<string>("");
+
+  const eventPriceConfigs = priceConfigs.filter((config) => config.day_type !== "NORMAL");
+  const selectedEventType = eventPriceConfigs.find((config) => config.day_type === evSelectedDayType)?.day_type
+    ?? eventPriceConfigs[0]?.day_type
+    ?? "";
+  const editableEventType = eventPriceConfigs.find((config) => config.day_type === editingEvType)?.day_type ?? "";
 
   const handleCreateEventDaysBatch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,12 +47,16 @@ export const EventSettingsTab: React.FC<Props> = ({
       setError("Vui lòng nhập 'Từ ngày' hoặc 'Đến ngày'");
       return;
     }
+    if (!selectedEventType) {
+      setError("Vui lòng tạo đơn giá cho loại ngày sự kiện trước khi áp dụng.");
+      return;
+    }
 
     try {
       const result = await createEventDaysBatch({
         start_date: evStartDate || undefined,
         end_date: evEndDate || undefined,
-        event_type: evSelectedDayType,
+        event_type: selectedEventType,
         notes: evNotes.trim() || undefined,
       });
 
@@ -81,10 +91,11 @@ export const EventSettingsTab: React.FC<Props> = ({
   };
 
   const handleSaveEditEventDay = async (id: number) => {
+    if (!editableEventType) return;
     try {
       await updateEventDay(id, {
         event_date: editingEvDate,
-        event_type: editingEvType,
+        event_type: editableEventType,
         notes: editingEvNotes.trim() ? editingEvNotes.trim() : null,
       });
       setSuccessMsg(" Đã cập nhật ngày sự kiện thành công!");
@@ -141,22 +152,21 @@ export const EventSettingsTab: React.FC<Props> = ({
                 Loại ngày áp dụng
               </label>
               <select id="meal-event-type"
-                value={evSelectedDayType}
+                value={selectedEventType}
                 onChange={(e) => setEvSelectedDayType(e.target.value)}
                 className={systemField}
               >
-                {priceConfigs
-                  .filter((p) => p.day_type !== "NORMAL")
-                  .map((p) => {
-                    const bf = p.foreign_breakfast_price ?? 30000;
-                    const dn = p.foreign_dinner_price ?? 40000;
-                    const lc = p.janitor_meal_price ?? 25000;
-                    return (
-                      <option key={p.id} value={p.day_type}>
-                        {p.day_type_name || p.day_type} (Sáng NNN: {bf.toLocaleString()} VNĐ | Tối NNN: {dn.toLocaleString()} VNĐ | Tạp vụ: {lc.toLocaleString()} VNĐ)
-                      </option>
-                    );
-                  })}
+                {!selectedEventType && <option value="">Chưa có loại ngày sự kiện</option>}
+                {eventPriceConfigs.map((p) => {
+                  const bf = p.foreign_breakfast_price ?? 30000;
+                  const dn = p.foreign_dinner_price ?? 40000;
+                  const lc = p.janitor_meal_price ?? 25000;
+                  return (
+                    <option key={p.id} value={p.day_type}>
+                      {p.day_type_name || p.day_type} (Sáng NNN: {bf.toLocaleString()} VNĐ | Tối NNN: {dn.toLocaleString()} VNĐ | Tạp vụ: {lc.toLocaleString()} VNĐ)
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -235,17 +245,16 @@ export const EventSettingsTab: React.FC<Props> = ({
                       <td className="px-4 py-3">
                         {isEditing ? (
                           <select
-                            aria-label="Sửa loại sự kiện" value={editingEvType}
+                            aria-label="Sửa loại sự kiện" value={editableEventType}
                             onChange={(e) => setEditingEvType(e.target.value)}
                             className={systemField}
                           >
-                            {priceConfigs
-                              .filter((p) => p.day_type !== "NORMAL")
-                              .map((p) => (
-                                <option key={p.id} value={p.day_type}>
-                                  {p.day_type_name || p.day_type}
-                                </option>
-                              ))}
+                            <option value="" disabled>Chọn loại ngày đã cấu hình</option>
+                            {eventPriceConfigs.map((p) => (
+                              <option key={p.id} value={p.day_type}>
+                                {p.day_type_name || p.day_type}
+                              </option>
+                            ))}
                           </select>
                         ) : (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-semibold text-slate-700">
@@ -281,6 +290,7 @@ export const EventSettingsTab: React.FC<Props> = ({
                           <>
                             <button
                               onClick={() => handleSaveEditEventDay(ev.id)}
+                              disabled={!editableEventType}
                               className={systemTextButton}
                             >
                               Lưu
