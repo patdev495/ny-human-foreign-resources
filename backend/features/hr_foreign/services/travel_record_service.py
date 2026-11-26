@@ -92,7 +92,7 @@ def create_travel_record(
             open_trip.entry_date = payload.entry_date
             if payload.expected_entry_date:
                 open_trip.expected_entry_date = payload.expected_entry_date
-            if payload.expected_exit_date:
+            if "expected_exit_date" in payload.model_fields_set:
                 open_trip.expected_exit_date = payload.expected_exit_date
             if payload.notes:
                 open_trip.notes = payload.notes
@@ -234,7 +234,7 @@ def record_employee_exit(
             for s in active_stays:
                 s.end_date = payload.actual_exit_date
 
-    if payload.expected_exit_date is not None:
+    if "expected_exit_date" in payload.model_fields_set:
         latest_tr.expected_exit_date = payload.expected_exit_date
         emp.expected_exit_date = payload.expected_exit_date
 

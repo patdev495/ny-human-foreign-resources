@@ -349,6 +349,7 @@ export const EmployeeProfileModal: React.FC<EmployeeProfileModalProps> = ({
               isOpen={isTravelModalOpen}
               onClose={() => setIsTravelModalOpen(false)}
               employee={data.employee}
+              plannedExitDate={data.travel_records.find((trip) => !trip.actual_exit_date)?.expected_exit_date}
               activeStay={data.stays.find((s) => !s.end_date)}
               onSuccess={handleRefresh}
             />

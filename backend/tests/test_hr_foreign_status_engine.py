@@ -13,6 +13,7 @@ from features.hr_foreign.models import (
     Room,
     Stay,
     TamTru,
+    TravelRecord,
     Visa,
     WorkPermit,
 )
@@ -251,6 +252,17 @@ def test_evaluate_employee_statuses_fallback_from_stay(db_session):
     assert r.entry_date == datetime.date(2026, 3, 15)
     assert r.expected_exit_date == datetime.date(2026, 9, 30)
     assert r.actual_exit_date is None
+    assert r.is_in_vietnam is True
+    assert r.is_overdue_exit is False
+
+    # A recorded trip with no planned exit keeps that date blank.
+    emp.entry_date = stay.start_date
+    stay.expected_end_date = today - datetime.timedelta(days=1)
+    db_session.add(TravelRecord(employee_id=emp.id, entry_date=stay.start_date))
+    db_session.commit()
+
+    r = evaluate_employee_statuses(db_session, [emp], today=today)[0]
+    assert r.expected_exit_date is None
     assert r.is_in_vietnam is True
     assert r.is_overdue_exit is False
 

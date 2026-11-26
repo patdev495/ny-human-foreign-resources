@@ -7,6 +7,7 @@ interface TravelRecordModalProps {
   isOpen: boolean;
   onClose: () => void;
   employee: ForeignEmployee;
+  plannedExitDate?: string | null;
   activeStay?: Stay | null;
   onSuccess: () => void;
 }
@@ -15,6 +16,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
   isOpen,
   onClose,
   employee,
+  plannedExitDate,
   activeStay,
   onSuccess,
 }) => {
@@ -41,11 +43,11 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
       setActualExitDate("");
       setEntryDate("");
       setExpectedEntryDate(employee.expected_entry_date || "");
-      setExpectedExitDate(employee.expected_exit_date || "");
+      setExpectedExitDate((isInVietnam ? employee.expected_exit_date : plannedExitDate) || "");
       setActionType("CHECK_OUT");
       setNotes("");
     }
-  }, [isOpen, employee]);
+  }, [isOpen, employee, isInVietnam, plannedExitDate]);
 
   if (!isOpen) return null;
 
@@ -59,12 +61,13 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
         throw new Error("Ngày thực tế đã về nước không được chọn ngày tương lai. Để lên lịch về, vui lòng điền vào 'Ngày dự kiến về'.");
       }
       if (isInVietnam) {
-        if (!actualExitDate && !expectedExitDate && !expectedEntryDate) {
+        const expectedExitChanged = expectedExitDate !== (employee.expected_exit_date || "");
+        if (!actualExitDate && !expectedExitDate && !expectedEntryDate && !expectedExitChanged) {
           throw new Error("Vui lòng nhập/cập nhật ít nhất 1 mốc ngày (Dự kiến về nước, Thực tế về nước, hoặc Dự kiến sang)");
         }
         await recordEmployeeExit(employee.id, {
           actual_exit_date: actualExitDate || undefined,
-          expected_exit_date: expectedExitDate || undefined,
+          expected_exit_date: expectedExitChanged ? expectedExitDate || null : undefined,
           expected_entry_date: expectedEntryDate || undefined,
           action_type: activeStay && actualExitDate ? actionType : "CHECK_OUT",
           notes: notes.trim() || undefined,
@@ -77,7 +80,7 @@ export const TravelRecordModal: React.FC<TravelRecordModalProps> = ({
           await createTravelRecord(employee.id, {
             entry_date: entryDate || undefined,
             expected_entry_date: expectedEntryDate || undefined,
-            expected_exit_date: expectedExitDate || undefined,
+            expected_exit_date: expectedExitDate || null,
             notes: notes.trim() || undefined,
           });
         } else {

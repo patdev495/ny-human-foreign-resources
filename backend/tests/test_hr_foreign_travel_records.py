@@ -137,6 +137,14 @@ def test_edit_travel_record(client: TestClient, emp_id: int) -> None:
     assert res.status_code == 200
     assert res.json()["expected_exit_date"] == "2026-09-01"
 
+    res = client.put(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records/{rid}",
+        json={"expected_exit_date": None},
+    )
+    assert res.status_code == 200
+    assert res.json()["expected_exit_date"] is None
+    assert client.get(f"/api/hr-foreign/employees/{emp_id}").json()["expected_exit_date"] is None
+
 
 # ---------------------------------------------------------------------------
 # Behavior 6: edit actual_exit_date < entry_date → HTTP 400
@@ -282,16 +290,33 @@ def test_record_exit_optional_actual_exit_date_updates_expected_dates(
     assert emp["expected_exit_date"] == "2026-09-15"
     assert emp["is_in_vietnam"] is True
 
+    res = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/record-exit",
+        json={"expected_exit_date": None},
+    )
+    assert res.status_code == 200
+    assert res.json()["expected_exit_date"] is None
+    emp = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
+    assert emp["expected_exit_date"] is None
+    assert emp["is_in_vietnam"] is True
+
 
 def test_allow_future_entry_but_reject_future_exit(client: TestClient, emp_id: int) -> None:
     future_date = (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
+    planned = client.post(
+        f"/api/hr-foreign/employees/{emp_id}/travel-records",
+        json={"expected_entry_date": future_date, "expected_exit_date": future_date},
+    )
+    assert planned.status_code == 201
 
     # HR can register an upcoming arrival for accommodation planning.
     res = client.post(
         f"/api/hr-foreign/employees/{emp_id}/travel-records",
-        json={"entry_date": future_date},
+        json={"entry_date": future_date, "expected_exit_date": None},
     )
     assert res.status_code == 201
+    assert res.json()["id"] == planned.json()["id"]
+    assert res.json()["expected_exit_date"] is None
     emp = client.get(f"/api/hr-foreign/employees/{emp_id}").json()
     assert emp["entry_date"] == future_date
     assert emp["is_in_vietnam"] is False
@@ -305,7 +330,7 @@ def test_allow_future_entry_but_reject_future_exit(client: TestClient, emp_id: i
     assert "tương lai" in res.json()["detail"].lower()
 
 
-def test_upcoming_trip_does_not_inherit_previous_actual_exit(client: TestClient, emp_id: int) -> None:
+def test_upcoming_trip_does_not_inherit_previous_exit_dates(client: TestClient, emp_id: int) -> None:
     today = datetime.date.today()
     previous_entry = (today - datetime.timedelta(days=30)).isoformat()
     previous_exit = (today - datetime.timedelta(days=10)).isoformat()
@@ -313,7 +338,7 @@ def test_upcoming_trip_does_not_inherit_previous_actual_exit(client: TestClient,
 
     previous = client.post(
         f"/api/hr-foreign/employees/{emp_id}/travel-records",
-        json={"entry_date": previous_entry, "actual_exit_date": previous_exit},
+        json={"entry_date": previous_entry, "expected_exit_date": previous_exit, "actual_exit_date": previous_exit},
     )
     assert previous.status_code == 201
     upcoming = client.post(
@@ -326,6 +351,7 @@ def test_upcoming_trip_does_not_inherit_previous_actual_exit(client: TestClient,
     assert employee["entry_date"] == upcoming_entry
     assert employee["is_in_vietnam"] is False
     assert employee["actual_exit_date"] is None
+    assert employee["expected_exit_date"] is None
 
 
 def test_delete_travel_record_cascades_to_stays(client: TestClient, emp_id: int) -> None:

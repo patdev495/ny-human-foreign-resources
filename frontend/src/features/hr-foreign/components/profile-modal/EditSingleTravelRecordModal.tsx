@@ -61,7 +61,7 @@ export const EditSingleTravelRecordModal: React.FC<Props> = ({
       await updateTravelRecord(employeeId, travelRecord.id, {
         entry_date: entryDate || undefined,
         expected_entry_date: expectedEntryDate || null,
-        expected_exit_date: expectedExitDate || undefined,
+        expected_exit_date: expectedExitDate || null,
         actual_exit_date: actualExitDate || undefined,
         action_type: activeStay && actualExitDate ? actionType : undefined,
         notes: notes.trim() || undefined,

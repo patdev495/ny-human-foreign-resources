@@ -114,7 +114,7 @@ def evaluate_employee_statuses(
         effective_entry = emp.entry_date or (latest_stay.start_date if latest_stay else None)
         effective_expected_exit = (
             emp.expected_exit_date
-            or (latest_stay.expected_end_date if latest_stay else None)
+            or (latest_stay.expected_end_date if latest_stay and not emp_trs else None)
         )
 
         res.entry_date = effective_entry
